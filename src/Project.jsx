@@ -104,67 +104,15 @@ const SectionEyebrow = ({ label, icon }) => (
 );
 
 // ============================================================================
-// TV STATIC CANVAS
-// ============================================================================
-
-const TVStatic = ({ active }) => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    if (!active) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animId;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const draw = () => {
-      const w = canvas.width;
-      const h = canvas.height;
-      const idata = ctx.createImageData(w, h);
-      const buffer32 = new Uint32Array(idata.data.buffer);
-      for (let i = 0; i < buffer32.length; i++) {
-        // noise with very low opacity (cyberpunk blue tint)
-        const noise = Math.random() < 0.5 ? 0xff001020 : 0xff000810;
-        buffer32[i] = noise;
-      }
-      ctx.putImageData(idata, 0, 0);
-      animId = requestAnimationFrame(draw);
-    };
-
-    draw();
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-    };
-  }, [active]);
-
-  if (!active) return null;
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.12, mixBlendMode: 'screen' }}
-    />
-  );
-};
-
-// ============================================================================
-// CYBERPUNK CIRCLE LOADER OVERLAY
+// GOOEY BUBBLE VACUUM
 // ============================================================================
 
 const OPEN_MS = 400;
-const LOAD_MS = 2200;
-const FLASH_MS = 150;
-const RESTORE_MS = 600;
+const SUCK_MS = 2600;
+const FLASH_MS = 180;
+const RESTORE_MS = 800;
 
-const usePortalTransition = () => {
+const useVacuumTransition = () => {
   const [target, setTarget] = useState(null);
   const [stage, setStage] = useState('idle');
   const arrivedRef = useRef(false);
@@ -177,13 +125,13 @@ const usePortalTransition = () => {
 
   useEffect(() => {
     if (stage !== 'opening') return undefined;
-    const t = setTimeout(() => setStage('loading'), OPEN_MS);
+    const t = setTimeout(() => setStage('sucking'), OPEN_MS);
     return () => clearTimeout(t);
   }, [stage]);
 
   useEffect(() => {
-    if (stage !== 'loading') return undefined;
-    const t = setTimeout(() => setStage('flash'), LOAD_MS);
+    if (stage !== 'sucking') return undefined;
+    const t = setTimeout(() => setStage('flash'), SUCK_MS);
     return () => clearTimeout(t);
   }, [stage]);
 
@@ -213,188 +161,319 @@ const usePortalTransition = () => {
   return { target, stage, trigger };
 };
 
-const CyberLoader = ({ stage, name }) => {
+const GooeyVacuum = ({ stage, name, darkMode }) => {
   const active = stage !== 'idle' && stage !== 'restoring';
-  const loading = stage === 'loading';
-  const progress = loading ? 100 : 0;
+  const sucking = stage === 'sucking' || stage === 'flash';
+  const canvasRef = useRef(null);
+  const particlesRef = useRef([]);
+  const frameRef = useRef(0);
+
+  const isDark = darkMode !== false;
+
+  useEffect(() => {
+    if (!active) {
+      particlesRef.current = [];
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    const darkColors = [
+      '#00667a', '#007a94', '#0088a3',
+      '#005c73', '#004d66', '#0099b8',
+      '#007a99', '#006080', '#00a3c4',
+      '#003d4d',
+    ];
+    const lightColors = [
+      '#ff0033', '#ff1a53', '#ff3366',
+      '#ff477e', '#ff6699', '#ff85a7',
+      '#e60039', '#ff0055', '#ff99bb',
+      '#ffffff',
+    ];
+    const colors = isDark ? darkColors : lightColors;
+
+    const BUBBLE_COUNT = 320;
+
+    if (particlesRef.current.length === 0) {
+      for (let i = 0; i < BUBBLE_COUNT; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * Math.max(w, h) * 0.6;
+        particlesRef.current.push({
+          x: cx + Math.cos(angle) * dist,
+          y: cy + Math.sin(angle) * dist,
+          baseSize: 14 + Math.random() * 34,
+          size: 14 + Math.random() * 34,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          opacity: 0.6 + Math.random() * 0.4,
+          angle,
+          dist,
+          spiralSpeed: 0.01 + Math.random() * 0.03,
+          wobblePhase: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.05,
+          vx: 0,
+          vy: 0,
+        });
+      }
+    }
+
+    const draw = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      particlesRef.current.forEach((p) => {
+        if (sucking) {
+          const dx = cx - p.x;
+          const dy = cy - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const angleToCenter = Math.atan2(dy, dx);
+
+          const attraction = 3.5 + (1000 / (dist + 25));
+          const swirl = 1.8 + (400 / (dist + 50));
+
+          p.vx += Math.cos(angleToCenter) * attraction * 0.18;
+          p.vy += Math.sin(angleToCenter) * attraction * 0.18;
+          p.vx += Math.cos(angleToCenter + Math.PI / 2) * swirl * 0.1;
+          p.vy += Math.sin(angleToCenter + Math.PI / 2) * swirl * 0.1;
+
+          p.vx *= 0.92;
+          p.vy *= 0.92;
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          const shrinkFactor = Math.min(1, Math.max(0.06, dist / 90));
+          p.size = p.baseSize * shrinkFactor;
+          p.opacity = Math.min(1, dist / 45) * 0.95;
+
+          if (dist < 16 || p.size < 1) {
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const spawnDist = Math.max(w, h) * 0.48 + Math.random() * 300;
+            p.x = cx + Math.cos(spawnAngle) * spawnDist;
+            p.y = cy + Math.sin(spawnAngle) * spawnDist;
+            p.vx = 0;
+            p.vy = 0;
+            p.size = p.baseSize;
+            p.opacity = 0.7 + Math.random() * 0.3;
+          }
+        } else {
+          p.wobblePhase += p.wobbleSpeed;
+          p.x += Math.cos(p.wobblePhase) * 0.6;
+          p.y += Math.sin(p.wobblePhase * 0.7) * 0.5;
+          p.size = p.baseSize + Math.sin(p.wobblePhase * 2) * 3;
+          p.opacity = 0.6 + Math.sin(p.wobblePhase) * 0.3;
+        }
+
+        if (p.size > 0.5 && p.opacity > 0.01) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.opacity;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(
+            p.x - p.size * 0.28,
+            p.y - p.size * 0.28,
+            p.size * 0.28,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.globalAlpha = p.opacity;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(
+            p.x + p.size * 0.15,
+            p.y + p.size * 0.25,
+            p.size * 0.12,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.globalAlpha = p.opacity * 0.6;
+          ctx.fill();
+        }
+      });
+
+      if (sucking) {
+        const pulse = 18 + Math.sin(frameRef.current * 0.12) * 5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.globalAlpha = 0.7;
+        ctx.fill();
+
+        const rimColor = isDark
+          ? 'rgba(0,200,240,0.3)'
+          : 'rgba(255,0,64,0.35)';
+        const rimMid = isDark
+          ? 'rgba(0,200,240,0.1)'
+          : 'rgba(255,0,64,0.12)';
+
+        const rimGrad = ctx.createRadialGradient(cx, cy, pulse * 0.7, cx, cy, pulse * 3.5);
+        rimGrad.addColorStop(0, rimColor);
+        rimGrad.addColorStop(0.4, rimMid);
+        rimGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = rimGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pulse * 3.5, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
+      }
+
+      frameRef.current++;
+      animId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, [active, sucking, isDark]);
 
   if (!active) return null;
 
+  // LIGHT MODE: white glow (no black shadows). DARK MODE: dark cyan shadows.
+  const labelShadow = isDark
+    ? '0 0 8px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,60,80,0.6)'
+    : '0 0 10px rgba(255,255,255,1), 0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.5)';
+
+  const titleShadow = isDark
+    ? '0 0 10px rgba(0,0,0,1), 0 0 25px rgba(0,0,0,0.95), 0 0 50px rgba(0,60,80,0.7), 0 0 100px rgba(0,60,80,0.4)'
+    : '0 0 15px rgba(255,255,255,1), 0 0 35px rgba(255,255,255,0.9), 0 0 70px rgba(255,255,255,0.6), 0 0 120px rgba(255,255,255,0.3)';
+
+  const statusShadow = isDark
+    ? '0 0 8px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,60,80,0.5)'
+    : '0 0 10px rgba(255,255,255,1), 0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.4)';
+
   return (
     <div className="fixed inset-0 z-[2000] pointer-events-none overflow-hidden flex items-center justify-center">
-      {/* dark cyberpunk backdrop */}
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 transition-opacity duration-500"
+        className="absolute inset-0 transition-opacity duration-700"
         style={{
-          background: 'radial-gradient(circle at center, #0a0a1a 0%, #050510 100%)',
+          background: isDark
+            ? 'radial-gradient(circle at center, rgba(0,240,255,0.04) 0%, rgba(0,0,0,0.25) 100%)'
+            : 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%)',
           opacity: active ? 1 : 0,
-        }}
-      />
-      
-      {/* scanlines */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,240,255,0.03) 2px, rgba(0,240,255,0.03) 4px)',
-          opacity: active ? 1 : 0,
-          transition: 'opacity 0.5s ease',
+          backdropFilter: 'blur(1px)',
+          WebkitBackdropFilter: 'blur(1px)',
         }}
       />
 
-      {/* TV static noise */}
-      <TVStatic active={loading} />
+      {/* SVG Gooey Filter */}
+      <svg className="absolute w-0 h-0">
+        <defs>
+          <filter id="gooey-vacuum">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -13"
+              result="goo"
+            />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
 
-      {/* vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+      {/* Bubble canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
         style={{
-          background: 'radial-gradient(circle at center, transparent 40%, rgba(0,10,30,0.8) 100%)',
           opacity: active ? 1 : 0,
-          transition: 'opacity 0.5s ease',
+          transition: 'opacity 0.8s ease',
+          filter: 'url(#gooey-vacuum)',
         }}
       />
 
-      {/* center loader */}
+      {/* Center drain */}
       <div
-        className="relative flex flex-col items-center justify-center transition-all duration-500"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-1000"
+        style={{
+          width: sucking ? '65px' : '0px',
+          height: sucking ? '65px' : '0px',
+          background: 'radial-gradient(circle at 35% 35%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 60%)',
+          boxShadow: isDark
+            ? '0 0 50px 12px rgba(0,240,255,0.12), inset 0 0 25px rgba(0,240,255,0.08)'
+            : '0 0 50px 12px rgba(255,0,64,0.15), inset 0 0 25px rgba(255,0,64,0.1)',
+          border: isDark ? '1px solid rgba(0,240,255,0.2)' : '1px solid rgba(255,0,64,0.2)',
+        }}
+      />
+
+      {/* Text — explicit white, no dark shadows in light mode */}
+      <div
+        className="relative flex flex-col items-center justify-center transition-all duration-700"
         style={{
           opacity: active ? 1 : 0,
-          transform: active ? 'scale(1)' : 'scale(0.8)',
+          transform: active ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)',
         }}
       >
-        {/* outer rotating ring */}
-        <div className="relative w-[200px] h-[200px] sm:w-[260px] sm:h-[260px]">
-          {/* outer glow ring */}
+        <div className="text-center space-y-3">
           <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              border: '1px solid rgba(0,240,255,0.3)',
-              boxShadow: '0 0 40px rgba(0,240,255,0.15), inset 0 0 40px rgba(0,240,255,0.05)',
-              animation: loading ? 'cyber-spin 8s linear infinite' : 'none',
-            }}
-          />
-          
-          {/* middle segmented ring */}
-          <div
-            className="absolute inset-[15px] rounded-full"
-            style={{
-              border: '2px dashed rgba(0,240,255,0.4)',
-              animation: loading ? 'cyber-spin-reverse 12s linear infinite' : 'none',
-            }}
-          />
+            className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.5em]"
+            style={{ color: '#ffffff', textShadow: labelShadow }}
+          >
+            Vacuum Sequence
+          </div>
 
-          {/* inner progress ring */}
-          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              fill="none"
-              stroke="rgba(0,240,255,0.08)"
-              strokeWidth="1"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              fill="none"
-              stroke="#00f0ff"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeDasharray={`${progress * 2.89} 289`}
+          {name && (
+            <h2
+              className="text-2xl sm:text-4xl font-black uppercase tracking-[0.2em]"
+              style={{ color: '#ffffff', textShadow: titleShadow }}
+            >
+              {name}
+            </h2>
+          )}
+
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <div
+              className="w-2 h-2 rounded-full bg-white"
               style={{
-                filter: 'drop-shadow(0 0 6px rgba(0,240,255,0.8))',
-                transition: loading ? 'stroke-dasharray 2.2s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+                animation: 'vacuum-pulse 1.2s ease-in-out infinite',
+                boxShadow: isDark
+                  ? '0 0 10px 2px rgba(255,255,255,0.9), 0 0 20px 4px rgba(0,240,255,0.3)'
+                  : '0 0 10px 2px rgba(255,255,255,1), 0 0 20px 4px rgba(255,255,255,0.6)',
               }}
             />
-          </svg>
-
-          {/* glitchy center circle */}
-          <div
-            className="absolute inset-[45px] sm:inset-[55px] rounded-full flex items-center justify-center overflow-hidden"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(0,240,255,0.15) 0%, transparent 70%)',
-              border: '1px solid rgba(0,240,255,0.25)',
-              boxShadow: '0 0 30px rgba(0,240,255,0.1), inset 0 0 20px rgba(0,240,255,0.05)',
-            }}
-          >
-            <Globe size={32} className="text-[#00f0ff] opacity-60" style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.6))' }} />
-          </div>
-
-          {/* orbiting dot */}
-          {loading && (
-            <div
-              className="absolute left-1/2 top-1/2 w-full h-full"
-              style={{ animation: 'cyber-spin 3s linear infinite' }}
+            <span
+              className="text-[9px] sm:text-[10px] font-mono tracking-widest uppercase"
+              style={{ color: '#ffffff', textShadow: statusShadow }}
             >
-              <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#00f0ff]"
-                style={{ boxShadow: '0 0 10px 2px rgba(0,240,255,0.8)' }}
-              />
-            </div>
-          )}
+              {sucking ? 'Compressing matter...' : 'Matter collapsed'}
+            </span>
+          </div>
         </div>
-
-        {/* destination name with glitch effect */}
-        {name && (
-          <div className="mt-10 sm:mt-14 text-center space-y-3">
-            <div
-              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-[#00f0ff]/50"
-              style={{ textShadow: '0 0 10px rgba(0,240,255,0.3)' }}
-            >
-              Establishing Uplink
-            </div>
-            <div className="relative">
-              <h2
-                className="text-xl sm:text-3xl font-black uppercase tracking-[0.15em] text-white relative z-10"
-                style={{
-                  textShadow: '0 0 20px rgba(0,240,255,0.5), 0 0 40px rgba(0,240,255,0.2)',
-                }}
-              >
-                {name}
-              </h2>
-              {/* glitch layers */}
-              {loading && (
-                <>
-                  <span
-                    className="absolute inset-0 text-xl sm:text-3xl font-black uppercase tracking-[0.15em] text-[#00f0ff] opacity-40 z-0"
-                    style={{
-                      clipPath: 'inset(0 0 55% 0)',
-                      transform: 'translateX(-3px)',
-                      animation: 'glitch-1 2s infinite linear alternate-reverse',
-                    }}
-                  >
-                    {name}
-                  </span>
-                  <span
-                    className="absolute inset-0 text-xl sm:text-3xl font-black uppercase tracking-[0.15em] text-[#0080ff] opacity-40 z-0"
-                    style={{
-                      clipPath: 'inset(45% 0 0 0)',
-                      transform: 'translateX(3px)',
-                      animation: 'glitch-2 3s infinite linear alternate-reverse',
-                    }}
-                  >
-                    {name}
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#00f0ff] animate-pulse" style={{ boxShadow: '0 0 6px rgba(0,240,255,0.8)' }} />
-              <span className="text-[9px] sm:text-[10px] font-mono text-[#00f0ff]/40 tracking-widest uppercase">
-                {loading ? 'Routing...' : 'Complete'}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* flash */}
+      {/* Flash */}
       <div
-        className="absolute inset-0 bg-[#00f0ff] transition-opacity"
+        className="absolute inset-0 transition-opacity"
         style={{
-          opacity: stage === 'flash' ? 0.15 : 0,
-          transitionDuration: stage === 'flash' ? '40ms' : `${FLASH_MS + 150}ms`,
+          backgroundColor: isDark ? '#00f0ff' : '#ff3366',
+          opacity: stage === 'flash' ? 0.12 : 0,
+          transitionDuration: stage === 'flash' ? '60ms' : `${FLASH_MS + 200}ms`,
         }}
       />
     </div>
@@ -623,7 +702,7 @@ const Lightbox = ({ active, onClose, onNav }) => {
 
 const Project = ({ darkMode = true }) => {
   const [active, setActive] = useState(null);
-  const { target: portalTarget, stage: portalStage, trigger: visitWebsite } = usePortalTransition();
+  const { target: portalTarget, stage: portalStage, trigger: visitWebsite } = useVacuumTransition();
 
   const openWebsite = (site) => setActive({ item: site, list: null, index: null });
   const openPoster = (poster, index) => setActive({ item: poster, list: posters, index });
@@ -636,52 +715,32 @@ const Project = ({ darkMode = true }) => {
     });
   };
 
-  const zoomingIn = portalStage === 'loading' || portalStage === 'flash';
+  const zoomingIn = portalStage === 'sucking' || portalStage === 'flash';
 
   return (
     <div className="relative">
       <style>{`
-        @keyframes cyber-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes cyber-spin-reverse {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
-        }
-        @keyframes glitch-1 {
-          0% { clip-path: inset(20% 0 60% 0); transform: translateX(-2px); }
-          20% { clip-path: inset(10% 0 80% 0); transform: translateX(2px); }
-          40% { clip-path: inset(50% 0 30% 0); transform: translateX(-1px); }
-          60% { clip-path: inset(80% 0 5% 0); transform: translateX(3px); }
-          80% { clip-path: inset(40% 0 40% 0); transform: translateX(-2px); }
-          100% { clip-path: inset(15% 0 70% 0); transform: translateX(1px); }
-        }
-        @keyframes glitch-2 {
-          0% { clip-path: inset(60% 0 20% 0); transform: translateX(2px); }
-          20% { clip-path: inset(30% 0 50% 0); transform: translateX(-3px); }
-          40% { clip-path: inset(80% 0 10% 0); transform: translateX(1px); }
-          60% { clip-path: inset(10% 0 70% 0); transform: translateX(-2px); }
-          80% { clip-path: inset(50% 0 30% 0); transform: translateX(2px); }
-          100% { clip-path: inset(25% 0 55% 0); transform: translateX(-1px); }
+        @keyframes vacuum-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(0.4); opacity: 0.3; }
         }
       `}</style>
 
       <Lightbox active={active} onClose={() => setActive(null)} onNav={navigate} />
-      <CyberLoader stage={portalStage} name={portalTarget?.name} />
+      <GooeyVacuum stage={portalStage} name={portalTarget?.name} darkMode={darkMode} />
 
       <div
         style={{
           transform: zoomingIn
-            ? 'scale(0.96)'
-            : 'scale(1)',
+            ? 'scale(0.88) translateY(30px)'
+            : 'scale(1) translateY(0)',
           transformOrigin: '50% 50%',
-          opacity: zoomingIn ? 0.3 : 1,
-          filter: zoomingIn ? 'blur(6px) brightness(0.7)' : 'blur(0px) brightness(1)',
+          opacity: zoomingIn ? 0.35 : 1,
+          filter: zoomingIn ? 'blur(6px) brightness(0.6)' : 'blur(0px) brightness(1)',
           transitionProperty: 'transform, opacity, filter',
-          transitionDuration: portalStage === 'restoring' ? `${RESTORE_MS}ms` : `${LOAD_MS}ms`,
+          transitionDuration: portalStage === 'restoring' ? `${RESTORE_MS}ms` : `${SUCK_MS}ms`,
           transitionTimingFunction:
-            portalStage === 'restoring' ? 'cubic-bezier(0.16,1,0.3,1)' : 'cubic-bezier(0.4, 0, 0.2, 1)',
+            portalStage === 'restoring' ? 'cubic-bezier(0.16,1,0.3,1)' : 'cubic-bezier(0.7, 0, 0.84, 0)',
         }}
         className="space-y-16 sm:space-y-24 animate-fade-in"
       >

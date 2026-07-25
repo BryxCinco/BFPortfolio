@@ -216,6 +216,179 @@ const SectionEyebrow = ({ label, icon }) => (
   </div>
 );
 
+// ============================================================================
+// ANIMATED NAVIGATION BAR
+// ============================================================================
+
+const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, setIsSidebarOpen }) => {
+  const navRef = useRef(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+  const [loaded, setLoaded] = useState(false);
+
+  // Nav accent color: pink/red (matches the "Download CV" button) in light mode, cyan in dark mode
+  const navAccent = darkMode ? '#00FFB3' : '#FF007A';
+  const navAccentShadow = darkMode ? 'rgba(0,255,179,0.9)' : 'rgba(255,0,122,0.9)';
+  const navAccentGlow = darkMode ? 'rgba(0,255,179,0.35)' : 'rgba(255,0,122,0.35)';
+
+  // Entrance animation trigger
+  useEffect(() => {
+    const t = setTimeout(() => setLoaded(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Sliding underline tracker
+  useEffect(() => {
+    const container = navRef.current;
+    if (!container) return;
+    const activeBtn = container.querySelector(`[data-nav="${activeSection}"]`);
+    if (!activeBtn) return;
+
+    setIndicator({
+      left: activeBtn.offsetLeft,
+      width: activeBtn.offsetWidth,
+      opacity: 1,
+    });
+  }, [activeSection]);
+
+  // Recalculate on resize
+  useEffect(() => {
+    const handleResize = () => {
+      const container = navRef.current;
+      if (!container) return;
+      const activeBtn = container.querySelector(`[data-nav="${activeSection}"]`);
+      if (!activeBtn) return;
+      setIndicator({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+        opacity: 1,
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeSection]);
+
+  return (
+    <nav
+      className={`fixed top-0 w-full z-[100] p-4 sm:p-6 flex justify-between items-center px-4 sm:px-6 md:px-10 backdrop-blur-xl border-b transition-all duration-700 ${
+        loaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      } ${darkMode ? 'bg-[#1B1B2A]/30 border-[#00FFB3]/10' : 'bg-white/60 border-[#FFEA00]/60'}`}
+    >
+      {/* Logo */}
+      <button
+        onClick={() => goToSection('home')}
+        aria-label="Go to home"
+        className={`cursor-target backdrop-blur-xl border px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-black tracking-tighter text-lg sm:text-xl hover:scale-105 active:scale-95 transition-all duration-300 shrink-0 ${
+          darkMode ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 hover:shadow-[0_0_30px_rgba(0,255,179,0.25)]' : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_30px_rgba(255,234,0,0.35)]'
+        }`}
+      >
+        BP<span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}>.DEV</span>
+      </button>
+
+      {/* Desktop Nav with Sliding Underline */}
+      <div
+        ref={navRef}
+        className={`hidden lg:flex items-center gap-1 backdrop-blur-xl border rounded-full px-2 py-2 relative ${
+          darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'
+        }`}
+      >
+        {/* THE SLIDING INDICATOR — bright neon underline */}
+        <div
+          className="absolute bottom-1.5 h-[2px] rounded-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] pointer-events-none"
+          style={{
+            left: indicator.left,
+            width: indicator.width,
+            opacity: indicator.opacity,
+            backgroundColor: navAccent,
+            boxShadow: `0 0 12px ${navAccentShadow}, 0 0 4px ${navAccentShadow}`,
+          }}
+        />
+
+        {navItems.map((item, idx) => (
+          <button
+            key={item.name}
+            data-nav={item.id}
+            onClick={() => goToSection(item.id)}
+            className={`cursor-target relative flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+              activeSection === item.id ? '' : 'opacity-60 hover:opacity-100'
+            } ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'}`}
+            style={{
+              transitionDelay: loaded ? `${idx * 60 + 100}ms` : '0ms',
+              color: activeSection === item.id ? navAccent : undefined,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = navAccent;
+              e.currentTarget.style.backgroundColor = darkMode
+                ? 'rgba(0,255,179,0.12)'
+                : 'rgba(255,0,122,0.12)';
+              if (activeSection !== item.id) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = activeSection === item.id ? navAccent : '';
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span className={`transition-transform duration-300 ${activeSection === item.id ? 'scale-110' : ''}`}>
+              {item.icon}
+            </span>
+            {item.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Right Controls */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Open navigation menu"
+          title="Menu"
+          className={`cursor-target lg:hidden p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 ${
+            darkMode
+              ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/50'
+              : 'bg-white/70 border-[#FFEA00] hover:border-[#FF007A]/60 hover:bg-[#FF007A]/10'
+          }`}
+        >
+          <Menu size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
+        </button>
+
+        <button
+          onClick={() => chatbotRef.current?.open()}
+          aria-label="Open chat assistant"
+          title="Chat with Sonya"
+          className={`cursor-target sm:hidden p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 ${
+            darkMode
+              ? 'bg-white/5 border-[#00FFB3]/20'
+              : 'bg-white/70 border-[#FFEA00] hover:border-[#FF007A]/60 hover:bg-[#FF007A]/10'
+          }`}
+        >
+          <MessageSquare size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
+        </button>
+
+        <button
+          onClick={toggleTheme}
+          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          className={`cursor-target p-3 sm:p-4 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 group ${
+            darkMode
+              ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60'
+              : 'bg-white/70 border-[#FFEA00] hover:border-[#FF007A]/60 hover:bg-[#FF007A]/10'
+          }`}
+        >
+          <div className="transition-transform duration-500 group-hover:rotate-180">
+            {darkMode ? (
+              <Sun size={20} className="text-[#00FFB3]" />
+            ) : (
+              <Moon size={20} className="text-[#A700FF]" />
+            )}
+          </div>
+        </button>
+      </div>
+    </nav>
+  );
+};
+
 function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -322,6 +495,21 @@ function App() {
 
   const galleryImages = [brian2, brian3, brian4, brian5, brian6];
 
+  const navItems = [
+    { name: 'Home', icon: <Home size={18}/>, id: 'home' },
+    { name: 'About', icon: <User size={18}/>, id: 'about' },
+    { name: 'Certificates', icon: <Award size={18}/>, id: 'certificates' },
+    { name: 'Projects', icon: <Box size={18}/>, id: 'projects' },
+    { name: 'Stacks', icon: <Layers size={18}/>, id: 'stacks' },
+    { name: 'Contact Me', icon: <Mail size={18}/>, id: 'contact' }
+  ];
+
+  const goToSection = (id) => {
+    setActiveSection(id);
+    setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       {showIntro && (
@@ -369,7 +557,8 @@ function App() {
           </div>
         )}
 
-        <div className={`fixed inset-0 z-[1000] transition-all duration-500 ${isSidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+        {/* Mobile / tablet slide-in drawer — desktop uses the inline top nav instead */}
+        <div className={`fixed inset-0 z-[1000] transition-all duration-500 lg:hidden ${isSidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
           <div className={`absolute left-4 sm:left-6 top-20 sm:top-24 bottom-4 sm:bottom-6 w-[78vw] max-w-[280px] sm:w-72 backdrop-blur-2xl border rounded-md sm:rounded-md p-7 sm:p-10 flex flex-col transition-all duration-500 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-[130%]'} ${darkMode ? 'bg-[#1B1B2A]/40 border-[#00FFB3]/20 text-[#FFEA00]' : 'bg-white/90 border-[#FFEA00] text-[#1B1B2A]'}`}>
             <div className="flex justify-between items-center mb-10 sm:mb-12">
@@ -379,21 +568,10 @@ function App() {
               </button>
             </div>
             <div className="flex flex-col gap-4 sm:gap-6 overflow-y-auto">
-              {[
-                { name: 'Home', icon: <Home size={18}/>, id: 'home' },
-                { name: 'About', icon: <User size={18}/>, id: 'about' },
-                { name: 'Certificates', icon: <Award size={18}/>, id: 'certificates' },
-                { name: 'Projects', icon: <Box size={18}/>, id: 'projects' },
-                { name: 'Stacks', icon: <Layers size={18}/>, id: 'stacks' },
-                { name: 'Contact Me', icon: <Mail size={18}/>, id: 'contact' }
-              ].map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.name}
-                  onClick={() => {
-                    setActiveSection(item.id);
-                    setIsSidebarOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => goToSection(item.id)}
                   className={`cursor-target flex items-center gap-4 text-xs sm:text-sm font-black uppercase tracking-widest transition-all group ${activeSection === item.id ? 'opacity-100 text-[#00FFB3]' : 'opacity-60 hover:opacity-100'}`}
                 >
                   <span className={`p-3 border rounded-md group-hover:bg-[#00FFB3]/20 transition-all ${activeSection === item.id ? 'bg-[#00FFB3]/20 border-[#00FFB3]' : 'bg-black/5 border-[#00FFB3]/10'}`}>{item.icon}</span>
@@ -408,33 +586,16 @@ function App() {
           </div>
         </div>
 
-        <nav className="fixed top-0 w-full z-[100] p-4 sm:p-6 flex justify-between items-center px-4 sm:px-6 md:px-10">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className={`cursor-target backdrop-blur-xl border px-5 sm:px-8 py-2.5 sm:py-3 rounded-full font-black tracking-tighter text-lg sm:text-xl md:text-2xl shadow-[0_0_20px_rgba(0,255,179,0.1)] hover:scale-105 active:scale-95 transition-all group ${darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'}`}
-          >
-            BP<span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}>.DEV</span>
-            <span className="ml-2 hidden sm:inline-block opacity-0 group-hover:opacity-100 transition-opacity"><Menu size={16} className="inline mb-1" /></span>
-          </button>
-          <div className="flex items-center gap-3 sm:gap-4">
-            <button
-              onClick={() => chatbotRef.current?.open()}
-              aria-label="Open chat assistant"
-              title="Chat with Sonya"
-              className={`cursor-target sm:hidden p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,255,179,0.1)] ${darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'}`}
-            >
-              <MessageSquare size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
-            </button>
-            <button
-              onClick={toggleTheme}
-              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              className={`cursor-target p-3 sm:p-4 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,255,179,0.1)] ${darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'}`}
-            >
-              {darkMode ? <Sun size={20} className="text-[#00FFB3]" /> : <Moon size={20} className="text-[#A700FF]" />}
-            </button>
-          </div>
-        </nav>
+        {/* NEW ANIMATED NAV */}
+        <AnimatedNavBar
+          darkMode={darkMode}
+          activeSection={activeSection}
+          navItems={navItems}
+          goToSection={goToSection}
+          toggleTheme={toggleTheme}
+          chatbotRef={chatbotRef}
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
 
         <div key={activeSection} className="w-full max-w-[1800px] mx-auto pt-24 sm:pt-32 px-4 sm:px-6 lg:px-12 space-y-6">
 
@@ -663,9 +824,9 @@ function App() {
           <RevealOnScroll>
             <footer className="pt-14 sm:pt-20 border-t border-[#00FFB3]/10 text-center space-y-6 sm:space-y-8 pb-10 px-4">
               <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] opacity-60">
-                 <a href="#" className="cursor-target hover:text-[#00FFB3] transition-colors">Github</a>
-                 <a href="#" className="cursor-target hover:text-[#00FFB3] transition-colors">LinkedIn</a>
-                 <a href="#" className="cursor-target hover:text-[#00FFB3] transition-colors">Twitter</a>
+                 <a href="https://github.com/BryxCinco" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Github</a>
+                 <a href="https://www.linkedin.com/in/brianfrancisco10/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">LinkedIn</a>
+                 <a href="https://www.facebook.com/Bryx.Francisco111/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Facebook</a>
               </div>
               <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#00FFB3]">
                  © {new Date().getFullYear()} Brian Paul Francisco
