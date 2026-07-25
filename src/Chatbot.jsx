@@ -350,27 +350,31 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
 
   const theme = darkMode
     ? {
-        panel: 'bg-[#0a1620] border-white/10 text-slate-100',
-        header: 'bg-gradient-to-b from-[#0f1f2e] to-[#0a1620] border-white/10',
-        bubbleBot: 'bg-white/[0.05] border-white/10 text-slate-100',
-        input: 'bg-white/[0.05] border-white/10 focus:border-cyan-400/70 text-slate-100 placeholder:text-slate-600',
-        fab: 'bg-gradient-to-br from-[#0f1f2e] to-[#0a1620] border-white/10',
-        notif: 'bg-gradient-to-br from-[#102232] to-[#0a1620] border-white/10 backdrop-blur-xl',
-        glow: 'shadow-[0_40px_110px_-20px_rgba(14,165,233,0.35),0_0_0_1px_rgba(255,255,255,0.06)]',
-        fabGlow: 'shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_20px_55px_-10px_rgba(14,165,233,0.5)]',
-        accentText: 'text-cyan-400',
-        ring: 'ring-[#0a1620]',
+        panel: 'bg-[#0D0D16] border-[#FFEA00]/15 text-white',
+        header: 'bg-gradient-to-b from-[#12121C] to-[#0D0D16] border-[#FFEA00]/15',
+        bubbleBot: 'bg-white/[0.06] border-white/10 text-white',
+        input: 'bg-white/[0.06] border-white/10 focus:border-[#FFEA00]/70 text-white placeholder:text-white/35',
+        fab: 'bg-gradient-to-br from-[#12121C] to-[#0D0D16] border-[#FFEA00]/25',
+        notif: 'bg-gradient-to-br from-[#12121C] to-[#0D0D16] border-[#FFEA00]/20 backdrop-blur-xl',
+        glow: 'shadow-[0_40px_110px_-20px_rgba(255,234,0,0.35),0_0_0_1px_rgba(255,255,255,0.06)]',
+        fabGlow: 'shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_20px_55px_-10px_rgba(255,234,0,0.55)]',
+        accentText: 'text-[#FFEA00]',
+        label: 'text-[#FFEA00]',
+        userBubble: 'bg-[#FFEA00]/15 border-[#FFEA00]/40 text-[#FFEA00]',
+        ring: 'ring-[#0D0D16]',
       }
     : {
-        panel: 'bg-[#f8fdff] border-slate-200 text-slate-900',
-        header: 'bg-gradient-to-b from-white to-sky-50/40 border-slate-200',
-        bubbleBot: 'bg-slate-100 border-slate-200 text-slate-800',
-        input: 'bg-white border-slate-200 focus:border-cyan-400 text-slate-900 placeholder:text-slate-400',
-        fab: 'bg-gradient-to-br from-white to-sky-50 border-slate-200',
-        notif: 'bg-gradient-to-br from-white to-sky-50/70 border-slate-200 backdrop-blur-xl',
-        glow: 'shadow-[0_40px_110px_-20px_rgba(14,165,233,0.22),0_0_0_1px_rgba(0,0,0,0.04)]',
-        fabGlow: 'shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_20px_55px_-10px_rgba(14,165,233,0.35)]',
-        accentText: 'text-cyan-600',
+        panel: 'bg-[#FFF8E1] border-[#E0B400]/40 text-[#1B1B2A]',
+        header: 'bg-gradient-to-b from-white to-[#FFF3C4] border-[#E0B400]/40',
+        bubbleBot: 'bg-[#FFEA00]/10 border-[#E0B400]/30 text-[#1B1B2A]',
+        input: 'bg-white border-[#E0B400]/40 focus:border-[#C99700] text-[#1B1B2A] placeholder:text-[#1B1B2A]/40',
+        fab: 'bg-gradient-to-br from-white to-[#FFF3C4] border-[#E0B400]/40',
+        notif: 'bg-gradient-to-br from-white to-[#FFF3C4] border-[#E0B400]/40 backdrop-blur-xl',
+        glow: 'shadow-[0_40px_110px_-20px_rgba(200,150,0,0.25),0_0_0_1px_rgba(0,0,0,0.04)]',
+        fabGlow: 'shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_20px_55px_-10px_rgba(200,150,0,0.4)]',
+        accentText: 'text-[#8A6800]',
+        label: 'text-[#8A6800]',
+        userBubble: 'bg-[#FFEA00]/25 border-[#C99700]/50 text-[#5C4600]',
         ring: 'ring-white',
       };
 
@@ -387,22 +391,22 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
             className={`hidden sm:flex relative mb-4 p-5 pr-9 rounded-2xl border items-center gap-4 cursor-pointer max-w-[320px] overflow-hidden transition-colors ${theme.notif} ${theme.glow}`}
             onClick={toggleChat}
           >
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-blue-500 to-teal-300" />
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00]" />
             <button
               onClick={(e) => { e.stopPropagation(); setShowNotification(false); }}
-              className={`absolute top-2.5 right-2.5 p-1 rounded-lg transition-colors ${darkMode ? 'text-slate-600 hover:text-slate-300 hover:bg-white/5' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-100'}`}
+              className={`absolute top-2.5 right-2.5 p-1 rounded-lg transition-colors ${darkMode ? 'text-white/50 hover:text-[#FFEA00] hover:bg-white/5' : 'text-[#1B1B2A]/40 hover:text-[#8A6800] hover:bg-[#FFEA00]/10'}`}
             >
               <X size={14} />
             </button>
-            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-cyan-400/50 shrink-0">
+            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#FFEA00] shrink-0 shadow-[0_0_12px_rgba(255,234,0,0.5)]">
               <img src={brianProfile} alt="Brian" className="w-full h-full object-cover" />
-              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-cyan-400 ring-2 ${darkMode ? 'ring-[#0a1620]' : 'ring-white'}`} />
+              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#FFEA00] ring-2 ${darkMode ? 'ring-[#0D0D16]' : 'ring-white'}`} />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-mono text-cyan-500 tracking-wide mb-0.5 flex items-center gap-1.5">
-                <span className="font-semibold">Brian's AI Assistant</span> <span className={darkMode ? 'text-slate-600' : 'text-slate-300'}>//</span> new_message
+              <p className={`text-xs font-mono tracking-wide mb-0.5 flex items-center gap-1.5 ${theme.label}`}>
+                <span className="font-semibold">Brian's AI Assistant</span> <span className={darkMode ? 'text-white/40' : 'text-[#1B1B2A]/40'}>//</span> new_message
               </p>
-              <p className={`text-base font-semibold leading-snug ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+              <p className={`text-base font-semibold leading-snug ${darkMode ? 'text-white' : 'text-[#1B1B2A]'}`}>
                 How's the work? Need help?
               </p>
             </div>
@@ -420,30 +424,30 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className={`mb-4 w-full sm:w-[460px] md:w-[34vw] lg:w-[28vw] sm:min-w-[380px] max-w-[520px] h-[85dvh] sm:h-[82vh] md:h-[74vh] min-h-[380px] sm:min-h-[600px] rounded-[1.75rem] border overflow-hidden flex flex-col relative ${theme.panel} ${theme.glow}`}
             >
-              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-blue-500 to-teal-300 z-10" />
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00] z-10" />
 
               <div className={`px-6 py-5 border-b flex justify-between items-center ${theme.header}`}>
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="relative shrink-0">
-                    <img src={brianProfile} alt="Brian" className="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-400/50" />
-                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full ring-[3px] ${darkMode ? 'ring-[#0a1620]' : 'ring-white'} ${status === 'online' ? 'bg-cyan-400' : 'bg-teal-400'}`} />
+                    <img src={brianProfile} alt="Brian" className="w-14 h-14 rounded-full object-cover border-2 border-[#FFEA00] shadow-[0_0_16px_rgba(255,234,0,0.55)]" />
+                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full ring-[3px] ${darkMode ? 'ring-[#0D0D16]' : 'ring-white'} bg-[#FFEA00]`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-mono text-lg font-bold tracking-tight truncate bg-gradient-to-r from-cyan-400 via-blue-500 to-teal-300 bg-clip-text text-transparent">
+                    <p className="font-mono text-lg font-bold tracking-tight truncate bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00] bg-clip-text text-transparent">
                       Brian's AI Assistant
                     </p>
-                    <p className={`text-[11px] font-mono truncate -mt-0.5 mb-0.5 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <p className={`text-[11px] font-mono truncate -mt-0.5 mb-0.5 ${darkMode ? 'text-white/45' : 'text-[#1B1B2A]/50'}`}>
                       brian's portfolio helper
                     </p>
-                    <p className={`text-xs font-mono flex items-center gap-1.5 ${status === 'online' ? 'text-cyan-500' : 'text-teal-500'}`}>
-                      <Circle size={7} className={`${status === 'online' ? 'fill-cyan-400 text-cyan-400' : 'fill-teal-400 text-teal-400'} animate-pulse`} />
+                    <p className={`text-xs font-mono flex items-center gap-1.5 ${theme.label}`}>
+                      <Circle size={7} className="fill-[#FFEA00] text-[#FFEA00] animate-pulse" />
                       {status === 'online' ? 'online' : 'connecting...'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={toggleChat}
-                  className={`p-2 rounded-xl transition-colors ${darkMode ? 'text-slate-500 hover:text-white hover:bg-white/5' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
+                  className={`p-2 rounded-xl transition-colors ${darkMode ? 'text-white/50 hover:text-[#FFEA00] hover:bg-white/5' : 'text-[#1B1B2A]/40 hover:text-[#8A6800] hover:bg-[#FFEA00]/10'}`}
                 >
                   <X size={22} />
                 </button>
@@ -452,15 +456,15 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                    <span className={`text-xs font-mono mb-1.5 px-1 font-medium ${msg.sender === 'user' ? 'text-teal-500' : 'text-cyan-500'}`}>
+                    <span className={`text-xs font-mono mb-1.5 px-1 font-medium ${theme.label}`}>
                       {msg.sender === 'user' ? 'you ❯' : "Brian's AI Assistant"}
                     </span>
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`max-w-[88%] px-5 py-3.5 rounded-2xl text-base leading-relaxed border ${
+                      className={`max-w-[88%] px-5 py-3.5 rounded-2xl text-base leading-relaxed border font-mono ${
                         msg.sender === 'user'
-                          ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-300 font-mono rounded-tr-md'
+                          ? `${theme.userBubble} rounded-tr-md`
                           : `${theme.bubbleBot} rounded-tl-md`
                       }`}
                     >
@@ -470,7 +474,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
                 ))}
                 {isTyping && (
                   <div className="flex flex-col items-start">
-                    <span className="text-xs font-mono mb-1.5 px-1 font-medium text-cyan-500">Brian's AI Assistant</span>
+                    <span className={`text-xs font-mono mb-1.5 px-1 font-medium ${theme.label}`}>Brian's AI Assistant</span>
                     <div className={`px-5 py-3.5 rounded-2xl rounded-tl-md border flex items-center gap-1.5 ${theme.bubbleBot}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s] opacity-60" />
                       <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s] opacity-60" />
@@ -486,7 +490,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
                   onClick={toggleDictation}
                   disabled={!voiceSupported}
                   title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
-                  className={`p-3 rounded-xl transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : 'hover:bg-slate-500/10'}`}
+                  className={`p-3 rounded-xl transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : `hover:bg-[#FFEA00]/10 ${darkMode ? 'text-white/60' : 'text-[#1B1B2A]/60'}`}`}
                 >
                   {isDictating ? <Mic size={20} className="animate-pulse" /> : <MicOff size={20} />}
                 </button>
@@ -501,7 +505,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="p-3 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 text-[#0a1620] disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
+                  className="p-3 rounded-xl bg-gradient-to-br from-[#FFEA00] to-[#FF007A] text-[#1B1B2A] disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
                 >
                   <ArrowUp size={20} strokeWidth={2.5} />
                 </button>
@@ -517,15 +521,20 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.92 }}
           onClick={toggleChat}
-          className={`hidden sm:flex relative p-6 rounded-3xl border overflow-hidden ${theme.fab} ${theme.fabGlow}`}
+          className={`hidden sm:flex relative items-center justify-center w-[76px] h-[76px] rounded-full border-2 border-[#FFEA00]/60 overflow-hidden ${theme.fab} ${theme.fabGlow}`}
         >
           <motion.span
-            className="absolute inset-0 rounded-3xl pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 50% 40%, rgba(34,211,238,0.35), transparent 70%)' }}
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle at 50% 40%, rgba(255,234,0,0.4), transparent 70%)' }}
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <Terminal size={34} className="text-cyan-400 relative" strokeWidth={2} />
+          <motion.span
+            className="absolute inset-0 rounded-full border-2 border-[#FFEA00] pointer-events-none"
+            animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+          />
+          <Terminal size={30} className="text-[#FFEA00] relative" strokeWidth={2.25} />
         </motion.button>
       )}
     </div>

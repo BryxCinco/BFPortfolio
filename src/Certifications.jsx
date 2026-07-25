@@ -25,7 +25,12 @@ import {
 // ============================================================================
 
 import daDataScienceEthics from './assets/PNGVER/DA-DSECoursera-1.png';
-import gdGraphicDesign from './assets/PNGVER/GD-AICADICT-1.png';
+import uxuiAicaDict from './assets/PNGVER/UXUI-AICADICT-1.png';
+import uxuiBrwc from './assets/PNGVER/UXUI-BRWCLinkedin.png';
+import uxuiUicw from './assets/PNGVER/UXUI-UICWLinkedin.png';
+import uxuiUxf from './assets/PNGVER/UXUI-UXFLinkedin.png';
+import uxuiUxr from './assets/PNGVER/UXUI-UXRLinkedin.png';
+import sweLngt from './assets/PNGVER/SWE-LNGTLinkedin.png';
 import iotEmbeddedSystems from './assets/PNGVER/IOT-ESCEDUCBA-1.png';
 import llmPredictiveModeling from './assets/PNGVER/LLM-IMCoursera-1.png';
 import netCyberPhysical from './assets/PNGVER/NET-CPSCoursera-1.png';
@@ -61,11 +66,18 @@ import acnParticipation from './assets/PNGVER/COP-ACN.png';
 // (external credential link shown as a secondary action inside the modal).
 // ============================================================================
 
+// Official DICT (Department of Information and Communications Technology,
+// Republic of the Philippines) seal — used as the badge icon for every
+// DICT-issued certificate so they're correctly attributed instead of
+// borrowing an unrelated platform icon.
+const DICT_LOGO = 'https://commons.wikimedia.org/wiki/Special:FilePath/DICT-Logo-icon_only.png';
+const LINKEDIN_LOGO = 'https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg';
+
 const certCategories = [
   {
     id: 'ai',
     label: 'Artificial Intelligence',
-    icon: <Cpu size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Cpu size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Introduction to Predictive Modeling',
@@ -107,7 +119,7 @@ const certCategories = [
         title: 'Introduction to Artificial Intelligence and Prompt Engineering Frameworks',
         issuer: 'DICT Region 2 · ILCDB',
         date: 'Jun 12, 2026',
-        logo: 'https://cdn.simpleicons.org/openai/412991',
+        logo: DICT_LOGO,
         img: aiPromptEngineering,
         description: 'Government-led training on core AI concepts and prompt engineering frameworks, covering how to structure prompts effectively for reliable, high-quality AI outputs.',
         verifyUrl: '#'
@@ -134,7 +146,7 @@ const certCategories = [
         title: 'Artificial Intelligence For Sustainable Development',
         issuer: 'DICT Region 2 - Nueva Vizcaya',
         date: 'Jun 23, 2026',
-        logo: 'https://cdn.simpleicons.org/googlescholar/4285F4',
+        logo: DICT_LOGO,
         img: aiSustainableDevWebinar,
         description: 'Webinar attendance certificate covering how artificial intelligence can be applied to advance sustainable development goals and community-level initiatives.',
         verifyUrl: '#'
@@ -144,7 +156,7 @@ const certCategories = [
   {
     id: 'data',
     label: 'Data Analytics',
-    icon: <Database size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Database size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Data Science Ethics',
@@ -158,17 +170,53 @@ const certCategories = [
     ]
   },
   {
-    id: 'design',
-    label: 'Graphic Design',
-    icon: <Palette size={16} className="text-[#00b4ff] shrink-0" />,
+    id: 'uxui',
+    label: 'UX/UI and Design',
+    icon: <Palette size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Basic Graphic Design Using AI-Powered Canva',
         issuer: 'DICT-ITU DTC Initiative',
         date: 'Jun 12, 2026',
-        logo: 'https://cdn.simpleicons.org/canva/00C4CC',
-        img: gdGraphicDesign,
+        logo: DICT_LOGO,
+        img: uxuiAicaDict,
         description: 'Hands-on training in fundamental graphic design principles using Canva\u2019s AI-powered tools, covering layout, composition, and rapid design workflows.',
+        verifyUrl: '#'
+      },
+      {
+        title: 'Building Responsive Websites with Canva',
+        issuer: 'LinkedIn Learning',
+        date: 'Jul 12, 2026',
+        logo: LINKEDIN_LOGO,
+        img: uxuiBrwc,
+        description: 'Covers building responsive, multi-device layouts directly in Canva, including grids, breakpoints, and adapting designs across desktop and mobile screens.',
+        verifyUrl: '#'
+      },
+      {
+        title: 'Canva for Web and Digital Design Projects',
+        issuer: 'LinkedIn Learning',
+        date: 'Jul 12, 2026',
+        logo: LINKEDIN_LOGO,
+        img: uxuiUicw,
+        description: 'Explores using Canva for end-to-end web and digital design projects, from wireframes and page layouts to exporting publish-ready assets.',
+        verifyUrl: '#'
+      },
+      {
+        title: 'UX Foundations: Usability Testing',
+        issuer: 'LinkedIn Learning',
+        date: 'Jul 12, 2026',
+        logo: LINKEDIN_LOGO,
+        img: uxuiUxf,
+        description: 'Introduces usability testing fundamentals, including planning test sessions, recruiting participants, and turning user feedback into actionable design improvements.',
+        verifyUrl: '#'
+      },
+      {
+        title: 'UX Foundations: Research',
+        issuer: 'LinkedIn Learning',
+        date: 'Jul 12, 2026',
+        logo: LINKEDIN_LOGO,
+        img: uxuiUxr,
+        description: 'Covers foundational UX research methods, including user interviews, surveys, and synthesizing qualitative data to inform design decisions.',
         verifyUrl: '#'
       }
     ]
@@ -176,7 +224,7 @@ const certCategories = [
   {
     id: 'iot',
     label: 'Internet of Things',
-    icon: <Wifi size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Wifi size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Embedded Systems using C',
@@ -192,7 +240,7 @@ const certCategories = [
   {
     id: 'networking',
     label: 'Networking & Systems',
-    icon: <Network size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Network size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Cyber-Physical Systems: Modeling and Simulation',
@@ -208,7 +256,7 @@ const certCategories = [
   {
     id: 'programming',
     label: 'Programming',
-    icon: <Code2 size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Code2 size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'CSS Essentials',
@@ -260,7 +308,7 @@ const certCategories = [
   {
     id: 'softwareEngineering',
     label: 'Software Engineering',
-    icon: <ShieldCheck size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <ShieldCheck size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Blockchain Basics',
@@ -333,13 +381,22 @@ const certCategories = [
         img: sweSustainableDevGoals,
         description: 'Explores the UN Sustainable Development Goals through a transdisciplinary lens, covering how technology and engineering practice intersect with global sustainability challenges.',
         verifyUrl: 'https://coursera.org/verify/L2KNLQ2U6PI3'
+      },
+      {
+        title: 'Learning GitHub',
+        issuer: 'LinkedIn Learning',
+        date: 'Jul 24, 2026',
+        logo: 'https://cdn.simpleicons.org/github/181717',
+        img: sweLngt,
+        description: 'Covers Git and GitHub fundamentals, including repositories, branching, commits, pull requests, and collaborative version control workflows.',
+        verifyUrl: '#'
       }
     ]
   },
   {
     id: 'professional',
     label: 'Professional Training',
-    icon: <Award size={16} className="text-[#00b4ff] shrink-0" />,
+    icon: <Award size={16} className="text-[#00FFB3] shrink-0" />,
     certs: [
       {
         title: 'Accenture Technology Academy \u2013 Certificate of Completion',
@@ -374,10 +431,10 @@ const allCerts = certCategories.flatMap((category) =>
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6">
-    <h3 className="text-[9px] sm:text-[11px] md:text-[12px] font-black text-[#00b4ff] uppercase tracking-[0.3em] sm:tracking-[0.6em] md:tracking-[1em] whitespace-nowrap">
+    <h3 className="text-[9px] sm:text-[11px] md:text-[12px] font-black text-[#00FFB3] uppercase tracking-[0.3em] sm:tracking-[0.6em] md:tracking-[1em] whitespace-nowrap">
       {label}
     </h3>
-    <div className="h-[1px] flex-1 bg-[#00b4ff]/20"></div>
+    <div className="h-[1px] flex-1 bg-[#00FFB3]/20"></div>
     {icon}
   </div>
 );
@@ -387,11 +444,11 @@ const CertCard = ({ cert, darkMode, onSelect }) => (
     onClick={() => onSelect(cert)}
     className={`group relative flex flex-col gap-5 sm:gap-6 p-6 sm:p-8 rounded-md sm:rounded-md border backdrop-blur-md cursor-pointer transition-all duration-500 hover:-translate-y-1 shadow-lg ${
       darkMode
-        ? 'bg-white/5 border-[#00b4ff]/10 hover:border-[#00b4ff]/30'
-        : 'bg-white/70 border-[#99f5ff] hover:border-[#00e5ff]'
+        ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30'
+        : 'bg-white/70 border-[#FFEA00] hover:border-[#00FFB3]'
     }`}
   >
-    <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center gap-1 bg-[#0088ff] text-white text-[8px] sm:text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
+    <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center gap-1 bg-[#FF007A] text-white text-[8px] sm:text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
       <BadgeCheck size={11} /> Verified
     </div>
 
@@ -400,19 +457,19 @@ const CertCard = ({ cert, darkMode, onSelect }) => (
     </div>
 
     <div className="space-y-1.5 sm:space-y-2 pr-4">
-      <h4 className="text-base sm:text-lg font-black leading-tight text-slate-900 dark:text-white">
+      <h4 className="text-base sm:text-lg font-black leading-tight text-[#1B1B2A] dark:text-white">
         {cert.title}
       </h4>
-      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00e5ff]/70">
+      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00FFB3]/70">
         {cert.issuer}
       </p>
     </div>
 
-    <div className="flex items-center justify-between pt-4 border-t border-[#00b4ff]/10">
+    <div className="flex items-center justify-between pt-4 border-t border-[#00FFB3]/10">
       <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-40">
         {cert.date}
       </span>
-      <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#00b4ff] opacity-60 group-hover:opacity-100 transition-opacity">
+      <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#00FFB3] opacity-60 group-hover:opacity-100 transition-opacity">
         View
         <ChevronRight size={12} />
       </span>
@@ -440,18 +497,18 @@ const CertModal = ({ cert, darkMode, onClose }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-md sm:rounded-md border shadow-2xl animate-scale-in ${
+        className={`relative w-full max-w-lg lg:max-w-5xl max-h-[90vh] overflow-y-auto lg:overflow-hidden rounded-md sm:rounded-md border shadow-2xl animate-scale-in lg:flex lg:items-stretch ${
           darkMode
-            ? 'bg-[#001a33]/90 border-[#00b4ff]/20 text-[#e0f4ff]'
-            : 'bg-white border-[#99f5ff] text-slate-900'
+            ? 'bg-[#1B1B2A]/90 border-[#00FFB3]/20 text-[#FFEA00]'
+            : 'bg-white border-[#FFEA00] text-[#1B1B2A]'
         }`}
       >
-        <div className="sticky top-0 z-10 flex justify-end p-3 sm:p-4">
+        <div className="sticky top-0 z-10 flex justify-end p-3 sm:p-4 lg:absolute lg:top-0 lg:right-0">
           <button
             onClick={onClose}
             aria-label="Close certificate details"
             className={`p-2 rounded-full shadow-lg backdrop-blur-md transition-colors ${
-              darkMode ? 'bg-black/40 hover:bg-black/60 text-white' : 'bg-white/80 hover:bg-white text-slate-900'
+              darkMode ? 'bg-black/40 hover:bg-black/60 text-white' : 'bg-white/80 hover:bg-white text-[#1B1B2A]'
             }`}
           >
             <X size={18} />
@@ -462,15 +519,17 @@ const CertModal = ({ cert, darkMode, onClose }) => {
           // Certificate screenshot + issuer logo shown together:
           // big screenshot fills the frame, small logo badge overlaps
           // its bottom-left corner so both are visible at once.
-          <div className={`relative flex items-center justify-center p-4 sm:p-6 max-h-[50vh] ${darkMode ? 'bg-black/20' : 'bg-[#e0f4ff]'}`}>
+          // On desktop this becomes the left-hand column, wider and taller
+          // than the mobile version so the certificate itself is the focus.
+          <div className={`relative flex items-center justify-center p-4 sm:p-6 lg:p-10 max-h-[50vh] lg:max-h-none lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-black/20' : 'bg-[#FFEA00]'}`}>
             <img
               src={cert.img}
               alt={cert.title}
-              className="w-full max-h-[46vh] object-contain rounded-md"
+              className="w-full max-h-[46vh] lg:max-h-[80vh] lg:h-full object-contain rounded-md"
             />
             <div
               className={`absolute bottom-3 left-3 sm:bottom-5 sm:left-5 w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-white flex items-center justify-center shadow-lg overflow-hidden p-2 border-2 ${
-                darkMode ? 'border-[#001a33]' : 'border-white'
+                darkMode ? 'border-[#1B1B2A]' : 'border-white'
               }`}
             >
               <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
@@ -478,15 +537,15 @@ const CertModal = ({ cert, darkMode, onClose }) => {
           </div>
         ) : (
           // No screenshot yet: fall back to showing just the logo, larger.
-          <div className={`flex items-center justify-center p-8 sm:p-10 ${darkMode ? 'bg-white/5' : 'bg-[#e0f4ff]'}`}>
+          <div className={`flex items-center justify-center p-8 sm:p-10 lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-white/5' : 'bg-[#FFEA00]'}`}>
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md bg-white flex items-center justify-center shadow-lg overflow-hidden p-5">
               <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
             </div>
           </div>
         )}
 
-        <div className="p-6 sm:p-8 space-y-5 sm:space-y-6">
-          <div className="flex items-center gap-1.5 bg-[#0088ff] text-white text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest w-fit">
+        <div className="p-6 sm:p-8 space-y-5 sm:space-y-6 lg:w-2/5 lg:overflow-y-auto lg:flex lg:flex-col lg:justify-center">
+          <div className="flex items-center gap-1.5 bg-[#FF007A] text-white text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest w-fit">
             <BadgeCheck size={11} /> Verified Credential
           </div>
 
@@ -494,10 +553,10 @@ const CertModal = ({ cert, darkMode, onClose }) => {
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] sm:text-[11px] font-black uppercase tracking-widest opacity-60">
             <span className="flex items-center gap-1.5">
-              <Building2 size={13} className="text-[#00b4ff]" /> {cert.issuer}
+              <Building2 size={13} className="text-[#00FFB3]" /> {cert.issuer}
             </span>
             <span className="flex items-center gap-1.5">
-              <Calendar size={13} className="text-[#00b4ff]" /> {cert.date}
+              <Calendar size={13} className="text-[#00FFB3]" /> {cert.date}
             </span>
           </div>
 
@@ -513,7 +572,7 @@ const CertModal = ({ cert, darkMode, onClose }) => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-2 pt-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00b4ff] hover:text-[#00e5ff] transition-colors"
+              className="inline-flex items-center gap-2 pt-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00FFB3] hover:text-[#00FFB3] transition-colors"
             >
               View Original Credential <ExternalLink size={13} />
             </a>
@@ -570,7 +629,7 @@ export function CertificationsPreview({ darkMode = true, count = 4, onViewAll })
 
       <SectionEyebrow
         label="Certifications"
-        icon={<ShieldCheck size={16} className="text-[#00b4ff] shrink-0" />}
+        icon={<ShieldCheck size={16} className="text-[#00FFB3] shrink-0" />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
@@ -584,8 +643,8 @@ export function CertificationsPreview({ darkMode = true, count = 4, onViewAll })
           onClick={onViewAll}
           className={`w-full flex items-center justify-center gap-3 py-5 sm:py-6 rounded-md sm:rounded-md border font-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 ${
             darkMode
-              ? 'bg-white/5 border-[#00b4ff]/10 hover:border-[#00b4ff]/30 text-[#66f0ff]'
-              : 'bg-white/70 border-[#99f5ff] hover:border-[#00e5ff] text-[#b3e0ff]'
+              ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 text-[#00FFB3]'
+              : 'bg-white/70 border-[#FFEA00] hover:border-[#00FFB3] text-[#A700FF]'
           }`}
         >
           View All Certificates <ArrowRight size={16} />
