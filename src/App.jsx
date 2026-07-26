@@ -27,6 +27,7 @@ import Carousel from './Carousel';
 import About from './About';
 import Contact from './Contact';
 import Chatbot from './Chatbot';
+import TypingTest, { TypingTestTrigger } from './TypingTest';
 import Certifications, { CertificationsPreview } from './Certifications';
 import Project from './Project';
 import Stacks from './Stacks';
@@ -220,7 +221,7 @@ const SectionEyebrow = ({ label, icon }) => (
 // ANIMATED NAVIGATION BAR
 // ============================================================================
 
-const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, setIsSidebarOpen, isDesktop }) => {
+const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, typingTestRef, setIsSidebarOpen, isDesktop }) => {
   const navRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
   const [loaded, setLoaded] = useState(false);
@@ -269,25 +270,30 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
 
   return (
     <nav
-      className={`fixed top-0 w-full z-[100] p-4 sm:p-6 flex justify-between items-center px-4 sm:px-6 md:px-10 backdrop-blur-xl border-b transition-all duration-700 ${
+      className={`fixed top-0 w-full z-[100] p-4 sm:p-6 grid grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 md:px-10 backdrop-blur-xl border-b transition-all duration-700 ${
         loaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
       } ${darkMode ? 'bg-[#1B1B2A]/30 border-[#00FFB3]/10' : 'bg-white/60 border-[#FF007A]/20'}`}
     >
-      {/* Logo */}
-      <button
-        onClick={() => goToSection('home')}
-        aria-label="Go to home"
-        className={`cursor-target backdrop-blur-xl border px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-black tracking-tighter text-lg sm:text-xl hover:scale-105 active:scale-95 transition-all duration-300 shrink-0 ${
-          darkMode ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 hover:shadow-[0_0_30px_rgba(0,255,179,0.25)]' : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_30px_rgba(255,234,0,0.35)]'
-        }`}
-      >
-        Brian<span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}> Francisco</span>
-      </button>
+      {/* Left: Logo + Typing Speed Test trigger */}
+      <div className="flex items-center gap-4 sm:gap-6 justify-self-start">
+        <button
+          onClick={() => goToSection('home')}
+          aria-label="Go to home"
+          className={`cursor-target backdrop-blur-xl border px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-black tracking-tighter text-lg sm:text-xl hover:scale-105 active:scale-95 transition-all duration-300 shrink-0 ${
+            darkMode ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 hover:shadow-[0_0_30px_rgba(0,255,179,0.25)]' : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_30px_rgba(255,234,0,0.35)]'
+          }`}
+        >
+          <span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}>Brian Francisco</span>
+        </button>
 
-      {/* Desktop Nav with Sliding Underline */}
+        {/* Typing Speed Test — bare icon + label, no pill/container, desktop only (not shown on tablets, iPads, or mobile) */}
+        <TypingTestTrigger darkMode={darkMode} onClick={() => typingTestRef.current?.open()} />
+      </div>
+
+      {/* Center: Desktop Nav with Sliding Underline — true-centered via the grid, unaffected by the left/right column widths */}
       <div
         ref={navRef}
-        className={`hidden lg:flex items-center gap-1 backdrop-blur-xl border rounded-full px-2 py-2 relative ${
+        className={`${isDesktop ? 'flex' : 'hidden'} items-center gap-1 backdrop-blur-xl border rounded-full px-2 py-2 relative justify-self-center ${
           darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'
         }`}
       >
@@ -357,13 +363,15 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
         </button>
       </div>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      {/* Right Controls — pinned directly to the true right edge of the nav bar with absolute
+          positioning (rather than relying on the grid's 1fr/1fr split) so it can never drift
+          toward the middle regardless of how wide the left/center content ends up being */}
+      <div className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 md:right-10 flex items-center gap-3 sm:gap-4">
         <button
           onClick={() => setIsSidebarOpen(true)}
           aria-label="Open navigation menu"
           title="Menu"
-          className={`cursor-target lg:hidden p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 ${
+          className={`cursor-target ${isDesktop ? 'hidden' : 'block'} p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 ${
             darkMode
               ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/50'
               : 'bg-white/70 border-[#FFEA00] hover:border-[#FF007A]/60 hover:bg-[#FF007A]/10'
@@ -372,7 +380,9 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           <Menu size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
         </button>
 
-        {/* Ask Me + theme toggle live inside the mobile sidebar drawer only; desktop keeps this capsule switch here */}
+        {/* Theme toggle lives inline here only when the full desktop pill nav is showing;
+            in mobile/compact toggle mode, only the hamburger shows here — the theme
+            switch is still reachable inside the slide-in drawer */}
         {isDesktop && <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />}
       </div>
     </nav>
@@ -410,13 +420,24 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
   </button>
 );
 
+// The full pill-style desktop nav (logo + typing test trigger + centered nav pill +
+// "Ask Me" + theme switch, all in one row) needs real estate to breathe. On a common
+// 1366px-wide laptop screen, browser zoom between ~80%-100% still reports an effective
+// CSS width comfortably above the old 1024px breakpoint, so the nav kept trying to
+// render its full desktop layout in a row that's actually too tight for it, causing
+// overlap. Raising the breakpoint (and driving it purely from JS instead of Tailwind's
+// fixed `lg:` class) means those widths now cleanly fall back to the same hamburger
+// toggle + slide-in drawer used on mobile. Bump this number up/down if you test on a
+// different screen and want to adjust exactly where the switch happens.
+const DESKTOP_NAV_MIN_WIDTH = 1750;
+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
+    typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_NAV_MIN_WIDTH : false
   );
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
+    const mq = window.matchMedia(`(min-width: ${DESKTOP_NAV_MIN_WIDTH}px)`);
     const handleChange = (e) => setIsDesktop(e.matches);
     setIsDesktop(mq.matches);
     if (mq.addEventListener) {
@@ -430,271 +451,6 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-// ============================================================================
-// DESKTOP-ONLY SIDE DECORATION — Cherry Blossom Cyber Trees (light) /
-// Cyber City Lights (dark). Fixed to one side only, purely decorative,
-// and hidden below the `lg` breakpoint so it naturally disappears when
-// the desktop browser is zoomed in (the CSS px viewport shrinks below
-// the breakpoint and the media query stops matching).
-// ============================================================================
-
-const CherryBlossomCyberTrees = () => {
-  const trunks = [
-    { path: 'M40 900 C 44 700, 30 560, 55 430 C 70 340, 50 240, 75 140', w: 7, c: '#FF007A', op: 0.6 },
-    { path: 'M170 900 C 175 800, 160 720, 180 640 C 195 560, 178 480, 200 400', w: 5.5, c: '#00FFB3', op: 0.45 },
-    { path: 'M-10 900 C -6 780, -18 660, 5 560', w: 4.5, c: '#A700FF', op: 0.4 },
-  ];
-
-  const branches = [
-    'M55 430 C 90 400, 120 390, 150 360',
-    'M60 560 C 20 540, -10 520, -30 500',
-    'M70 240 C 110 220, 140 200, 175 170',
-    'M63 340 C 40 320, 15 310, -15 300',
-    'M180 640 C 200 610, 215 590, 230 560',
-    'M190 480 C 165 460, 145 450, 120 430',
-    'M5 560 C 30 540, 50 535, 75 515',
-    'M200 400 C 180 380, 165 370, 145 350',
-  ];
-
-  const blossomClusters = [
-    [75, 140, 24], [110, 108, 15], [55, 88, 13], [140, 163, 11], [175, 168, 22],
-    [150, 360, 18], [120, 388, 13], [90, 398, 11], [15, 300, 14], [-15, 300, 16],
-    [-30, 500, 20], [10, 520, 13], [-5, 468, 11], [75, 515, 12], [50, 535, 15],
-    [230, 560, 18], [215, 588, 12], [200, 610, 11], [120, 430, 14], [145, 350, 12],
-    [200, 400, 15], [180, 380, 10], [5, 560, 13],
-  ];
-
-  const petals = [
-    [30, 260, 4, 20], [95, 340, 3, -15], [10, 480, 4.5, 40], [140, 560, 3.5, -30],
-    [190, 420, 4, 10], [60, 700, 3, 25], [150, 780, 4, -20], [200, 200, 3.5, 15],
-    [45, 620, 3, -10], [175, 260, 4, 35], [-25, 380, 3.5, -25], [110, 650, 3, 5],
-    [20, 820, 4, -35], [165, 700, 3.5, 20], [80, 200, 3, -5],
-  ];
-
-  const lanterns = [ [175, 170], [-30, 500], [230, 560], [15, 300] ];
-
-  return (
-    <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMin slice" className="w-full h-full" aria-hidden="true">
-      <defs>
-        <radialGradient id="blossomGlowPink" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#FF007A" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#FF007A" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="blossomGlowCyan" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#00FFB3" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#00FFB3" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="blossomGlowPurple" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#A700FF" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#A700FF" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#FFEA00" stopOpacity="0.9" />
-          <stop offset="60%" stopColor="#FFEA00" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#FFEA00" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* ambient glow blobs */}
-      <circle cx="60" cy="120" r="150" fill="url(#blossomGlowPink)" />
-      <circle cx="170" cy="600" r="170" fill="url(#blossomGlowCyan)" />
-      <circle cx="0" cy="560" r="130" fill="url(#blossomGlowPurple)" />
-
-      {/* ground mist glow */}
-      <ellipse cx="80" cy="895" rx="160" ry="30" fill="url(#blossomGlowPink)" opacity="0.5" />
-
-      {/* trunks — layered double-stroke bark effect */}
-      {trunks.map((t, i) => (
-        <g key={`trunk-${i}`}>
-          <path d={t.path} stroke={t.c} strokeOpacity={t.op * 0.4} strokeWidth={t.w + 4} fill="none" strokeLinecap="round" />
-          <path d={t.path} stroke={t.c} strokeOpacity={t.op} strokeWidth={t.w} fill="none" strokeLinecap="round" />
-        </g>
-      ))}
-
-      {/* branches */}
-      {branches.map((d, i) => (
-        <path key={`br-${i}`} d={d} stroke="#FF007A" strokeOpacity={0.32 + (i % 3) * 0.06} strokeWidth={3.5 - (i % 3) * 0.5} fill="none" strokeLinecap="round" />
-      ))}
-
-      {/* blossom clusters — layered sakura petals with neon centers */}
-      {blossomClusters.map(([cx, cy, r], i) => (
-        <g key={`bl-${i}`}>
-          <circle cx={cx} cy={cy} r={r} fill="#FFFFFF" fillOpacity="0.16" />
-          <circle cx={cx - r * 0.35} cy={cy - r * 0.2} r={r * 0.55} fill="#FFD9EC" fillOpacity="0.22" />
-          <circle cx={cx + r * 0.3} cy={cy + r * 0.25} r={r * 0.4} fill="#FFFFFF" fillOpacity="0.18" />
-          <circle
-            cx={cx}
-            cy={cy}
-            r={r * 0.42}
-            fill={i % 4 === 0 ? '#A700FF' : '#FF007A'}
-            fillOpacity="0.65"
-            style={{ filter: `drop-shadow(0 0 7px ${i % 4 === 0 ? 'rgba(167,0,255,0.65)' : 'rgba(255,0,122,0.65)'})` }}
-          />
-        </g>
-      ))}
-
-      {/* paper lantern nodes hanging on the tree — extra detail */}
-      {lanterns.map(([cx, cy], i) => (
-        <g key={`lt-${i}`}>
-          <circle cx={cx} cy={cy + 26} r="22" fill="url(#lanternGlow)" />
-          <rect x={cx - 6} y={cy + 16} width="12" height="18" rx="5" fill="#FFEA00" fillOpacity="0.55" stroke="#FFEA00" strokeOpacity="0.7" strokeWidth="1" />
-          <line x1={cx} y1={cy} x2={cx} y2={cy + 16} stroke="#FFEA00" strokeOpacity="0.4" strokeWidth="1" />
-        </g>
-      ))}
-
-      {/* falling petals, gently rotated */}
-      {petals.map(([x, y, r, rot], i) => (
-        <ellipse key={`pt-${i}`} cx={x} cy={y} rx={r} ry={r * 0.55} fill="#FF007A" fillOpacity="0.5" transform={`rotate(${rot} ${x} ${y})`} />
-      ))}
-
-      {/* tiny sparkle accents */}
-      {[[100, 250], [30, 450], [190, 320], [60, 620], [150, 700], [10, 700], [180, 150]].map(([x, y], i) => (
-        <g key={`sp-${i}`} opacity="0.55">
-          <line x1={x - 5} y1={y} x2={x + 5} y2={y} stroke="#FFFFFF" strokeWidth="1" />
-          <line x1={x} y1={y - 5} x2={x} y2={y + 5} stroke="#FFFFFF" strokeWidth="1" />
-        </g>
-      ))}
-    </svg>
-  );
-};
-
-const CyberCityLights = () => {
-  const buildings = [
-    { x: -20, y: 420, w: 60, h: 480, style: 'flat' },
-    { x: 30, y: 300, w: 50, h: 600, style: 'antenna' },
-    { x: 75, y: 500, w: 45, h: 400, style: 'stepped' },
-    { x: 110, y: 220, w: 55, h: 680, style: 'tank' },
-    { x: 160, y: 360, w: 60, h: 540, style: 'antenna' },
-    { x: 5, y: 620, w: 40, h: 280, style: 'flat' },
-    { x: 205, y: 470, w: 40, h: 430, style: 'stepped' },
-  ];
-
-  const windowRects = [];
-  buildings.forEach((b, bi) => {
-    const cols = 3;
-    const rowH = 26;
-    const rows = Math.floor((b.h - 30) / rowH);
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const lit = (bi * 13 + r * 7 + c * 5) % 5 !== 0;
-        if (!lit) continue;
-        const colors = ['#00FFB3', '#FFEA00', '#A700FF', '#FF007A'];
-        const color = colors[(bi + r + c) % colors.length];
-        windowRects.push({
-          x: b.x + 8 + c * ((b.w - 16) / (cols - 1)),
-          y: b.y + 18 + r * rowH,
-          color,
-          op: 0.35 + ((bi + r + c) % 3) * 0.12,
-        });
-      }
-    }
-  });
-
-  return (
-    <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMin slice" className="w-full h-full" aria-hidden="true">
-      <defs>
-        <linearGradient id="citySky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#A700FF" stopOpacity="0.10" />
-          <stop offset="45%" stopColor="#00FFB3" stopOpacity="0.04" />
-          <stop offset="100%" stopColor="#00FFB3" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="cityMoonGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#00FFB3" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#00FFB3" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="buildingFade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00FFB3" stopOpacity="0.14" />
-          <stop offset="100%" stopColor="#00FFB3" stopOpacity="0.04" />
-        </linearGradient>
-        <linearGradient id="groundFog" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1B1B2A" stopOpacity="0" />
-          <stop offset="100%" stopColor="#00FFB3" stopOpacity="0.12" />
-        </linearGradient>
-      </defs>
-
-      {/* sky wash */}
-      <rect x="0" y="0" width="220" height="900" fill="url(#citySky)" />
-
-      {/* stars */}
-      {[
-        [20, 40], [60, 20], [100, 60], [140, 30], [180, 50], [15, 90], [190, 100],
-        [50, 130], [120, 100], [200, 20], [10, 150], [170, 140],
-      ].map(([x, y], i) => (
-        <circle key={`star-${i}`} cx={x} cy={y} r={i % 3 === 0 ? 1.8 : 1} fill="#FFFFFF" fillOpacity={0.4 + (i % 3) * 0.15} />
-      ))}
-
-      {/* moon with glow ring */}
-      <circle cx="150" cy="90" r="130" fill="url(#cityMoonGlow)" />
-      <circle cx="150" cy="90" r="26" fill="#00FFB3" fillOpacity="0.18" stroke="#00FFB3" strokeOpacity="0.4" strokeWidth="1.5" />
-      <circle cx="142" cy="82" r="6" fill="#00FFB3" fillOpacity="0.15" />
-
-      {/* skyline silhouettes with varied rooftop details */}
-      {buildings.map((b, i) => (
-        <g key={`b-${i}`}>
-          <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="url(#buildingFade)" stroke="#00FFB3" strokeOpacity="0.22" strokeWidth="1" />
-          {b.style === 'antenna' && (
-            <>
-              <line x1={b.x + b.w / 2} y1={b.y} x2={b.x + b.w / 2} y2={b.y - 40} stroke="#00FFB3" strokeOpacity="0.4" strokeWidth="1.5" />
-              <circle cx={b.x + b.w / 2} cy={b.y - 42} r="3" fill="#FF007A" fillOpacity="0.8" style={{ filter: 'drop-shadow(0 0 5px rgba(255,0,122,0.8))' }} />
-            </>
-          )}
-          {b.style === 'tank' && (
-            <rect x={b.x + b.w / 2 - 8} y={b.y - 18} width="16" height="18" fill="#1B1B2A" fillOpacity="0.4" stroke="#A700FF" strokeOpacity="0.35" strokeWidth="1" />
-          )}
-          {b.style === 'stepped' && (
-            <rect x={b.x + b.w * 0.2} y={b.y - 24} width={b.w * 0.6} height="24" fill="url(#buildingFade)" stroke="#00FFB3" strokeOpacity="0.22" strokeWidth="1" />
-          )}
-        </g>
-      ))}
-
-      {/* window lights */}
-      {windowRects.map((w, i) => (
-        <rect key={`w-${i}`} x={w.x} y={w.y} width="4.5" height="7" fill={w.color} fillOpacity={w.op} />
-      ))}
-
-      {/* vertical neon sign strips */}
-      <path d="M137 250 L137 900" stroke="#A700FF" strokeOpacity="0.28" strokeWidth="2.5" />
-      <path d="M155 250 L155 900" stroke="#00FFB3" strokeOpacity="0.22" strokeWidth="1.5" />
-      <path d="M46 350 L46 900" stroke="#FF007A" strokeOpacity="0.2" strokeWidth="1.5" />
-
-      {/* small holographic ad glyphs on a tower face */}
-      <g opacity="0.5">
-        <rect x="115" y="260" width="34" height="14" rx="2" fill="none" stroke="#FFEA00" strokeOpacity="0.5" strokeWidth="1" />
-        <line x1="120" y1="267" x2="144" y2="267" stroke="#FFEA00" strokeOpacity="0.5" strokeWidth="1" />
-        <rect x="115" y="282" width="20" height="8" rx="2" fill="#FFEA00" fillOpacity="0.15" />
-      </g>
-
-      {/* drifting drone lights with trail */}
-      {[[190, 200], [30, 260], [210, 420]].map(([x, y], i) => (
-        <g key={`dr-${i}`}>
-          <line x1={x} y1={y} x2={x - 18} y2={y + 4} stroke="#00FFB3" strokeOpacity="0.3" strokeWidth="1.5" />
-          <circle cx={x} cy={y} r="2.5" fill="#00FFB3" fillOpacity="0.9" style={{ filter: 'drop-shadow(0 0 5px rgba(0,255,179,0.8))' }} />
-        </g>
-      ))}
-
-      {/* ground fog glow at the base */}
-      <rect x="0" y="760" width="220" height="140" fill="url(#groundFog)" />
-    </svg>
-  );
-};
-
-const SIDE_FADE_MASK =
-  'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%)';
-
-const SideDecoration = ({ darkMode, side = 'right' }) => (
-  <div
-    className={`hidden lg:block fixed top-0 ${side === 'left' ? 'left-0' : 'right-0'} h-screen w-56 xl:w-72 2xl:w-80 pointer-events-none z-0 overflow-hidden opacity-50`}
-    style={{
-      transform: side === 'left' ? 'scaleX(-1)' : undefined,
-      WebkitMaskImage: SIDE_FADE_MASK,
-      maskImage: SIDE_FADE_MASK,
-    }}
-    aria-hidden="true"
-  >
-    {darkMode ? <CyberCityLights /> : <CherryBlossomCyberTrees />}
-  </div>
-);
-
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
@@ -703,6 +459,7 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const chatbotRef = useRef(null);
+  const typingTestRef = useRef(null);
 
   const [activeSection, setActiveSection] = useState(() => {
     return localStorage.getItem('activeSection') || 'home';
@@ -855,16 +612,6 @@ function App() {
         <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#FF007A]/20 blur-[80px] sm:blur-[120px] pointer-events-none animate-pulse" />
         <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#A700FF]/20 blur-[80px] sm:blur-[120px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
-        {/* Desktop-only one-sided decoration: Cherry Blossom Cyber Trees (light) /
-            Cyber City Lights (dark). isDesktop tracks a `min-width:1024px` media
-            query, so this also vanishes automatically when zooming in on desktop. */}
-        {isDesktop && (
-          <>
-            <SideDecoration darkMode={darkMode} side="left" />
-            <SideDecoration darkMode={darkMode} side="right" />
-          </>
-        )}
-
         {selectedImage && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setSelectedImage(null)}>
             <button className="cursor-target absolute top-6 right-6 sm:top-10 sm:right-10 text-white hover:text-[#00FFB3] transition-colors z-[1001]" aria-label="Close preview">
@@ -881,8 +628,8 @@ function App() {
           </div>
         )}
 
-        {/* Mobile / tablet slide-in drawer — desktop uses the inline top nav instead */}
-        <div className={`fixed inset-0 z-[1000] transition-all duration-500 lg:hidden ${isSidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+        {/* Mobile / tablet / compact-desktop slide-in drawer — full desktop nav only replaces this once isDesktop is true */}
+        <div className={`fixed inset-0 z-[1000] transition-all duration-500 ${isDesktop ? 'hidden' : ''} ${isSidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
           <div className={`absolute left-4 sm:left-6 top-20 sm:top-24 bottom-4 sm:bottom-6 w-[78vw] max-w-[280px] sm:w-72 backdrop-blur-2xl border rounded-md sm:rounded-md p-7 sm:p-10 flex flex-col transition-all duration-500 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-[130%]'} ${darkMode ? 'bg-[#1B1B2A]/40 border-[#00FFB3]/20 text-[#FFEA00]' : 'bg-white/90 border-[#FFEA00] text-[#1B1B2A]'}`}>
             <div className="flex justify-between items-center mb-10 sm:mb-12">
@@ -942,6 +689,7 @@ function App() {
           goToSection={goToSection}
           toggleTheme={toggleTheme}
           chatbotRef={chatbotRef}
+          typingTestRef={typingTestRef}
           setIsSidebarOpen={setIsSidebarOpen}
           isDesktop={isDesktop}
         />
@@ -1188,6 +936,7 @@ function App() {
           </RevealOnScroll>
 
           <Chatbot ref={chatbotRef} darkMode={darkMode} />
+          <TypingTest ref={typingTestRef} darkMode={darkMode} />
         </div>
       </div>
       </div>

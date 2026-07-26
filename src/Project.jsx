@@ -231,7 +231,7 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
     ];
     const colors = isDark ? darkColors : lightColors;
 
-    const BUBBLE_COUNT = isMobile ? 90 : 320;
+    const BUBBLE_COUNT = isMobile ? 40 : 320;
 
     if (particlesRef.current.length === 0) {
       for (let i = 0; i < BUBBLE_COUNT; i++) {
@@ -313,17 +313,19 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
           ctx.globalAlpha = p.opacity;
           ctx.fill();
 
-          ctx.beginPath();
-          ctx.arc(
-            p.x - p.size * 0.28,
-            p.y - p.size * 0.28,
-            p.size * 0.28,
-            0,
-            Math.PI * 2
-          );
-          ctx.fillStyle = 'rgba(255,255,255,0.85)';
-          ctx.globalAlpha = p.opacity;
-          ctx.fill();
+          if (!isMobile) {
+            ctx.beginPath();
+            ctx.arc(
+              p.x - p.size * 0.28,
+              p.y - p.size * 0.28,
+              p.size * 0.28,
+              0,
+              Math.PI * 2
+            );
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.globalAlpha = p.opacity;
+            ctx.fill();
+          }
 
           if (!isMobile) {
             ctx.beginPath();
@@ -433,7 +435,7 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
       <svg className="absolute w-0 h-0">
         <defs>
           <filter id="gooey-vacuum">
-            <feGaussianBlur in="SourceGraphic" stdDeviation={isMobile ? 10 : 16} result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation={isMobile ? 6 : 16} result="blur" />
             <feColorMatrix
               in="blur"
               mode="matrix"
@@ -554,14 +556,15 @@ const VisitLink = ({ site, darkMode, onVisit }) => {
       title={hasLiveLink ? `Launch ${site.name}` : 'Live link coming soon'}
       className={`
         inline-flex items-center gap-2
-        px-5 py-2.5 rounded-md
+        px-5 py-2.5 sm:px-6 sm:py-3 rounded-md
         text-[11px] sm:text-[12px] font-black uppercase tracking-[0.18em]
+        bg-white/5 border
         transition-all duration-200 ease-out
         outline-none focus:outline-none focus:ring-0
         ${hasLiveLink
           ? darkMode
-            ? 'bg-[#00f0ff]/10 text-[#00f0ff] border border-[#00f0ff]/25 hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/18 hover:text-white'
-            : 'bg-[#00f0ff]/10 text-[#00f0ff] border border-[#00f0ff]/30 hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/18 hover:text-white'
+            ? 'border-[#00f0ff]/20 text-[#00f0ff] hover:bg-[#00f0ff] hover:text-[#1B1B2A] hover:border-[#00f0ff]'
+            : 'border-[#ff3366]/30 text-[#ff3366] hover:bg-[#ff3366] hover:text-white hover:border-[#ff3366]'
           : 'opacity-30 cursor-not-allowed border border-white/10 text-white/30'
         }
         ${isPressed ? 'scale-[0.96]' : isHovered ? 'scale-[1.02]' : 'scale-100'}

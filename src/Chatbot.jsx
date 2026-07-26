@@ -4,12 +4,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const THINKING_LABELS = ['thinking...', 'analyzing...'];
 
+// Pool of "prepared" starter questions — a random subset of these is shown
+// each time the chat is opened, so returning visitors see a fresh set.
+const QUESTION_BANK = [
+  'Who is Brian?',
+  'Why should we hire you?',
+  'What work locations do you prefer?',
+  'What is your expected salary?',
+  'What can you build?',
+  'How do you handle complex technical problems?',
+  'Where do you see yourself in 2-3 years?',
+  'What companies are you interested in working for?',
+  'What work modality do you prefer?',
+  'Tell me about a time you had a disagreement.',
+  'What days do you work?',
+  'What is your tech stack?',
+  'What projects have you built?',
+  'What tools do you use for design?',
+  'What dev tools do you use?',
+  'Which AI tools do you use?',
+  'What are your hobbies?',
+  'What is your dream job?',
+];
+
+// Fisher-Yates shuffle so the same handful of questions doesn't always
+// surface first.
+const shuffleArray = (arr) => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
 const Chatbot = forwardRef(({ darkMode }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isWaiting, setIsWaiting] = useState(false); // between send and first streamed character
   const [thinkingLabel, setThinkingLabel] = useState(THINKING_LABELS[0]);
   const [messages, setMessages] = useState([]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [inputFocused, setInputFocused] = useState(false);
 
   // Speech-to-text dictation state
   const [isDictating, setIsDictating] = useState(false);
@@ -53,6 +89,14 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     if (isOpen) {
       const t = setTimeout(() => inputRef.current?.focus(), 300);
       return () => clearTimeout(t);
+    }
+  }, [isOpen]);
+
+  // Pick a fresh random set of 4-5 prepared questions every time the chat opens
+  useEffect(() => {
+    if (isOpen) {
+      const count = Math.random() < 0.5 ? 4 : 5;
+      setSuggestedQuestions(shuffleArray(QUESTION_BANK).slice(0, count));
     }
   }, [isOpen]);
 
@@ -288,6 +332,85 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
   const maybeAddAside = (reply) => (Math.random() < 0.2 ? `${reply} Also — ${getRandomJoke()}` : reply);
 
   const getBotResponse = (query) => {
+    // Prepared interview-style Q&A checked first, since some of these
+    // questions contain generic words (e.g. "a time you had a disagreement"
+    // contains "time") that would otherwise be swallowed by the looser
+    // keyword checks further down.
+    if (query.includes('who is brian') || query.includes('about brian') || query.includes('tell me about brian')) {
+      return "I am Brian Paul Francisco, a BSIT graduate from National Teachers College specializing in full-stack integration. I bridge the gap between secure backend architecture and fluid user experiences by combining intuitive UI/UX design with robust database management. My technical toolkit spans both traditional and modern stacks—leveraging the LAMP stack (Linux, Apache, MySQL, PHP) alongside modern JavaScript ecosystems including Node.js and React to build scalable, data-driven applications.";
+    }
+    if (query.includes('hire you') || query.includes('why should we hire') || query.includes('why should i hire')) {
+      return "I build fast, responsive, and reliable web applications designed to solve real-world problems. With end-to-end expertise across the full stack—from intuitive frontend interfaces to secure backend systems—I don't just write clean code. I focus on delivering scalable, user-centric solutions that deliver tangible business results.";
+    }
+    if (
+      (query.includes('location') && (query.includes('work') || query.includes('prefer'))) ||
+      query.includes('onsite location') ||
+      query.includes('where do you want to work')
+    ) {
+      return "For onsite roles, I prefer locations around Manila, Cubao, Pasay, EDSA, San Juan, and Quezon City. For opportunities located in other cities or internationally, I am fully equipped to work remotely.";
+    }
+    if (query.includes('salary') || query.includes('compensation') || query.includes('expected pay')) {
+      return "My expected salary range is between ₱22,000 and ₱40,000 per month, depending on the scope of responsibility, working arrangements, and full compensation package.";
+    }
+    if (
+      query.includes('what can you build') ||
+      query.includes('what can you do') ||
+      query.includes('what can you make')
+    ) {
+      return "I can build full-stack web platforms across various domain models, including single-page landing sites with integrated mailing services, e-commerce stores, inventory and supply chain systems, booking platforms, and multi-department SaaS applications.";
+    }
+    if (
+      query.includes('complex') ||
+      query.includes('technical problem') ||
+      query.includes('handle problem') ||
+      query.includes('difficult problem')
+    ) {
+      return "I take a structured approach: 1. Root-Cause Analysis — I investigate logs and debug step-by-step to isolate the core issue. 2. Research & Collaboration — I consult documentation and reach out to senior engineers or peers for guidance when needed. 3. Pragmatic Delivery — when deadlines are tight, I prioritize delivering a core Minimum Viable Product (MVP) to ensure business continuity without sacrificing quality.";
+    }
+    if (
+      query.includes('see yourself') ||
+      query.includes('2 to 3 years') ||
+      query.includes('2-3 years') ||
+      query.includes('next few years') ||
+      query.includes('5 years')
+    ) {
+      return "In 2 to 3 years, I see myself taking full ownership of end-to-end web products, including building advanced, AI-powered applications. I also plan to expand my technical range into complementary domains like Cybersecurity, Cloud Engineering, Data Science, and AI/LLM integration to continually evolve my overall development skill set.";
+    }
+    if (
+      query.includes('companies') ||
+      query.includes('company are you interested') ||
+      query.includes('faang') ||
+      query.includes('what company')
+    ) {
+      return "My goal is to work with leading tech organizations like FAANG (Meta, Apple, Amazon, Netflix, Google), as well as enterprise tech leaders like Nvidia, IBM, Oracle, and Accenture—or any forward-thinking company building scalable SaaS products.";
+    }
+    if (
+      query.includes('modality') ||
+      query.includes('hybrid') ||
+      query.includes('work setup') ||
+      query.includes('remote or onsite')
+    ) {
+      return "I thrive in Hybrid and Remote setups due to their focus on efficiency and productivity. However, I am equally open to Onsite arrangements to gain hands-on collaboration and professional real-world experience.";
+    }
+    if (
+      query.includes('disagreement') ||
+      query.includes('conflict') ||
+      query.includes('leadership issue') ||
+      query.includes('leadership')
+    ) {
+      return "I once worked in a project environment where team morale was low due to a lack of clear direction and accountability. Rather than waiting passively or letting the project stall, I took the initiative to step up: Proactive Communication — I initiated syncs with my team to clarify individual responsibilities and align our goals. Leading by Example — I worked on core features independently to demonstrate progress and keep momentum going. Establishing Structure — by breaking down tasks into clear deliverables, I helped re-engage the team, boost productivity, and keep our deployment on track.";
+    }
+    if (
+      query.includes('workdays') ||
+      query.includes('work days') ||
+      query.includes('what days') ||
+      query.includes('available days') ||
+      query.includes('schedule') ||
+      query.includes('hours a day') ||
+      query.includes('how many hours')
+    ) {
+      return "I'm available Monday to Friday, anytime, for a total of 8-9 hours of work per day.";
+    }
     if (query.includes('joke') || query.includes('funny') || query.includes('makakatawa')) return getRandomJoke();
     if (query.includes('time')) {
       const now = new Date();
@@ -319,7 +442,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     }
     if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like SweepXpress, Soundlify, and a Maritime LMS! Solid dev work!");
     if (query.includes('intern') || query.includes('work')) return maybeAddAside("He's currently killing it as an IT Intern at Grandline Maritime Training, in Kalaw!");
-    if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("He's a master of React, PHP, MySQL, and Tailwind CSS.");
+    if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("His stack is React, Node.js, HTML, CSS, JavaScript, Tailwind CSS, SQL, and PHP — a solid mix of frontend and backend tools.");
     if (
       query.includes('design tool') ||
       query.includes('canva') ||
@@ -399,6 +522,15 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
 
   const closeChat = () => setIsOpen(false);
 
+  // Suggestions in the input bar: while typing, filter the prepared bank to
+  // matches containing the text so far; with an empty box, fall back to the
+  // currently-randomized set so the popup still appears on focus (not just
+  // in the very first empty-conversation screen).
+  const typedQuery = input.trim().toLowerCase();
+  const typeaheadMatches = typedQuery
+    ? QUESTION_BANK.filter((q) => q.toLowerCase().includes(typedQuery)).slice(0, 4)
+    : suggestedQuestions.slice(0, 4);
+
   // Pink in light mode, blue in dark mode — matches the accent language
   // used across the rest of the site (pink light / cyan-blue dark).
   const theme = darkMode
@@ -443,9 +575,15 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
             <span
               className={`inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide ${theme.title} opacity-90`}
             >
-              press
+              <span className="xl:hidden">press</span>
               <kbd
-                className={`px-2.5 py-1 rounded-md border text-sm sm:text-base font-bold ${theme.divider} ${theme.title}`}
+                className={`xl:hidden px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}
+              >
+                X
+              </kbd>
+              <span className="hidden xl:inline">press</span>
+              <kbd
+                className={`hidden xl:inline-block px-2.5 py-1 rounded-md border text-sm sm:text-base font-bold ${theme.divider} ${theme.title}`}
               >
                 esc
               </kbd>
@@ -467,9 +605,25 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
           >
             <div className="max-w-3xl mx-auto w-full min-h-full flex flex-col justify-center gap-8 sm:gap-10 py-10">
               {messages.length === 0 && !isWaiting && (
-                <p className={`text-2xl sm:text-3xl md:text-4xl font-light leading-snug ${theme.title}`}>
-                  what do you want to ask?
-                </p>
+                <div className="flex flex-col gap-6">
+                  <p className={`text-2xl sm:text-3xl md:text-4xl font-light leading-snug ${theme.title}`}>
+                    what do you want to ask?
+                  </p>
+                  {suggestedQuestions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      {suggestedQuestions.map((q, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => processUserInput(q)}
+                          className={`cursor-target text-left px-4 py-2 rounded-full border text-sm sm:text-base transition-colors hover:opacity-80 ${theme.userChip}`}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
 
               {messages.map((msg) =>
@@ -510,33 +664,70 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
             onSubmit={handleSend}
             className={`relative shrink-0 px-6 sm:px-12 md:px-24 lg:px-40 pb-8 sm:pb-10 pt-4`}
           >
-            <div className={`max-w-3xl mx-auto w-full flex items-center gap-3 border-b ${theme.divider} pb-3`}>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={micError || 'what do you want to ask?'}
-                className={`flex-1 bg-transparent outline-none text-lg sm:text-xl font-light ${theme.text} ${theme.placeholder}`}
-              />
-              <button
-                type="button"
-                onClick={toggleDictation}
-                disabled={!voiceSupported}
-                title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
-                className={`cursor-target p-3.5 rounded-full transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : theme.iconIdle}`}
-              >
-                {isDictating ? <Mic size={24} className="animate-pulse" /> : <MicOff size={24} />}
-              </button>
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                aria-label="Send message"
-                className="cursor-target p-3.5 rounded-full disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
-                style={{ color: theme.accent }}
-              >
-                <ArrowUp size={26} strokeWidth={2.5} />
-              </button>
+            <div className="max-w-3xl mx-auto w-full relative">
+              <AnimatePresence>
+                {inputFocused && typeaheadMatches.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className={`absolute bottom-full left-0 right-0 mb-2 flex flex-col gap-0.5 rounded-2xl border p-1.5 backdrop-blur-xl shadow-lg ${theme.divider} ${darkMode ? 'bg-[#03050C]/95' : 'bg-white/95'}`}
+                  >
+                    {typeaheadMatches.map((q, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setInput('');
+                          setInputFocused(false);
+                          processUserInput(q);
+                        }}
+                        className={`cursor-target text-left px-3.5 py-2 rounded-xl text-sm sm:text-base transition-colors ${theme.text} ${darkMode ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div className={`flex items-center gap-3 border-b ${theme.divider} pb-3`}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onFocus={() => {
+                    setInputFocused(true);
+                    if (!input.trim()) {
+                      const count = Math.random() < 0.5 ? 4 : 5;
+                      setSuggestedQuestions(shuffleArray(QUESTION_BANK).slice(0, count));
+                    }
+                  }}
+                  onBlur={() => setInputFocused(false)}
+                  placeholder={micError || 'what do you want to ask?'}
+                  className={`flex-1 bg-transparent outline-none text-lg sm:text-xl font-light ${theme.text} ${theme.placeholder}`}
+                />
+                <button
+                  type="button"
+                  onClick={toggleDictation}
+                  disabled={!voiceSupported}
+                  title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
+                  className={`cursor-target p-3.5 rounded-full transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : theme.iconIdle}`}
+                >
+                  {isDictating ? <Mic size={24} className="animate-pulse" /> : <MicOff size={24} />}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!input.trim()}
+                  aria-label="Send message"
+                  className="cursor-target p-3.5 rounded-full disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
+                  style={{ color: theme.accent }}
+                >
+                  <ArrowUp size={26} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
           </form>
         </motion.div>
