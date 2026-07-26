@@ -56,7 +56,7 @@ const ScrollReveal = ({ children }) => {
   );
 };
 
-const About = () => {
+const About = ({ darkMode }) => {
   const experiences = [
     {
       role: "IT Intern",
@@ -150,7 +150,11 @@ const About = () => {
             transition={{ duration: 0.8 }}
             className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left"
           >
-            <div className="inline-flex items-center justify-center lg:justify-start gap-3 px-4 py-2 bg-[#00FFB3]/10 border border-[#00FFB3]/20 rounded-md text-[#00FFB3] dark:text-[#00FFB3] text-xs font-black uppercase tracking-widest">
+            <div className={`inline-flex items-center justify-center lg:justify-start gap-3 px-4 py-2 border rounded-md text-xs font-black uppercase tracking-widest ${
+              darkMode
+                ? 'bg-[#00FFB3]/10 border-[#00FFB3]/20 text-[#00FFB3]'
+                : 'bg-[#FF007A]/10 border-[#FF007A]/20 text-[#FF007A]'
+            }`}>
               <User size={14} /> More Things About Me
             </div>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-none text-[#1B1B2A] dark:text-white">
@@ -229,7 +233,7 @@ const About = () => {
                     <p className="text-xs sm:text-sm text-[#A700FF]/80 dark:text-white/70 leading-relaxed mb-4">{exp.desc}</p>
                     <div className="flex flex-wrap gap-2">
                       {exp.skills.map(s => (
-                        <span key={s} className="text-[9px] px-2 py-1 bg-[#00FFB3]/10 border border-[#00FFB3]/20 rounded-md font-black text-[#FF007A] dark:text-[#00FFB3] uppercase">{s}</span>
+                        <span key={s} className="text-[9px] px-2 py-1 bg-[#00FFB3]/10 border border-[#00FFB3]/20 rounded-md font-black text-[#00FFB3] dark:text-[#00FFB3] uppercase">{s}</span>
                       ))}
                     </div>
                   </div>

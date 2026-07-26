@@ -167,8 +167,25 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const frameRef = useRef(0);
+  const suckStartRef = useRef(0);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 640
+  );
 
   const isDark = darkMode !== false;
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (stage === 'sucking') {
+      suckStartRef.current = performance.now();
+    }
+  }, [stage]);
 
   useEffect(() => {
     if (!active) {
@@ -180,23 +197,31 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
     const ctx = canvas.getContext('2d');
     let animId;
 
+    const isMobile = window.innerWidth < 640;
+    // Cap device pixel ratio on mobile so we're not pushing 3x resolution
+    // canvases through a heavy blur filter on weaker GPUs.
+    const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener('resize', resize);
 
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     const cx = w / 2;
     const cy = h / 2;
 
     const darkColors = [
-      '#00667a', '#007a94', '#0088a3',
-      '#005c73', '#004d66', '#0099b8',
-      '#007a99', '#006080', '#00a3c4',
-      '#003d4d',
+      '#00f0ff', '#00d9ec', '#1af2ff',
+      '#00c2d6', '#33f4ff', '#00e0f0',
+      '#0af0ff', '#00b8cc', '#66f6ff',
+      '#00a8bf',
     ];
     const lightColors = [
       '#ff0033', '#ff1a53', '#ff3366',
@@ -206,7 +231,7 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
     ];
     const colors = isDark ? darkColors : lightColors;
 
-    const BUBBLE_COUNT = 320;
+    const BUBBLE_COUNT = isMobile ? 90 : 320;
 
     if (particlesRef.current.length === 0) {
       for (let i = 0; i < BUBBLE_COUNT; i++) {
@@ -231,8 +256,8 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
     }
 
     const draw = () => {
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
       const cx = w / 2;
       const cy = h / 2;
 
@@ -300,22 +325,30 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
           ctx.globalAlpha = p.opacity;
           ctx.fill();
 
-          ctx.beginPath();
-          ctx.arc(
-            p.x + p.size * 0.15,
-            p.y + p.size * 0.25,
-            p.size * 0.12,
-            0,
-            Math.PI * 2
-          );
-          ctx.fillStyle = 'rgba(255,255,255,0.4)';
-          ctx.globalAlpha = p.opacity * 0.6;
-          ctx.fill();
+          if (!isMobile) {
+            ctx.beginPath();
+            ctx.arc(
+              p.x + p.size * 0.15,
+              p.y + p.size * 0.25,
+              p.size * 0.12,
+              0,
+              Math.PI * 2
+            );
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.globalAlpha = p.opacity * 0.6;
+            ctx.fill();
+          }
         }
       });
 
       if (sucking) {
-        const pulse = 18 + Math.sin(frameRef.current * 0.12) * 5;
+        // Core radius grows the longer we've been collecting bubbles, so the
+        // vacuum visibly swells as it fills up instead of staying static.
+        const elapsed = suckStartRef.current ? performance.now() - suckStartRef.current : 0;
+        const progress = Math.min(1, Math.max(0, elapsed / SUCK_MS));
+        const growth = 1 + progress * 3.2;
+        const pulse = (18 + Math.sin(frameRef.current * 0.12) * 5) * growth;
+
         ctx.beginPath();
         ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -323,10 +356,10 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
         ctx.fill();
 
         const rimColor = isDark
-          ? 'rgba(0,200,240,0.3)'
+          ? 'rgba(0,240,255,0.32)'
           : 'rgba(255,0,64,0.35)';
         const rimMid = isDark
-          ? 'rgba(0,200,240,0.1)'
+          ? 'rgba(0,240,255,0.11)'
           : 'rgba(255,0,64,0.12)';
 
         const rimGrad = ctx.createRadialGradient(cx, cy, pulse * 0.7, cx, cy, pulse * 3.5);
@@ -353,21 +386,36 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
 
   if (!active) return null;
 
-  // LIGHT MODE: white glow (no black shadows). DARK MODE: dark cyan shadows.
+  // Text color is forced via the .vacuum-force-white CSS class (with
+  // !important) further down, not inline style — inline style values
+  // can't carry !important reliably, so if any global CSS in the host
+  // app was overriding text color, this guarantees white wins.
+
   const labelShadow = isDark
     ? '0 0 8px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,60,80,0.6)'
-    : '0 0 10px rgba(255,255,255,1), 0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.5)';
+    : '0 2px 4px rgba(0,0,0,0.8), 0 0 14px rgba(0,0,0,0.55)';
 
   const titleShadow = isDark
     ? '0 0 10px rgba(0,0,0,1), 0 0 25px rgba(0,0,0,0.95), 0 0 50px rgba(0,60,80,0.7), 0 0 100px rgba(0,60,80,0.4)'
-    : '0 0 15px rgba(255,255,255,1), 0 0 35px rgba(255,255,255,0.9), 0 0 70px rgba(255,255,255,0.6), 0 0 120px rgba(255,255,255,0.3)';
+    : '0 3px 6px rgba(0,0,0,0.85), 0 0 20px rgba(0,0,0,0.6)';
 
   const statusShadow = isDark
     ? '0 0 8px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,60,80,0.5)'
-    : '0 0 10px rgba(255,255,255,1), 0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.4)';
+    : '0 2px 4px rgba(0,0,0,0.8), 0 0 14px rgba(0,0,0,0.55)';
 
   return (
     <div className="fixed inset-0 z-[2000] pointer-events-none overflow-hidden flex items-center justify-center">
+      <style>{`
+        @keyframes drain-grow {
+          0% { width: 65px; height: 65px; }
+          100% { width: 280px; height: 280px; }
+        }
+        .vacuum-force-white {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+        }
+      `}</style>
+
       {/* Backdrop */}
       <div
         className="absolute inset-0 transition-opacity duration-700"
@@ -385,7 +433,7 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
       <svg className="absolute w-0 h-0">
         <defs>
           <filter id="gooey-vacuum">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation={isMobile ? 10 : 16} result="blur" />
             <feColorMatrix
               in="blur"
               mode="matrix"
@@ -408,12 +456,17 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
         }}
       />
 
-      {/* Center drain */}
+      {/* Center drain — radius grows as it swallows more bubbles */}
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-1000"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
-          width: sucking ? '65px' : '0px',
-          height: sucking ? '65px' : '0px',
+          width: sucking ? undefined : '0px',
+          height: sucking ? undefined : '0px',
+          transition: sucking ? 'none' : 'width 0.6s ease, height 0.6s ease',
+          animation:
+            stage === 'sucking'
+              ? `drain-grow ${SUCK_MS}ms cubic-bezier(0.3,0,0.6,1) forwards`
+              : 'none',
           background: 'radial-gradient(circle at 35% 35%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 60%)',
           boxShadow: isDark
             ? '0 0 50px 12px rgba(0,240,255,0.12), inset 0 0 25px rgba(0,240,255,0.08)'
@@ -432,16 +485,16 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
       >
         <div className="text-center space-y-3">
           <div
-            className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.5em]"
-            style={{ color: '#ffffff', textShadow: labelShadow }}
+            className="vacuum-force-white text-[10px] sm:text-[11px] font-black uppercase tracking-[0.5em]"
+            style={{ textShadow: labelShadow }}
           >
             Vacuum Sequence
           </div>
 
           {name && (
             <h2
-              className="text-2xl sm:text-4xl font-black uppercase tracking-[0.2em]"
-              style={{ color: '#ffffff', textShadow: titleShadow }}
+              className="vacuum-force-white text-2xl sm:text-4xl font-black uppercase tracking-[0.2em]"
+              style={{ textShadow: titleShadow }}
             >
               {name}
             </h2>
@@ -449,17 +502,18 @@ const GooeyVacuum = ({ stage, name, darkMode }) => {
 
           <div className="flex items-center justify-center gap-2 mt-3">
             <div
-              className="w-2 h-2 rounded-full bg-white"
+              className="vacuum-force-white w-2 h-2 rounded-full"
               style={{
+                backgroundColor: '#ffffff',
                 animation: 'vacuum-pulse 1.2s ease-in-out infinite',
                 boxShadow: isDark
                   ? '0 0 10px 2px rgba(255,255,255,0.9), 0 0 20px 4px rgba(0,240,255,0.3)'
-                  : '0 0 10px 2px rgba(255,255,255,1), 0 0 20px 4px rgba(255,255,255,0.6)',
+                  : '0 0 10px 2px rgba(255,255,255,0.9), 0 0 20px 4px rgba(0,0,0,0.35)',
               }}
             />
             <span
-              className="text-[9px] sm:text-[10px] font-mono tracking-widest uppercase"
-              style={{ color: '#ffffff', textShadow: statusShadow }}
+              className="vacuum-force-white text-[9px] sm:text-[10px] font-mono tracking-widest uppercase"
+              style={{ textShadow: statusShadow }}
             >
               {sucking ? 'Compressing matter...' : 'Matter collapsed'}
             </span>

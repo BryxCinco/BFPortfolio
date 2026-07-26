@@ -442,10 +442,10 @@ const SectionEyebrow = ({ label, icon }) => (
 const CertCard = ({ cert, darkMode, onSelect }) => (
   <div
     onClick={() => onSelect(cert)}
-    className={`group relative flex flex-col gap-5 sm:gap-6 p-6 sm:p-8 rounded-md sm:rounded-md border backdrop-blur-md cursor-pointer transition-all duration-500 hover:-translate-y-1 shadow-lg ${
+    className={`group relative flex flex-col gap-5 sm:gap-6 p-6 sm:p-8 rounded-md sm:rounded-md border backdrop-blur-md cursor-pointer transition-all duration-500 hover:-translate-y-1 ${
       darkMode
-        ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30'
-        : 'bg-white/70 border-[#FFEA00] hover:border-[#00FFB3]'
+        ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 shadow-lg'
+        : 'bg-white/70 border-black/10 hover:border-[#00FFB3] hover:shadow-[0_10px_25px_rgba(0,255,179,0.2)]'
     }`}
   >
     <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center gap-1 bg-[#FF007A] text-white text-[8px] sm:text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
@@ -469,7 +469,7 @@ const CertCard = ({ cert, darkMode, onSelect }) => (
       <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-40">
         {cert.date}
       </span>
-      <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#00FFB3] opacity-60 group-hover:opacity-100 transition-opacity">
+      <span className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all ${darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF] group-hover:text-[#00FFB3]'}`}>
         View
         <ChevronRight size={12} />
       </span>
@@ -500,7 +500,7 @@ const CertModal = ({ cert, darkMode, onClose }) => {
         className={`relative w-full max-w-lg lg:max-w-5xl max-h-[90vh] overflow-y-auto lg:overflow-hidden rounded-md sm:rounded-md border shadow-2xl animate-scale-in lg:flex lg:items-stretch ${
           darkMode
             ? 'bg-[#1B1B2A]/90 border-[#00FFB3]/20 text-[#FFEA00]'
-            : 'bg-white border-[#FFEA00] text-[#1B1B2A]'
+            : 'bg-white border-black/10 text-[#1B1B2A]'
         }`}
       >
         <div className="sticky top-0 z-10 flex justify-end p-3 sm:p-4 lg:absolute lg:top-0 lg:right-0">
@@ -521,7 +521,7 @@ const CertModal = ({ cert, darkMode, onClose }) => {
           // its bottom-left corner so both are visible at once.
           // On desktop this becomes the left-hand column, wider and taller
           // than the mobile version so the certificate itself is the focus.
-          <div className={`relative flex items-center justify-center p-4 sm:p-6 lg:p-10 max-h-[50vh] lg:max-h-none lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-black/20' : 'bg-[#FFEA00]'}`}>
+          <div className={`relative flex items-center justify-center p-4 sm:p-6 lg:p-10 max-h-[50vh] lg:max-h-none lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-black/20' : 'bg-[#F4F4F4]'}`}>
             <img
               src={cert.img}
               alt={cert.title}
@@ -537,7 +537,7 @@ const CertModal = ({ cert, darkMode, onClose }) => {
           </div>
         ) : (
           // No screenshot yet: fall back to showing just the logo, larger.
-          <div className={`flex items-center justify-center p-8 sm:p-10 lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-white/5' : 'bg-[#FFEA00]'}`}>
+          <div className={`flex items-center justify-center p-8 sm:p-10 lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-white/5' : 'bg-[#F4F4F4]'}`}>
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md bg-white flex items-center justify-center shadow-lg overflow-hidden p-5">
               <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
             </div>
@@ -643,8 +643,8 @@ export function CertificationsPreview({ darkMode = true, count = 4, onViewAll })
           onClick={onViewAll}
           className={`w-full flex items-center justify-center gap-3 py-5 sm:py-6 rounded-md sm:rounded-md border font-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 ${
             darkMode
-              ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 text-[#00FFB3]'
-              : 'bg-white/70 border-[#FFEA00] hover:border-[#00FFB3] text-[#A700FF]'
+              ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 text-[#00FFB3] hover:text-white'
+              : 'bg-white/70 border-black/10 hover:border-[#00FFB3] text-[#A700FF] hover:text-[#00FFB3]'
           }`}
         >
           View All Certificates <ArrowRight size={16} />

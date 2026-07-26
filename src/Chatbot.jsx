@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Terminal, X, ArrowUp, Circle, Mic, MicOff } from 'lucide-react';
+import { X, ArrowUp, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Import ng profile pic mo
-import brianProfile from './assets/Sonya.png';
+const THINKING_LABELS = ['thinking...', 'analyzing...'];
 
 const Chatbot = forwardRef(({ darkMode }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [status, setStatus] = useState('online');
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hi! I'm Brian's AI Assistant. Ask me anything about his projects, tools, tech stack, or even what he does off the keyboard! 👋", sender: 'bot' }
-  ]);
+  const [isWaiting, setIsWaiting] = useState(false); // between send and first streamed character
+  const [thinkingLabel, setThinkingLabel] = useState(THINKING_LABELS[0]);
+  const [messages, setMessages] = useState([]);
 
   // Speech-to-text dictation state
   const [isDictating, setIsDictating] = useState(false);
@@ -23,18 +19,50 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
+  const streamIntervalRef = useRef(null);
+  const thinkingIntervalRef = useRef(null);
   const lastResponseIndexRef = useRef(-1);
   const lastJokeIndexRef = useRef(-1);
 
-  // Expose an imperative "open" method so the mobile navigation bar
-  // (which owns its own trigger icon in place of the floating bubble)
-  // can open this widget from the parent component.
+  // Expose an imperative "open" method so the nav bar (desktop pill + mobile
+  // drawer), which now owns the only entry point into the chat, can open
+  // this widget from the parent component.
   useImperativeHandle(ref, () => ({
-    open: () => {
-      setShowNotification(false);
-      setIsOpen(true);
-    },
+    open: () => setIsOpen(true),
   }));
+
+  // Lock page scroll while the overlay is open
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [isOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen]);
+
+  // Focus the input shortly after the overlay finishes animating in
+  useEffect(() => {
+    if (isOpen) {
+      const t = setTimeout(() => inputRef.current?.focus(), 300);
+      return () => clearTimeout(t);
+    }
+  }, [isOpen]);
+
+  // Clean up any in-flight timers on unmount / close
+  useEffect(() => {
+    if (!isOpen) {
+      clearInterval(streamIntervalRef.current);
+      clearInterval(thinkingIntervalRef.current);
+    }
+  }, [isOpen]);
 
   // Speech recognition setup (dictation only — no speech synthesis)
   useEffect(() => {
@@ -107,31 +135,57 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isOpen) setShowNotification(true);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
-
-  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, isWaiting]);
+
+  // Cycle the "thinking... / analyzing..." label while we wait for a reply,
+  // just like the reference — a couple of status words swapping in.
+  const startThinkingCycle = () => {
+    let idx = 0;
+    setThinkingLabel(THINKING_LABELS[0]);
+    clearInterval(thinkingIntervalRef.current);
+    thinkingIntervalRef.current = setInterval(() => {
+      idx = (idx + 1) % THINKING_LABELS.length;
+      setThinkingLabel(THINKING_LABELS[idx]);
+    }, 700);
+  };
+
+  // Reveals a bot reply progressively into the message it belongs to,
+  // ChatGPT-style, instead of dumping the whole string in at once.
+  const streamReply = (id, fullText) => {
+    clearInterval(streamIntervalRef.current);
+    let i = 0;
+    const chunk = 2;
+    streamIntervalRef.current = setInterval(() => {
+      i += chunk;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, text: fullText.slice(0, i), streaming: i < fullText.length } : m))
+      );
+      if (i >= fullText.length) {
+        clearInterval(streamIntervalRef.current);
+      }
+    }, 16);
+  };
 
   // Shared pipeline: takes raw text from the input box,
-  // adds it to the transcript, and produces a bot reply.
+  // adds it to the transcript, and streams a bot reply in.
   const processUserInput = (text) => {
     if (!text?.trim()) return;
     const userMsg = { id: Date.now(), text, sender: 'user' };
     setMessages((prev) => [...prev, userMsg]);
-    setIsTyping(true);
+    setIsWaiting(true);
+    startThinkingCycle();
 
     const lower = text.toLowerCase();
 
     const deliverReply = (botReply) => {
-      setMessages((prev) => [...prev, { id: Date.now() + 1, text: botReply, sender: 'bot' }]);
-      setIsTyping(false);
+      clearInterval(thinkingIntervalRef.current);
+      setIsWaiting(false);
+      const botId = Date.now() + 1;
+      setMessages((prev) => [...prev, { id: botId, text: '', sender: 'bot', streaming: true }]);
+      streamReply(botId, botReply);
     };
 
     // Weather needs a real network round-trip (geolocation + forecast API),
@@ -194,7 +248,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
             const data = await res.json();
             const temp = Math.round(data?.current?.temperature_2m);
             const desc = WEATHER_CODES[data?.current?.weather_code] ?? "some kind of weather I can't quite classify";
-            resolve(`Right now it's about ${Number.isFinite(temp) ? `${temp}°C` : 'a mild temperature'} with ${desc} where you are. `);
+            resolve(`Right now it's about ${Number.isFinite(temp) ? `${temp}°C` : 'a mild temperature'} with ${desc} where you are.`);
           } catch (err) {
             resolve("I tried to grab the forecast, but the weather service didn't come back in time. Try again in a bit?");
           }
@@ -205,14 +259,14 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     });
 
   const jokes = [
-    "Why do programmers prefer dark mode? Because light attracts bugs! 🐛😂",
-    "I told my computer I needed a break, and now it won't stop showing me KitKat ads. 🍫",
-    "Why did the developer go broke? Because he used up all his cache! 💸",
-    "There are only 10 types of people: those who understand binary and those who don't. 😄",
-    "Why do Java developers wear glasses? Because they don't C#! 👓",
-    "Why did the AI cross the road? To optimize the chicken's route. 🐔🤖",
-    "I'd tell you a UDP joke, but you might not get it. 📡",
-    "Debugging: being the detective in a crime movie where you're also the murderer. 🕵️",
+    "Why do programmers prefer dark mode? Because light attracts bugs!",
+    "I told my computer I needed a break, and now it won't stop showing me KitKat ads.",
+    "Why did the developer go broke? Because he used up all his cache!",
+    "There are only 10 types of people: those who understand binary and those who don't.",
+    "Why do Java developers wear glasses? Because they don't C#!",
+    "Why did the AI cross the road? To optimize the chicken's route.",
+    "I'd tell you a UDP joke, but you might not get it.",
+    "Debugging: being the detective in a crime movie where you're also the murderer.",
   ];
 
   const getRandomJoke = () => {
@@ -237,11 +291,11 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     if (query.includes('joke') || query.includes('funny') || query.includes('makakatawa')) return getRandomJoke();
     if (query.includes('time')) {
       const now = new Date();
-      return `Right now it's ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. `;
+      return `Right now it's ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
     }
     if (query.includes('date') || query.includes('today') || query.includes("what day")) {
       const now = new Date();
-      return `Today is ${now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. `;
+      return `Today is ${now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
     }
     if (
       query.includes('dream job') ||
@@ -250,7 +304,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
       query.includes('future job') ||
       query.includes('career goal')
     ) {
-      return "If I had to pick a dream job? Software engineering is at the top — building real products end-to-end. AI/LLM engineering is a close second, since that's basically what powers me! And graphic design rounds it out for the creative side — good visuals make everything better. 💻🤖🎨";
+      return "If I had to pick a dream job? Software engineering is at the top — building real products end-to-end. AI/LLM engineering is a close second, since that's basically what powers this chat! And graphic design rounds it out for the creative side — good visuals make everything better.";
     }
     if (
       query.includes('how are you') ||
@@ -263,16 +317,16 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     ) {
       return dayLines[Math.floor(Math.random() * dayLines.length)]();
     }
-    if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like SweepXpress, Soundlify, and a Maritime LMS! 🚀 Solid dev work!");
-    if (query.includes('intern') || query.includes('work')) return maybeAddAside("He's currently killing it as an IT Intern at Grandline Maritime Training, in Kalaw! ⚓💻");
-    if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("He's a master of React, PHP, MySQL, and Tailwind CSS. ");
+    if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like SweepXpress, Soundlify, and a Maritime LMS! Solid dev work!");
+    if (query.includes('intern') || query.includes('work')) return maybeAddAside("He's currently killing it as an IT Intern at Grandline Maritime Training, in Kalaw!");
+    if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("He's a master of React, PHP, MySQL, and Tailwind CSS.");
     if (
       query.includes('design tool') ||
       query.includes('canva') ||
       query.includes('figma') ||
       (query.includes('design') && (query.includes('app') || query.includes('tool') || query.includes('use')))
     ) {
-      return maybeAddAside("For design he splits the work: Canva for quick, punchy graphics and social posts, and Figma when he needs real wireframes and clickable prototypes before touching code. 🎨🖌️");
+      return maybeAddAside("For design he splits the work: Canva for quick, punchy graphics and social posts, and Figma when he needs real wireframes and clickable prototypes before touching code.");
     }
     if (
       query.includes('dev tool') ||
@@ -284,7 +338,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
       query.includes('github') ||
       query.includes('git ')
     ) {
-      return maybeAddAside("His dev setup is VS Code as the main editor, Git/GitHub for version control, and Postman for testing APIs — plus a lot of coffee. 💻🧠");
+      return maybeAddAside("His dev setup is VS Code as the main editor, Git/GitHub for version control, and Postman for testing APIs — plus a lot of coffee.");
     }
     if (
       query.includes('ai tool') ||
@@ -296,7 +350,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
       query.includes('chatgpt') ||
       query.includes('claude')
     ) {
-      return maybeAddAside("He actually mixes a few AI tools depending on the task — Claude for deep reasoning and coding help, Gemini for fast research and brainstorming, DeepSeek when he wants a quick, low-cost second opinion on code, and Perplexity when he needs answers with sources attached. 🤖🔍");
+      return maybeAddAside("He actually mixes a few AI tools depending on the task — Claude for deep reasoning and coding help, Gemini for fast research and brainstorming, DeepSeek when he wants a quick, low-cost second opinion on code, and Perplexity when he needs answers with sources attached.");
     }
     if (
       query.includes('hobby') ||
@@ -309,29 +363,29 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
       query.includes('quote') ||
       query.includes('outside of')
     ) {
-      return maybeAddAside("Outside of code, Brian trains mixed martial arts, works as a barista pulling shots on the side, and writes quotes/reflections whenever an idea hits him. Code, cardio, caffeine, and a bit of poetry — that's the rotation. 🥋☕✍️");
+      return maybeAddAside("Outside of code, Brian trains mixed martial arts, works as a barista pulling shots on the side, and writes quotes/reflections whenever an idea hits him. Code, cardio, caffeine, and a bit of poetry — that's the rotation.");
     }
     if (
       query.includes('your name') ||
       query.includes('who are you') ||
       query.includes('what are you')
     ) {
-      return "I'm Brian's AI Assistant! I'm here to talk about his projects, tools, and skills, or just chat if you want a break. 😄";
+      return "I'm here to help you explore Brian's projects, tools, and skills — or just chat if you want a break.";
     }
-    if (query.includes('hi') || query.includes('hello')) return `Hey there! Good ${getGreetingByTime()}! How can I help you explore Brian's portfolio today? 😊`;
-    if (query.includes('pogi') || query.includes('gwapo')) return "Sobra! Kitang-kita naman sa profile pic diba? 😎✨";
+    if (query.includes('hi') || query.includes('hello')) return `Hey there! Good ${getGreetingByTime()}! How can I help you explore Brian's portfolio today?`;
+    if (query.includes('pogi') || query.includes('gwapo')) return "Sobra! Kitang-kita naman sa profile pic diba?";
     if (query.includes('old') || query.includes('age')) return "Brian is currently 22 years old.";
     if (query.includes('contacts') || query.includes('email')) return "You can reach him at bp.francisco1003@gmail.com or 09564321020.";
     if (query.includes('student') || query.includes('study')) return "He is studying at the National Teachers College in Quiapo, Manila.";
-    if (query.includes('bye') || query.includes('thank')) return "Anytime! Come back if you've got more questions about Brian. 👋";
+    if (query.includes('bye') || query.includes('thank')) return "Anytime! Come back if you've got more questions about Brian.";
 
     const randomResponses = [
-      "I'm not quite sure about that, but I can definitely tell you about Brian's tech stack! ",
-      "That's an interesting topic! Want to hear about the Maritime Training System he built instead? ",
-      "I'm listening! You can ask me about his projects, his design/dev/AI tools, his hobbies, the time, the weather, or just ask for a joke. ",
-      "Hmm, I don't have an answer for that one. Try asking about his projects, the date, or how to reach him! ",
-      "Good question! I'm best at talking about Brian's work, skills, tools, and hobbies — or the time and weather. ",
-      "Not sure about that one, but I do know a good joke if you want one ",
+      "I'm not quite sure about that, but I can definitely tell you about Brian's tech stack!",
+      "That's an interesting topic! Want to hear about the Maritime Training System he built instead?",
+      "I'm listening! You can ask me about his projects, his design/dev/AI tools, his hobbies, the time, the weather, or just ask for a joke.",
+      "Hmm, I don't have an answer for that one. Try asking about his projects, the date, or how to reach him!",
+      "Good question! I'm best at talking about Brian's work, skills, tools, and hobbies — or the time and weather.",
+      "Not sure about that one, but I do know a good joke if you want one",
       `Beats me! It's been a quiet ${getGreetingByTime()} otherwise. Ask me about Brian's projects, tools, hobbies, the weather, or tell me to tell a joke!`,
     ];
     // Avoid repeating the same filler answer twice in a row
@@ -343,201 +397,151 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     return randomResponses[idx];
   };
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-    setShowNotification(false);
-  };
+  const closeChat = () => setIsOpen(false);
 
+  // Pink in light mode, blue in dark mode — matches the accent language
+  // used across the rest of the site (pink light / cyan-blue dark).
   const theme = darkMode
     ? {
-        panel: 'bg-[#0D0D16] border-[#FFEA00]/15 text-white',
-        header: 'bg-gradient-to-b from-[#12121C] to-[#0D0D16] border-[#FFEA00]/15',
-        bubbleBot: 'bg-white/[0.06] border-white/10 text-white',
-        input: 'bg-white/[0.06] border-white/10 focus:border-[#FFEA00]/70 text-white placeholder:text-white/35',
-        fab: 'bg-gradient-to-br from-[#12121C] to-[#0D0D16] border-[#FFEA00]/25',
-        notif: 'bg-gradient-to-br from-[#12121C] to-[#0D0D16] border-[#FFEA00]/20 backdrop-blur-xl',
-        glow: 'shadow-[0_40px_110px_-20px_rgba(255,234,0,0.35),0_0_0_1px_rgba(255,255,255,0.06)]',
-        fabGlow: 'shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_20px_55px_-10px_rgba(255,234,0,0.55)]',
-        accentText: 'text-[#FFEA00]',
-        label: 'text-[#FFEA00]',
-        userBubble: 'bg-[#FFEA00]/15 border-[#FFEA00]/40 text-[#FFEA00]',
-        ring: 'ring-[#0D0D16]',
+        backdrop: 'bg-[#03050C]/75',
+        text: 'text-white',
+        title: 'text-white/70',
+        userChip: 'bg-white/10 text-white/90 border-white/10',
+        accent: '#3D9BFF',
+        accentSoft: 'text-[#3D9BFF]',
+        placeholder: 'placeholder:text-white/30',
+        divider: 'border-white/10',
+        iconIdle: 'text-white/40 hover:text-white/70 hover:bg-white/5',
       }
     : {
-        panel: 'bg-[#FFF8E1] border-[#E0B400]/40 text-[#1B1B2A]',
-        header: 'bg-gradient-to-b from-white to-[#FFF3C4] border-[#E0B400]/40',
-        bubbleBot: 'bg-[#FFEA00]/10 border-[#E0B400]/30 text-[#1B1B2A]',
-        input: 'bg-white border-[#E0B400]/40 focus:border-[#C99700] text-[#1B1B2A] placeholder:text-[#1B1B2A]/40',
-        fab: 'bg-gradient-to-br from-white to-[#FFF3C4] border-[#E0B400]/40',
-        notif: 'bg-gradient-to-br from-white to-[#FFF3C4] border-[#E0B400]/40 backdrop-blur-xl',
-        glow: 'shadow-[0_40px_110px_-20px_rgba(200,150,0,0.25),0_0_0_1px_rgba(0,0,0,0.04)]',
-        fabGlow: 'shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_20px_55px_-10px_rgba(200,150,0,0.4)]',
-        accentText: 'text-[#8A6800]',
-        label: 'text-[#8A6800]',
-        userBubble: 'bg-[#FFEA00]/25 border-[#C99700]/50 text-[#5C4600]',
-        ring: 'ring-white',
+        backdrop: 'bg-white/70',
+        text: 'text-[#1B1B2A]',
+        title: 'text-[#1B1B2A]/60',
+        userChip: 'bg-black/5 text-[#1B1B2A]/90 border-black/10',
+        accent: '#FF3D8A',
+        accentSoft: 'text-[#FF3D8A]',
+        placeholder: 'placeholder:text-[#1B1B2A]/30',
+        divider: 'border-black/10',
+        iconIdle: 'text-[#1B1B2A]/40 hover:text-[#1B1B2A]/70 hover:bg-black/5',
       };
 
   return (
-    <div className="fixed inset-x-0 bottom-4 px-4 sm:px-0 sm:inset-x-auto sm:bottom-8 sm:right-8 z-[1000] flex flex-col items-center sm:items-end font-sans">
-      <AnimatePresence>
-        {showNotification && !isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 14, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 14, scale: 0.96 }}
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={`hidden sm:flex relative mb-4 p-5 pr-9 rounded-2xl border items-center gap-4 cursor-pointer max-w-[320px] overflow-hidden transition-colors ${theme.notif} ${theme.glow}`}
-            onClick={toggleChat}
-          >
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00]" />
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowNotification(false); }}
-              className={`absolute top-2.5 right-2.5 p-1 rounded-lg transition-colors ${darkMode ? 'text-white/50 hover:text-[#FFEA00] hover:bg-white/5' : 'text-[#1B1B2A]/40 hover:text-[#8A6800] hover:bg-[#FFEA00]/10'}`}
-            >
-              <X size={14} />
-            </button>
-            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#FFEA00] shrink-0 shadow-[0_0_12px_rgba(255,234,0,0.5)]">
-              <img src={brianProfile} alt="Brian" className="w-full h-full object-cover" />
-              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#FFEA00] ring-2 ${darkMode ? 'ring-[#0D0D16]' : 'ring-white'}`} />
-            </div>
-            <div className="min-w-0">
-              <p className={`text-xs font-mono tracking-wide mb-0.5 flex items-center gap-1.5 ${theme.label}`}>
-                <span className="font-semibold">Brian's AI Assistant</span> <span className={darkMode ? 'text-white/40' : 'text-[#1B1B2A]/40'}>//</span> new_message
-              </p>
-              <p className={`text-base font-semibold leading-snug ${darkMode ? 'text-white' : 'text-[#1B1B2A]'}`}>
-                How's the work? Need help?
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isOpen && (
-          <div className="flex flex-col items-center sm:items-end w-full max-w-full">
-            <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 40, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className={`mb-4 w-full sm:w-[460px] md:w-[34vw] lg:w-[28vw] sm:min-w-[380px] max-w-[520px] h-[85dvh] sm:h-[82vh] md:h-[74vh] min-h-[380px] sm:min-h-[600px] rounded-[1.75rem] border overflow-hidden flex flex-col relative ${theme.panel} ${theme.glow}`}
-            >
-              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00] z-10" />
-
-              <div className={`px-6 py-5 border-b flex justify-between items-center ${theme.header}`}>
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="relative shrink-0">
-                    <img src={brianProfile} alt="Brian" className="w-14 h-14 rounded-full object-cover border-2 border-[#FFEA00] shadow-[0_0_16px_rgba(255,234,0,0.55)]" />
-                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full ring-[3px] ${darkMode ? 'ring-[#0D0D16]' : 'ring-white'} bg-[#FFEA00]`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-mono text-lg font-bold tracking-tight truncate bg-gradient-to-r from-[#FFEA00] via-[#FF007A] to-[#FFEA00] bg-clip-text text-transparent">
-                      Brian's AI Assistant
-                    </p>
-                    <p className={`text-[11px] font-mono truncate -mt-0.5 mb-0.5 ${darkMode ? 'text-white/45' : 'text-[#1B1B2A]/50'}`}>
-                      brian's portfolio helper
-                    </p>
-                    <p className={`text-xs font-mono flex items-center gap-1.5 ${theme.label}`}>
-                      <Circle size={7} className="fill-[#FFEA00] text-[#FFEA00] animate-pulse" />
-                      {status === 'online' ? 'online' : 'connecting...'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={toggleChat}
-                  className={`p-2 rounded-xl transition-colors ${darkMode ? 'text-white/50 hover:text-[#FFEA00] hover:bg-white/5' : 'text-[#1B1B2A]/40 hover:text-[#8A6800] hover:bg-[#FFEA00]/10'}`}
-                >
-                  <X size={22} />
-                </button>
-              </div>
-
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                    <span className={`text-xs font-mono mb-1.5 px-1 font-medium ${theme.label}`}>
-                      {msg.sender === 'user' ? 'you ❯' : "Brian's AI Assistant"}
-                    </span>
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`max-w-[88%] px-5 py-3.5 rounded-2xl text-base leading-relaxed border font-mono ${
-                        msg.sender === 'user'
-                          ? `${theme.userBubble} rounded-tr-md`
-                          : `${theme.bubbleBot} rounded-tl-md`
-                      }`}
-                    >
-                      {msg.text}
-                    </motion.div>
-                  </div>
-                ))}
-                {isTyping && (
-                  <div className="flex flex-col items-start">
-                    <span className={`text-xs font-mono mb-1.5 px-1 font-medium ${theme.label}`}>Brian's AI Assistant</span>
-                    <div className={`px-5 py-3.5 rounded-2xl rounded-tl-md border flex items-center gap-1.5 ${theme.bubbleBot}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s] opacity-60" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s] opacity-60" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce opacity-60" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <form onSubmit={handleSend} className={`p-4 border-t flex items-center gap-2 ${theme.header}`}>
-                <button
-                  type="button"
-                  onClick={toggleDictation}
-                  disabled={!voiceSupported}
-                  title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
-                  className={`p-3 rounded-xl transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : `hover:bg-[#FFEA00]/10 ${darkMode ? 'text-white/60' : 'text-[#1B1B2A]/60'}`}`}
-                >
-                  {isDictating ? <Mic size={20} className="animate-pulse" /> : <MicOff size={20} />}
-                </button>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={micError || "ask something..."}
-                  className={`flex-1 px-3 py-3.5 rounded-xl border outline-none text-base font-mono transition-colors ${theme.input}`}
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim()}
-                  className="p-3 rounded-xl bg-gradient-to-br from-[#FFEA00] to-[#FF007A] text-[#1B1B2A] disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
-                >
-                  <ArrowUp size={20} strokeWidth={2.5} />
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating trigger button — hidden on mobile, visible on sm+ */}
-      {!isOpen && (
-        <motion.button
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={toggleChat}
-          className={`hidden sm:flex relative items-center justify-center w-[76px] h-[76px] rounded-full border-2 border-[#FFEA00]/60 overflow-hidden ${theme.fab} ${theme.fabGlow}`}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className={`fixed inset-0 z-[1000] flex flex-col backdrop-blur-2xl ${theme.backdrop} ${theme.text} font-sans`}
         >
-          <motion.span
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 50% 40%, rgba(255,234,0,0.4), transparent 70%)' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.span
-            className="absolute inset-0 rounded-full border-2 border-[#FFEA00] pointer-events-none"
-            animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
-          />
-          <Terminal size={30} className="text-[#FFEA00] relative" strokeWidth={2.25} />
-        </motion.button>
+          {/* Top bar — centered "ASK ME" title + exit */}
+          <div className="relative flex flex-col items-center justify-center gap-2 px-6 py-6 sm:py-8 shrink-0">
+            <span className={`text-xs sm:text-sm font-black uppercase tracking-[0.5em] ${theme.title}`}>
+              Ask Me
+            </span>
+            <span
+              className={`inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide ${theme.title} opacity-90`}
+            >
+              press
+              <kbd
+                className={`px-2.5 py-1 rounded-md border text-sm sm:text-base font-bold ${theme.divider} ${theme.title}`}
+              >
+                esc
+              </kbd>
+              to close
+            </span>
+            <button
+              onClick={closeChat}
+              aria-label="Close chat"
+              className={`cursor-target absolute right-5 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-colors ${theme.iconIdle}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Conversation — no card, no bubbles, just the chat floating on the blur */}
+          <div
+            ref={scrollRef}
+            className="relative flex-1 overflow-y-auto px-6 sm:px-12 md:px-24 lg:px-40 custom-scrollbar"
+          >
+            <div className="max-w-3xl mx-auto w-full min-h-full flex flex-col justify-center gap-8 sm:gap-10 py-10">
+              {messages.length === 0 && !isWaiting && (
+                <p className={`text-2xl sm:text-3xl md:text-4xl font-light leading-snug ${theme.title}`}>
+                  what do you want to ask?
+                </p>
+              )}
+
+              {messages.map((msg) =>
+                msg.sender === 'user' ? (
+                  <div key={msg.id} className="flex justify-start">
+                    <span className={`inline-block max-w-[85%] px-4 py-2 rounded-full border text-sm sm:text-base ${theme.userChip}`}>
+                      {msg.text}
+                    </span>
+                  </div>
+                ) : (
+                  <p key={msg.id} className="text-xl sm:text-2xl md:text-3xl font-light leading-snug">
+                    {msg.text}
+                    {msg.streaming && (
+                      <span
+                        className="inline-block w-[2px] h-[0.9em] ml-1 align-middle animate-pulse"
+                        style={{ backgroundColor: theme.accent }}
+                      />
+                    )}
+                  </p>
+                )
+              )}
+
+              {isWaiting && (
+                <div className="flex items-center gap-3">
+                  <span className="flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.accent }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.accent }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.accent }} />
+                  </span>
+                  <span className={`text-lg sm:text-xl font-light ${theme.title}`}>{thinkingLabel}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Input — sits directly on the blur, no boxed container */}
+          <form
+            onSubmit={handleSend}
+            className={`relative shrink-0 px-6 sm:px-12 md:px-24 lg:px-40 pb-8 sm:pb-10 pt-4`}
+          >
+            <div className={`max-w-3xl mx-auto w-full flex items-center gap-3 border-b ${theme.divider} pb-3`}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={micError || 'what do you want to ask?'}
+                className={`flex-1 bg-transparent outline-none text-lg sm:text-xl font-light ${theme.text} ${theme.placeholder}`}
+              />
+              <button
+                type="button"
+                onClick={toggleDictation}
+                disabled={!voiceSupported}
+                title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
+                className={`cursor-target p-3.5 rounded-full transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : theme.iconIdle}`}
+              >
+                {isDictating ? <Mic size={24} className="animate-pulse" /> : <MicOff size={24} />}
+              </button>
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                aria-label="Send message"
+                className="cursor-target p-3.5 rounded-full disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
+                style={{ color: theme.accent }}
+              >
+                <ArrowUp size={26} strokeWidth={2.5} />
+              </button>
+            </div>
+          </form>
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 });
 
