@@ -50,7 +50,7 @@ const FieldLine = ({ prompt, children }) => (
   </div>
 );
 
-const Contact = ({ darkMode }) => {
+const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
   // Resolve colors directly from the darkMode prop rather than Tailwind's
   // `dark:` variant, which only works if something adds a `dark` class to
   // an ancestor element. This guarantees correct text color regardless of
@@ -100,6 +100,14 @@ const Contact = ({ darkMode }) => {
         );
       })
       .finally(() => setIsSubmitting(false));
+  };
+
+  // Keys that shouldn't trigger a click sound (pure modifiers/navigation)
+  const SILENT_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape']);
+  const handleTypingKeydown = (e) => {
+    if (!soundEnabled || typeof onTypeTick !== 'function') return;
+    if (SILENT_KEYS.has(e.key)) return;
+    onTypeTick('key');
   };
 
   const inputClasses = `w-full bg-transparent border-b border-[#00FFB3]/20 focus:border-[#00FFB3] outline-none py-2 text-sm font-mono transition-colors ${t(
@@ -199,6 +207,7 @@ const Contact = ({ darkMode }) => {
                 placeholder="Juan Dela Cruz"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onKeyDown={handleTypingKeydown}
               />
             </FieldLine>
             <FieldLine prompt="email   &gt;">
@@ -209,6 +218,7 @@ const Contact = ({ darkMode }) => {
                 placeholder="juan@email.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onKeyDown={handleTypingKeydown}
               />
             </FieldLine>
             <FieldLine prompt="message &gt;">
@@ -219,6 +229,7 @@ const Contact = ({ darkMode }) => {
                 placeholder="Tell me about your project..."
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onKeyDown={handleTypingKeydown}
               />
             </FieldLine>
 
@@ -295,7 +306,7 @@ const Contact = ({ darkMode }) => {
         </div>
       </ScrollReveal>
 
-      <Chatbot darkMode={darkMode} />
+      <Chatbot darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={onTypeTick} />
     </motion.div>
   );
 };

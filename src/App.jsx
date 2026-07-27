@@ -19,7 +19,9 @@ import {
   Lock,
   Award,
   Box,
-  Layers
+  Layers,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 // Import ang Components
@@ -28,6 +30,8 @@ import About from './About';
 import Contact from './Contact';
 import Chatbot from './Chatbot';
 import TypingTest, { TypingTestTrigger } from './TypingTest';
+import PlayGame, { PlayGameTrigger } from './PlayGame';
+import { useSoundEffects, useGlobalClickSounds } from './soundEffects';
 import Certifications, { CertificationsPreview } from './Certifications';
 import Project from './Project';
 import Stacks from './Stacks';
@@ -106,6 +110,29 @@ const themeTransitionStyles = `
 `;
 
 const ThemeTransitionStyles = () => <style>{themeTransitionStyles}</style>;
+
+// Sound On / Off button — sits beside the Typing Speed Test trigger.
+// Does NOT touch or shift the surrounding layout: it's an inline flex item
+// sized to match the other nav-adjacent icon buttons, with no absolute
+// positioning or margin changes to neighboring elements.
+const SoundToggle = ({ darkMode, soundEnabled, onToggle }) => {
+  return (
+    <button
+      onClick={onToggle}
+      data-no-sound="true"
+      aria-label={soundEnabled ? 'Turn typing sound off' : 'Turn typing sound on'}
+      aria-pressed={soundEnabled}
+      title={soundEnabled ? 'Sound: On' : 'Sound: Off'}
+      className={`cursor-target shrink-0 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
+        darkMode
+          ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 text-[#00FFB3]'
+          : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_20px_rgba(255,234,0,0.35)] text-[#1B1B2A]'
+      }`}
+    >
+      {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} className="opacity-50" />}
+    </button>
+  );
+};
 
 function useThemeTransition(setDarkMode) {
   const isAnimating = useRef(false);
@@ -221,7 +248,7 @@ const SectionEyebrow = ({ label, icon }) => (
 // ANIMATED NAVIGATION BAR
 // ============================================================================
 
-const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, typingTestRef, setIsSidebarOpen, isDesktop }) => {
+const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, typingTestRef, playGameRef, setIsSidebarOpen, isDesktop, soundEnabled, onToggleSound }) => {
   const navRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
   const [loaded, setLoaded] = useState(false);
@@ -288,6 +315,10 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
 
         {/* Typing Speed Test — bare icon + label, no pill/container, desktop only (not shown on tablets, iPads, or mobile) */}
         <TypingTestTrigger darkMode={darkMode} onClick={() => typingTestRef.current?.open()} />
+
+        {/* Sound On/Off — desktop only; on mobile/tablet the sound switch already
+            lives inside the slide-in sidebar drawer, so it isn't duplicated here */}
+        {isDesktop && <SoundToggle darkMode={darkMode} soundEnabled={soundEnabled} onToggle={onToggleSound} />}
       </div>
 
       {/* Center: Desktop Nav with Sliding Underline — true-centered via the grid, unaffected by the left/right column widths */}
@@ -380,14 +411,51 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           <Menu size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
         </button>
 
-        {/* Theme toggle lives inline here only when the full desktop pill nav is showing;
-            in mobile/compact toggle mode, only the hamburger shows here — the theme
-            switch is still reachable inside the slide-in drawer */}
-        {isDesktop && <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />}
+        {/* Play Game + Theme toggle — grouped together with a comfortable gap so
+            Play Game sits near the dark mode switch without crowding it.
+            Desktop-only, like the Typing Test trigger; doesn't shift the Menu button. */}
+        {isDesktop && (
+          <div className="flex items-center gap-4 sm:gap-5">
+            <PlayGameTrigger darkMode={darkMode} onClick={() => playGameRef.current?.open()} />
+            <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
+          </div>
+        )}
       </div>
     </nav>
   );
 };
+
+const SoundSwitch = ({ soundEnabled, toggleSound, darkMode, className = '' }) => (
+  <button
+    onClick={toggleSound}
+    data-no-sound="true"
+    aria-label={soundEnabled ? 'Turn sound off' : 'Turn sound on'}
+    title={soundEnabled ? 'Turn sound off' : 'Turn sound on'}
+    className={`cursor-target relative inline-flex items-center shrink-0 w-14 h-7 sm:w-16 sm:h-8 rounded-full border transition-colors duration-300 ${
+      darkMode ? 'bg-[#00FFB3]/10 border-[#00FFB3]/40' : 'bg-[#FF007A]/10 border-[#FF007A]/40'
+    } ${className}`}
+  >
+    <VolumeX
+      size={12}
+      className={`absolute left-1.5 sm:left-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-0' : 'opacity-50 text-[#FF007A]'}`}
+    />
+    <Volume2
+      size={12}
+      className={`absolute right-1.5 sm:right-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-50 text-[#00FFB3]' : 'opacity-0'}`}
+    />
+    <span
+      className={`absolute top-0.5 left-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
+        soundEnabled ? 'translate-x-[28px] sm:translate-x-[32px] bg-white' : 'translate-x-0 bg-[#1B1B2A]'
+      }`}
+    >
+      {soundEnabled ? (
+        <Volume2 size={13} className="text-[#FF007A]" />
+      ) : (
+        <VolumeX size={13} className="text-[#00FFB3]" />
+      )}
+    </span>
+  </button>
+);
 
 const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
   <button
@@ -460,6 +528,9 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const chatbotRef = useRef(null);
   const typingTestRef = useRef(null);
+  const playGameRef = useRef(null);
+  const { soundEnabled, toggleSound, playClick } = useSoundEffects();
+  useGlobalClickSounds(soundEnabled, playClick);
 
   const [activeSection, setActiveSection] = useState(() => {
     return localStorage.getItem('activeSection') || 'home';
@@ -633,7 +704,7 @@ function App() {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
           <div className={`absolute left-4 sm:left-6 top-20 sm:top-24 bottom-4 sm:bottom-6 w-[78vw] max-w-[280px] sm:w-72 backdrop-blur-2xl border rounded-md sm:rounded-md p-7 sm:p-10 flex flex-col transition-all duration-500 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-[130%]'} ${darkMode ? 'bg-[#1B1B2A]/40 border-[#00FFB3]/20 text-[#FFEA00]' : 'bg-white/90 border-[#FFEA00] text-[#1B1B2A]'}`}>
             <div className="flex justify-between items-center mb-10 sm:mb-12">
-              <span className="font-black text-lg sm:text-xl tracking-tighter">NAV<span className="text-[#00FFB3]">IGATION</span></span>
+              <span className="font-black text-lg sm:text-xl tracking-tighter">Brian <span className="text-[#00FFB3]">Francisco</span></span>
               <button onClick={() => setIsSidebarOpen(false)} aria-label="Close navigation" className={`cursor-target p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-white/10' : 'hover:bg-[#FFEA00]'}`}>
                 <X size={20} />
               </button>
@@ -666,11 +737,32 @@ function App() {
                 Ask Me
               </button>
 
+              <button
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  playGameRef.current?.open();
+                }}
+                aria-label="Open Stack Game"
+                className="cursor-target w-full flex items-center gap-4 text-xs sm:text-sm font-black uppercase tracking-widest transition-all group opacity-90 hover:opacity-100"
+              >
+                <span className="p-3 border rounded-md bg-[#00FFB3]/20 border-[#00FFB3] group-hover:bg-[#00FFB3]/30 transition-all">
+                  <Layers size={18} className="text-[#00FFB3]" />
+                </span>
+                Play Game
+              </button>
+
               <div className="w-full flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-black uppercase tracking-widest opacity-90">
                   {darkMode ? 'Dark Mode' : 'Light Mode'}
                 </span>
                 <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
+              </div>
+
+              <div className="w-full flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-widest opacity-90">
+                  Sound {soundEnabled ? 'On' : 'Off'}
+                </span>
+                <SoundSwitch soundEnabled={soundEnabled} toggleSound={toggleSound} darkMode={darkMode} />
               </div>
             </div>
 
@@ -690,6 +782,9 @@ function App() {
           toggleTheme={toggleTheme}
           chatbotRef={chatbotRef}
           typingTestRef={typingTestRef}
+          playGameRef={playGameRef}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
           setIsSidebarOpen={setIsSidebarOpen}
           isDesktop={isDesktop}
         />
@@ -918,7 +1013,7 @@ function App() {
             </div>
           ) : (
             <div className="animate-fade-in">
-               <Contact darkMode={darkMode} />
+               <Contact darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} />
             </div>
           )}
 
@@ -935,8 +1030,9 @@ function App() {
             </footer>
           </RevealOnScroll>
 
-          <Chatbot ref={chatbotRef} darkMode={darkMode} />
-          <TypingTest ref={typingTestRef} darkMode={darkMode} />
+          <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} />
+          <TypingTest ref={typingTestRef} darkMode={darkMode} soundEnabled={soundEnabled} onKeyPress={playClick} />
+          <PlayGame ref={playGameRef} darkMode={darkMode} soundEnabled={soundEnabled} onAction={playClick} />
         </div>
       </div>
       </div>

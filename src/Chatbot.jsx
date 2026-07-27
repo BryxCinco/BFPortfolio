@@ -38,7 +38,7 @@ const shuffleArray = (arr) => {
   return copy;
 };
 
-const Chatbot = forwardRef(({ darkMode }, ref) => {
+const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isWaiting, setIsWaiting] = useState(false); // between send and first streamed character
@@ -178,6 +178,14 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
     }
   };
 
+  // Keys that shouldn't trigger a click sound (pure modifiers/navigation)
+  const SILENT_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape']);
+  const handleTypingKeydown = (e) => {
+    if (!soundEnabled || typeof onTypeTick !== 'function') return;
+    if (SILENT_KEYS.has(e.key)) return;
+    onTypeTick('key');
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -201,9 +209,16 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
   const streamReply = (id, fullText) => {
     clearInterval(streamIntervalRef.current);
     let i = 0;
+    let tick = 0;
     const chunk = 2;
     streamIntervalRef.current = setInterval(() => {
       i += chunk;
+      tick += 1;
+      // Throttled so it reads as a soft "typewriter" texture rather than
+      // firing on every single character reveal.
+      if (soundEnabled && typeof onTypeTick === 'function' && tick % 2 === 0) {
+        onTypeTick('type');
+      }
       setMessages((prev) =>
         prev.map((m) => (m.id === id ? { ...m, text: fullText.slice(0, i), streaming: i < fullText.length } : m))
       );
@@ -698,6 +713,7 @@ const Chatbot = forwardRef(({ darkMode }, ref) => {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleTypingKeydown}
                   onFocus={() => {
                     setInputFocused(true);
                     if (!input.trim()) {

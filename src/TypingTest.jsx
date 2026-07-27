@@ -217,7 +217,7 @@ const AccuracyRing = ({ accuracy, accent, darkMode, size = 120 }) => {
 // MAIN COMPONENT
 // ============================================================================
 
-const TypingTest = forwardRef(({ darkMode }, ref) => {
+const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [duration, setDuration] = useState(30);
   const [status, setStatus] = useState('idle'); // idle | running | finished
@@ -320,6 +320,15 @@ const TypingTest = forwardRef(({ darkMode }, ref) => {
       startTest();
     }
 
+    // Sound effect: only on new characters being typed (not backspace/deletes).
+    // Plays a normal click for a correct key, a lower "error" tone for a mistyped one.
+    if (soundEnabled && typeof onKeyPress === 'function' && val.length > typedRef.current.length) {
+      const newIndex = val.length - 1;
+      const typedChar = val[newIndex];
+      const targetChar = targetRef.current[newIndex];
+      onKeyPress(typedChar === targetChar ? 'key' : 'error');
+    }
+
     typedRef.current = val;
     setTyped(val);
 
@@ -387,7 +396,7 @@ const TypingTest = forwardRef(({ darkMode }, ref) => {
               silently override the typed-letter colors. */}
           <style>{`
             #claude-typing-test-overlay .tt-pending { color: ${darkMode ? 'rgba(255,255,255,0.25)' : 'rgba(27,27,42,0.3)'} !important; }
-            #claude-typing-test-overlay .tt-correct { color: ${theme.accent} !important; }
+            #claude-typing-test-overlay .tt-correct { color: ${darkMode ? '#ffffff' : '#000000'} !important; }
             #claude-typing-test-overlay .tt-incorrect { color: #ef4444 !important; text-decoration: underline !important; }
             #claude-typing-test-overlay .tt-caret { color: ${darkMode ? '#1B1B2A' : '#ffffff'} !important; }
           `}</style>
