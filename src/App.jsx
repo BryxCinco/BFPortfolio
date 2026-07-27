@@ -31,7 +31,7 @@ import Contact from './Contact';
 import Chatbot from './Chatbot';
 import TypingTest, { TypingTestTrigger } from './TypingTest';
 import PlayGame, { PlayGameTrigger } from './PlayGame';
-import { useSoundEffects, useGlobalClickSounds } from './soundEffects';
+import { useSoundEffects, useGlobalClickSounds } from './SoundEffects';
 import Certifications, { CertificationsPreview } from './Certifications';
 import Project from './Project';
 import Stacks from './Stacks';
