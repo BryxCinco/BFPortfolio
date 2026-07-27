@@ -135,6 +135,7 @@ export const PlayGameTrigger = ({ darkMode, onClick, className = '' }) => {
 // ============================================================================
 
 const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) => {
+  const isDesktop = useIsDesktopOnly();
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | playing | gameover
   const [stack, setStack] = useState([]); // placed blocks, base included
@@ -143,6 +144,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
   const [best, setBest] = useState(0);
   const [milestoneToast, setMilestoneToast] = useState(null);
   const [comboStreak, setComboStreak] = useState(0);
+  const [scale, setScale] = useState(1);
 
   const rafRef = useRef(null);
   const lastTsRef = useRef(0);
@@ -152,6 +154,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
   const comboRef = useRef(0);
   const reachedMilestonesRef = useRef(new Set());
   const toastTimerRef = useRef(null);
+  const scaleWrapRef = useRef(null); // measures available width to scale the playfield
 
   useImperativeHandle(ref, () => ({
     open: () => setIsOpen(true),
@@ -211,6 +214,40 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Keep the game's internal 400px-wide physics untouched, but shrink the
+  // whole playfield visually (via CSS transform) to fit narrow phones —
+  // iPhone SE/mini in portrait, split-screen iPad, small Android widths, etc.
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = scaleWrapRef.current;
+    if (!el) return;
+
+    const SAFETY_MARGIN = 8; // px breathing room so edges never clip
+
+    const recompute = () => {
+      const available = el.clientWidth - SAFETY_MARGIN;
+      const next = available > 0 ? Math.min(1, available / PLAYFIELD_WIDTH) : 1;
+      setScale(next);
+    };
+
+    recompute();
+
+    let ro;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(recompute);
+      ro.observe(el);
+    } else {
+      window.addEventListener('resize', recompute);
+    }
+    window.addEventListener('orientationchange', recompute);
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener('resize', recompute);
+      window.removeEventListener('orientationchange', recompute);
+    };
   }, [isOpen]);
 
   // rAF loop — runs continuously while playing; drops mutate currentRef
@@ -389,46 +426,60 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
           className={`fixed inset-0 z-[1000] flex flex-col backdrop-blur-2xl ${theme.backdrop} ${theme.text} font-sans`}
         >
           {/* Top bar */}
-          <div className="relative flex items-center justify-center px-6 shrink-0" style={{ height: 68 }}>
-            <span className={`text-sm font-black uppercase tracking-[0.5em] ${theme.title}`}>
+          <div
+            className="relative flex items-center justify-center px-4 sm:px-6 shrink-0"
+            style={{ height: 60, paddingTop: 'env(safe-area-inset-top)' }}
+          >
+            <span className={`text-[11px] sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] ${theme.title}`}>
               Stack Game
             </span>
             <button
               onClick={closeGame}
               aria-label="Close game"
-              className={`cursor-target absolute right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-colors ${theme.iconIdle}`}
+              className={`cursor-target absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-colors ${theme.iconIdle}`}
+              style={{ marginTop: 'env(safe-area-inset-top)' }}
             >
               <X size={20} />
             </button>
           </div>
 
-          <div className="relative flex-1 overflow-y-auto px-6 custom-scrollbar">
-            <div className="mx-auto w-full min-h-full flex flex-col justify-start items-center gap-6 py-10">
+          <div className="relative flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 custom-scrollbar">
+            <div
+              ref={scaleWrapRef}
+              className="mx-auto w-full max-w-full min-h-full flex flex-col justify-start items-center gap-4 sm:gap-6 py-6 sm:py-10"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
+            >
               {status !== 'gameover' ? (
                 <>
-                  <span className={`inline-flex items-center gap-2 text-sm font-medium tracking-wide ${theme.title} opacity-90`}>
-                    press
-                    <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>space</kbd>
-                    or click / tap the tower to drop a block,
-                    <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>esc</kbd>
-                    to close
+                  <span className={`flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-center font-medium tracking-wide ${theme.title} opacity-90`}>
+                    {isDesktop ? (
+                      <>
+                        press
+                        <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>space</kbd>
+                        or click / tap the tower to drop a block,
+                        <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>esc</kbd>
+                        to close
+                      </>
+                    ) : (
+                      'Tap the tower to drop a block'
+                    )}
                   </span>
 
                   {/* Live counters */}
-                  <div className="flex items-center justify-center gap-14">
-                    <div className="text-center" style={{ width: 110 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Score</p>
-                      <p className="text-5xl font-black tabular-nums" style={{ color: theme.accent }}>
+                  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:gap-x-10 md:gap-x-14">
+                    <div className="text-center min-w-[76px] sm:min-w-[110px]">
+                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Score</p>
+                      <p className="text-3xl sm:text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {score}
                       </p>
                     </div>
-                    <div className="text-center" style={{ width: 110 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Best</p>
-                      <p className="text-5xl font-black tabular-nums">{best}</p>
+                    <div className="text-center min-w-[76px] sm:min-w-[110px]">
+                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
+                      <p className="text-3xl sm:text-4xl md:text-5xl font-black tabular-nums">{best}</p>
                     </div>
-                    <div className="text-center" style={{ width: 150 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Level</p>
-                      <p className="text-xl font-black uppercase tracking-wide" style={{ color: theme.accent }}>
+                    <div className="text-center min-w-[100px] sm:min-w-[150px]">
+                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Level</p>
+                      <p className="text-base sm:text-lg md:text-xl font-black uppercase tracking-wide" style={{ color: theme.accent }}>
                         {title || '—'}
                       </p>
                     </div>
@@ -452,8 +503,15 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                     <Sparkles size={13} /> Perfect Streak ×{comboStreak || 1}
                   </div>
 
-                  {/* Playfield */}
-                  <div className="relative" style={{ width: PLAYFIELD_WIDTH }}>
+                  {/* Playfield — the inner block keeps the game's real 400px
+                      logical size (physics/collision math is untouched); the
+                      outer wrapper reserves the *scaled* footprint so layout
+                      doesn't leave extra blank space on narrow screens. */}
+                  <div style={{ width: PLAYFIELD_WIDTH * scale, height: containerHeight * scale }}>
+                  <div
+                    className="relative"
+                    style={{ width: PLAYFIELD_WIDTH, transform: `scale(${scale})`, transformOrigin: 'top left' }}
+                  >
                     {/* Milestone toast */}
                     <AnimatePresence>
                       {milestoneToast && (
@@ -473,7 +531,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                     <div
                       onPointerDown={handleDrop}
                       className={`relative overflow-hidden rounded-md border cursor-pointer select-none ${theme.track}`}
-                      style={{ width: PLAYFIELD_WIDTH, height: containerHeight }}
+                      style={{ width: PLAYFIELD_WIDTH, height: containerHeight, touchAction: 'manipulation' }}
                     >
                       {status === 'idle' && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center">
@@ -547,19 +605,20 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                       })()}
                     </div>
                   </div>
+                  </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-10 animate-fade-in">
-                  <div className="flex items-center justify-center gap-16">
-                    <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Final Score</p>
-                      <p className="text-7xl font-black tabular-nums" style={{ color: theme.accent }}>
+                <div className="flex flex-col items-center gap-6 sm:gap-10 animate-fade-in px-2">
+                  <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 sm:gap-x-16">
+                    <div className="text-center min-w-[110px] sm:min-w-[160px]">
+                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Final Score</p>
+                      <p className="text-5xl sm:text-6xl md:text-7xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {score}
                       </p>
                     </div>
-                    <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Best</p>
-                      <p className="text-7xl font-black tabular-nums">{best}</p>
+                    <div className="text-center min-w-[110px] sm:min-w-[160px]">
+                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
+                      <p className="text-5xl sm:text-6xl md:text-7xl font-black tabular-nums">{best}</p>
                     </div>
                   </div>
 
@@ -572,7 +631,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
 
                   <button
                     onClick={resetGame}
-                    className="cursor-target flex items-center gap-3 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                    className="cursor-target flex items-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
                     style={{ backgroundColor: theme.accent, color: darkMode ? '#1B1B2A' : '#fff' }}
                   >
                     <RotateCcw size={16} /> Play Again
