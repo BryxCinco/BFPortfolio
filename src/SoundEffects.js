@@ -58,6 +58,32 @@ export function useSoundEffects() {
     return audioCtxRef.current;
   }, []);
 
+  // Unlocks AudioContext on mobile devices (iOS Safari / Mobile Chrome) on the first user interaction
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const unlockAudio = () => {
+      const ctx = getCtx();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          window.removeEventListener('touchstart', unlockAudio, true);
+          window.removeEventListener('touchend', unlockAudio, true);
+          window.removeEventListener('click', unlockAudio, true);
+        });
+      }
+    };
+
+    window.addEventListener('touchstart', unlockAudio, true);
+    window.addEventListener('touchend', unlockAudio, true);
+    window.addEventListener('click', unlockAudio, true);
+
+    return () => {
+      window.removeEventListener('touchstart', unlockAudio, true);
+      window.removeEventListener('touchend', unlockAudio, true);
+      window.removeEventListener('click', unlockAudio, true);
+    };
+  }, [getCtx]);
+
   // A short buffer of white noise, generated once in-memory and reused for
   // every click — this is what makes the click sound like an actual key
   // "clack" instead of a synth beep, with no audio file involved.
