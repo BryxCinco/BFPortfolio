@@ -455,7 +455,7 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick }, ref) 
     ) {
       return dayLines[Math.floor(Math.random() * dayLines.length)]();
     }
-    if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like SweepXpress, Soundlify, and a Maritime LMS! Solid dev work!");
+    if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like TIDE (an AI productivity coach), Poopipoo (a crowdsourced toilet finder), and Neo Chess XD (an 8-bit chess game)! Check them out in the Projects tab.");
     if (query.includes('intern') || query.includes('work')) return maybeAddAside("He's currently killing it as an IT Intern at Grandline Maritime Training, in Kalaw!");
     if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("His stack is React, Node.js, HTML, CSS, JavaScript, Tailwind CSS, SQL, and PHP — a solid mix of frontend and backend tools.");
     if (

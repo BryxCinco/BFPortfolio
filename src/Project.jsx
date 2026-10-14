@@ -10,10 +10,10 @@ import {
 } from 'lucide-react';
 
 import Carousel from './Carousel';
-import doughRemiSite from './assets/Dough Re Mi.png';
-import soundlifySite from './assets/Soundlify.png';
+import tideSite from './assets/Tide.png';
+import poopipooSite from './assets/Poopipoo.png';
+import neoChessSite from './assets/NeoChessXD.png';
 import sweepXpressSite from './assets/SweepXpress.png';
-import grandlineSite from './assets/Grandline.png';
 
 import adventurePoster from './assets/Keep On Keeping On.png';
 import lamboPoster from './assets/Lambo Poster.png';
@@ -27,34 +27,70 @@ import musicFestPoster from './assets/Music Fest Poster.png';
 
 const websites = [
   {
-    name: 'Dough Re Mi',
-    tag: 'Bakery & Caramel E-Commerce',
-    desc: 'A full-stack ordering platform for a home bakery brand — browsing, bagging, and checkout built around a soft, dessert-forward visual identity.',
-    image: doughRemiSite,
-    url: 'https://www.facebook.com/Bryx.Francisco111',
+    name: 'TIDE',
+    subtitle: 'Time · Interest · Diary · Entry',
+    tag: 'AI Productivity App',
+    desc: 'A personal productivity coach that brings focus sessions, journaling, tasks, and habit tracking into one calm dashboard — with an AI coach that turns your routine into daily quests worth showing up for.',
+    highlights: [
+      'Gamified daily quests with XP, rarity tiers, and streaks',
+      'Focus timer, journal, tasks, and activity insights in one place',
+      'Built-in AI Coach for reflection and quest generation',
+    ],
+    stack: ['React Native', 'Expo', 'AI Integration', 'Vercel'],
+    image: tideSite,
+    url: 'https://tide-rust.vercel.app/',
+    featured: true,
   },
   {
-    name: 'Soundlify',
-    tag: 'Community & Resident Portal',
-    desc: 'A registration and login gateway for a community services platform, designed to keep members securely connected to local programs and records.',
-    image: soundlifySite,
-    url: 'https://www.facebook.com/Bryx.Francisco111',
+    name: 'Poopipoo',
+    subtitle: 'Crowdsourced Toilet Finder',
+    tag: 'Community Map App',
+    desc: 'When nature calls in Metro Manila, Poopipoo shows you the nearest public restroom. Users pin, browse, and rate toilets on a live map, so the community keeps the data fresh.',
+    highlights: [
+      'Interactive map with search and one-tap “Near Me”',
+      'Community-submitted restroom pins with map and list views',
+      'Mobile-first layout with an AI assistant shortcut',
+    ],
+    stack: ['Next.js', 'React', 'OpenStreetMap', 'Vercel'],
+    image: poopipooSite,
+    url: 'https://poopipoo.vercel.app/',
+  },
+  {
+    name: 'Neo Chess XD',
+    subtitle: '8-Bit Chess Game',
+    tag: 'Retro Browser Game',
+    desc: 'Classic chess wrapped in a pixel-arcade shell. Pick your mode, set the clock, and hit “Push Start” — then pick up where you left off with saved matches.',
+    highlights: [
+      'Local 1v1 PvP or a match against the CPU',
+      'Six time-control presets, from 30-second blitz to no limit',
+      'Saved-match data and toggleable chiptune audio',
+    ],
+    stack: ['React', 'Vite', 'JavaScript', 'Vercel'],
+    image: neoChessSite,
+    url: 'https://neo-chess-xd.vercel.app/',
   },
   {
     name: 'SweepXpress',
-    tag: 'Logistics Admin Dashboard',
+    subtitle: 'Logistics Admin Dashboard',
+    tag: 'Logistics System',
     desc: 'A secured admin control panel for monitoring orders, inventory, and customers in real time, with audit-logged sign-ins for accountability.',
+    highlights: [
+      'Real-time order, inventory, and customer monitoring',
+      'Audit-logged admin sign-ins',
+    ],
+    stack: ['PHP', 'MySQL', 'Tailwind'],
     image: sweepXpressSite,
-    url: 'https://www.facebook.com/Bryx.Francisco111',
-  },
-  {
-    name: 'Grandline Maritime',
-    tag: 'LMS Portal for Maritime Training',
-    desc: 'A certification and training management portal for maritime professionals, pairing a secure login flow with live system status at a glance.',
-    image: grandlineSite,
-    url: 'https://www.facebook.com/Bryx.Francisco111',
+    url: '#',
   },
 ];
+
+const hostOf = (url) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+};
 
 const posters = [
   {
@@ -584,35 +620,89 @@ const VisitLink = ({ site, darkMode, onVisit }) => {
 // WEBSITE CARD
 // ============================================================================
 
-const WebsiteCard = ({ site, darkMode, onPreview, onVisit }) => (
-  <div className="bg-white/5 backdrop-blur-md border border-[#00f0ff]/10 rounded-md overflow-hidden shadow-lg transition-all duration-500 hover:border-[#00f0ff]/30 group">
-    <button
-      onClick={() => onPreview(site)}
-      className="relative w-full aspect-video overflow-hidden block outline-none focus:outline-none"
-      aria-label={`Preview ${site.name}`}
-    >
-      <img
-        src={site.image}
-        alt={site.name}
-        className="w-full h-full object-cover object-top transition-all duration-700 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6">
-        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[#00f0ff] mb-1">
-          {site.tag}
-        </p>
-        <h4 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter leading-none">
-          {site.name}
-        </h4>
-      </div>
-    </button>
+const WebsiteCard = ({ site, index, darkMode, onPreview, onVisit }) => {
+  const host = site.url && site.url !== '#' ? hostOf(site.url) : null;
+  const chipClasses = darkMode
+    ? 'bg-[#00f0ff]/10 border-[#00f0ff]/20 text-[#00f0ff]'
+    : 'bg-[#1B1B2A]/5 border-[#1B1B2A]/15 text-[#1B1B2A]';
+  const bulletColor = darkMode ? 'text-[#00f0ff]' : 'text-[#ff3366]';
 
-    <div className="p-6 sm:p-8 space-y-4 sm:space-y-5">
-      <p className="text-sm opacity-60 font-medium leading-relaxed">{site.desc}</p>
-      <VisitLink site={site} darkMode={darkMode} onVisit={onVisit} />
-    </div>
-  </div>
-);
+  return (
+    <article
+      className={`backdrop-blur-md border rounded-md overflow-hidden shadow-lg transition-all duration-500 group flex flex-col ${
+        site.featured ? 'md:col-span-2 xl:col-span-3 lg:grid lg:grid-cols-[1.25fr_1fr]' : ''
+      } ${
+        darkMode
+          ? 'bg-white/5 border-[#00f0ff]/10 hover:border-[#00f0ff]/40'
+          : 'bg-white/60 border-[#1B1B2A]/10 hover:border-[#ff3366]/40'
+      } hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(0,0,0,0.3)]`}
+    >
+      <button
+        onClick={() => onPreview(site)}
+        className={`relative w-full overflow-hidden block outline-none focus-visible:ring-2 focus-visible:ring-[#00f0ff] ${
+          site.featured ? 'aspect-video lg:aspect-auto lg:h-full lg:min-h-[380px]' : 'aspect-video'
+        }`}
+        aria-label={`Preview ${site.name}`}
+      >
+        <img
+          src={site.image}
+          alt={`${site.name} screenshot`}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+        <span className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.25em] text-white">
+          {String(index + 1).padStart(2, '0')}
+          {site.featured && <span className="text-[#00f0ff]"> · Featured</span>}
+        </span>
+        <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 text-left">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#00f0ff] mb-1">
+            {site.tag}
+          </p>
+          <h4 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter leading-none">
+            {site.name}
+          </h4>
+        </div>
+      </button>
+
+      <div className="p-6 sm:p-8 flex flex-col gap-5 flex-1">
+        {site.subtitle && (
+          <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70">{site.subtitle}</p>
+        )}
+        <p className="text-sm sm:text-[15px] opacity-75 font-medium leading-relaxed">{site.desc}</p>
+
+        {site.highlights?.length > 0 && (
+          <ul className="space-y-2">
+            {site.highlights.map((h) => (
+              <li key={h} className="flex items-start gap-2 text-sm opacity-80 leading-snug">
+                <ChevronRight size={16} className={`shrink-0 mt-0.5 ${bulletColor}`} />
+                <span>{h}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {site.stack?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {site.stack.map((s) => (
+              <span
+                key={s}
+                className={`px-2.5 py-1 border rounded-md text-[10px] font-black uppercase tracking-widest ${chipClasses}`}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-3">
+          <VisitLink site={site} darkMode={darkMode} onVisit={onVisit} />
+          {host && <span className="text-[11px] font-mono opacity-50 truncate">{host}</span>}
+        </div>
+      </div>
+    </article>
+  );
+};
 
 // ============================================================================
 // POSTER STACK
@@ -805,14 +895,15 @@ const Project = ({ darkMode = true }) => {
         <section>
           <SectionEyebrow label="Websites" icon={<Globe size={16} className="text-[#00f0ff]" />} />
           <p className="text-sm sm:text-base opacity-60 max-w-2xl mb-8 sm:mb-10">
-            Full-stack builds spanning e-commerce, admin dashboards, and secure portals. Click
-            a thumbnail for a closer look, or launch a site and watch reality fold in on itself.
+            Live, deployed apps — from an AI productivity coach to a community map and a retro
+            chess game. Click a screenshot for a closer look, or launch the site to try it yourself.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            {websites.map((site) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+            {websites.map((site, idx) => (
               <WebsiteCard
                 key={site.name}
                 site={site}
+                index={idx}
                 darkMode={darkMode}
                 onPreview={openWebsite}
                 onVisit={visitWebsite}

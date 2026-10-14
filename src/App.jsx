@@ -3,9 +3,9 @@ import {
   Sun,
   Moon,
   Truck,
-  Music,
-  Anchor,
-  Coffee,
+  Waves,
+  MapPin,
+  Crown,
   Download,
   MessageSquare,
   Globe,
@@ -49,9 +49,9 @@ import brian6 from './assets/Brian6.png';
 
 // Project & Tool Images
 import sweepImg from './assets/SweepXpress.png';
-import soundImg from './assets/Soundlify.png';
-import maritimeImg from './assets/Grandline.png';
-import doughImg from './assets/Dough Re Mi.png';
+import tideImg from './assets/Tide.png';
+import poopipooImg from './assets/Poopipoo.png';
+import neoChessImg from './assets/NeoChessXD.png';
 import vsCodeLogo from './assets/VSCODE.png';
 import canvaLogo from './assets/Canva.png';
 import cssLogo from './assets/CSS.png';
@@ -599,32 +599,32 @@ function App() {
 
   const projects = [
     {
+      name: 'TIDE',
+      role: 'Productivity App',
+      desc: 'AI-powered productivity coach with focus timers, journaling, and gamified daily quests.',
+      icon: <Waves size={28} className="text-[#00FFB3]" />,
+      image: tideImg
+    },
+    {
+      name: 'Poopipoo',
+      role: 'Crowdsourced Toilet Finder',
+      desc: 'Community-mapped public restrooms around Metro Manila, searchable by place or proximity.',
+      icon: <MapPin size={28} className="text-[#00FFB3]" />,
+      image: poopipooImg
+    },
+    {
+      name: 'Neo Chess XD',
+      role: '8-Bit Chess Game',
+      desc: 'Retro arcade-style chess with local PvP, a CPU opponent, timed matches, and saved games.',
+      icon: <Crown size={28} className="text-[#00FFB3]" />,
+      image: neoChessImg
+    },
+    {
       name: 'SweepXpress',
       role: 'Logistics System',
       desc: 'Real-time supply chain efficiency and tracking solutions.',
       icon: <Truck size={28} className="text-[#00FFB3]" />,
       image: sweepImg
-    },
-    {
-      name: 'Soundlify',
-      role: 'Streaming Platform',
-      desc: 'Modern music interface with seamless audio playback.',
-      icon: <Music size={28} className="text-[#00FFB3]" />,
-      image: soundImg
-    },
-    {
-      name: 'Maritime LMS',
-      role: 'Learning Portal',
-      desc: 'Secure environment for maritime students.',
-      icon: <Anchor size={28} className="text-[#00FFB3]" />,
-      image: maritimeImg
-    },
-    {
-      name: 'Dough Re Mi',
-      role: 'Coffee & Bakery',
-      desc: 'Full-stack e-commerce system using PHP and MySQL.',
-      icon: <Coffee size={28} className="text-[#00FFB3]" />,
-      image: doughImg
     },
   ];
 
