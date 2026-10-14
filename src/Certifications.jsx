@@ -1,4 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useInView,
+  useScroll,
+  useSpring,
+  animate,
+} from 'framer-motion';
 import {
   Cpu,
   Database,
@@ -15,8 +25,16 @@ import {
   ExternalLink,
   Calendar,
   Building2,
-  ArrowRight
+  ArrowRight,
+  Search,
+  LayoutGrid,
+  History,
+  Sparkles,
+  ZoomIn,
+  Hand,
 } from 'lucide-react';
+
+import { rgba, getPalette, cssVars } from './theme';
 
 // ============================================================================
 // CERTIFICATE IMAGES
@@ -56,9 +74,13 @@ import aiIntroModernAI from './assets/PNGVER/AI-IMAICisco.png';
 import aiUpdateResume from './assets/PNGVER/AI-URCisco.png';
 import acnCompletion from './assets/PNGVER/ACN-COC.png';
 import acnParticipation from './assets/PNGVER/COP-ACN.png';
+// Simple Icons dropped its css3 mark, so the CSS cert uses the local logo.
+import cssLogo from './assets/CSS.png';
 
 // ============================================================================
 // CERTIFICATION DATA
+// Each category carries its icon, an accent colour (used by the domain ring,
+// chips, and card trim in both themes) and a short chip label.
 // Every cert has TWO separate images:
 //   - logo: the small issuer badge shown on the card.
 //   - img:  the actual certificate screenshot, shown large in the modal.
@@ -77,7 +99,9 @@ const certCategories = [
   {
     id: 'ai',
     label: 'Artificial Intelligence',
-    icon: <Cpu size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Cpu,
+    color: '#A700FF',
+    short: 'AI',
     certs: [
       {
         title: 'Introduction to Predictive Modeling',
@@ -156,7 +180,9 @@ const certCategories = [
   {
     id: 'data',
     label: 'Data Analytics',
-    icon: <Database size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Database,
+    color: '#00B8D9',
+    short: 'Data',
     certs: [
       {
         title: 'Data Science Ethics',
@@ -172,7 +198,9 @@ const certCategories = [
   {
     id: 'uxui',
     label: 'UX/UI and Design',
-    icon: <Palette size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Palette,
+    color: '#FF007A',
+    short: 'UX/UI',
     certs: [
       {
         title: 'Basic Graphic Design Using AI-Powered Canva',
@@ -224,7 +252,9 @@ const certCategories = [
   {
     id: 'iot',
     label: 'Internet of Things',
-    icon: <Wifi size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Wifi,
+    color: '#FF8A00',
+    short: 'IoT',
     certs: [
       {
         title: 'Embedded Systems using C',
@@ -240,7 +270,9 @@ const certCategories = [
   {
     id: 'networking',
     label: 'Networking & Systems',
-    icon: <Network size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Network,
+    color: '#3B82F6',
+    short: 'Networking',
     certs: [
       {
         title: 'Cyber-Physical Systems: Modeling and Simulation',
@@ -256,13 +288,15 @@ const certCategories = [
   {
     id: 'programming',
     label: 'Programming',
-    icon: <Code2 size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Code2,
+    color: '#E0A800',
+    short: 'Programming',
     certs: [
       {
         title: 'CSS Essentials',
         issuer: 'Cisco Networking Academy · JS Institute',
         date: 'Jun 9, 2026',
-        logo: 'https://cdn.simpleicons.org/css3/1572B6',
+        logo: cssLogo,
         img: progCssEssentials,
         description: 'Covers core CSS concepts including selectors, the box model, flexbox, and responsive styling techniques for building modern web layouts.',
         verifyUrl: '#'
@@ -308,7 +342,9 @@ const certCategories = [
   {
     id: 'softwareEngineering',
     label: 'Software Engineering',
-    icon: <ShieldCheck size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: ShieldCheck,
+    color: '#00C48C',
+    short: 'Software Eng.',
     certs: [
       {
         title: 'Blockchain Basics',
@@ -396,7 +432,9 @@ const certCategories = [
   {
     id: 'professional',
     label: 'Professional Training',
-    icon: <Award size={16} className="text-[#00FFB3] shrink-0" />,
+    Icon: Award,
+    color: '#E11D48',
+    short: 'Professional',
     certs: [
       {
         title: 'Accenture Technology Academy \u2013 Certificate of Completion',
@@ -420,9 +458,100 @@ const certCategories = [
   }
 ];
 
-// Flat list, in data order — used for the homepage preview.
+// ============================================================================
+// DERIVED DATA
+// ============================================================================
+
+const PROVIDERS = ['Coursera', 'Cisco', 'LinkedIn', 'DICT', 'Accenture'];
+
+// Flat list in data order, each cert tagged with its category, a stable id,
+// a running number, and a parsed date for sorting the timeline.
 const allCerts = certCategories.flatMap((category) =>
-  category.certs.map((cert) => ({ ...cert, categoryLabel: category.label }))
+  category.certs.map((cert, i) => ({
+    ...cert,
+    id: `${category.id}-${i}`,
+    category,
+    categoryLabel: category.label,
+    time: Date.parse(cert.date) || 0,
+    verified: !!cert.verifyUrl && cert.verifyUrl !== '#',
+    provider: PROVIDERS.find((p) => cert.issuer.includes(p)) ?? cert.issuer,
+  }))
+).map((cert, i) => ({ ...cert, n: i + 1 }));
+
+const TOTAL = allCerts.length;
+const certById = Object.fromEntries(allCerts.map((c) => [c.id, c]));
+
+// Headline credentials for the spotlight carousel and the homepage preview.
+const FEATURED_IDS = [
+  'professional-0',
+  'softwareEngineering-2',
+  'softwareEngineering-3',
+  'softwareEngineering-1',
+  'ai-0',
+];
+const featuredCerts = FEATURED_IDS.map((id) => certById[id]).filter(Boolean);
+
+const categoryCounts = Object.fromEntries(certCategories.map((c) => [c.id, c.certs.length]));
+const STATS = [
+  { label: 'Credentials', value: TOTAL },
+  { label: 'Domains', value: certCategories.length },
+  { label: 'Platforms', value: new Set(allCerts.map((c) => c.provider)).size },
+  { label: 'Verifiable online', value: allCerts.filter((c) => c.verified).length },
+];
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+// ============================================================================
+// STYLES — scoped colour classes beat the global `.light/.dark h1..span`
+// `!important` overrides in index.css, plus the holographic foil layers.
+// ============================================================================
+
+const vaultVars = (darkMode) => ({
+  ...cssVars(getPalette(darkMode)),
+  '--foil-blend': darkMode ? 'color-dodge' : 'multiply',
+  '--foil-o': darkMode ? 0.9 : 0.45,
+  '--glare-a': darkMode ? 0.22 : 0.65,
+  '--card-shadow': darkMode ? '0 20px 45px -15px rgba(0,0,0,0.6)' : '0 20px 45px -18px rgba(27,27,42,0.35)',
+});
+
+const VaultStyles = () => (
+  <style>{`
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-acc { color: var(--acc) !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-hi { color: var(--acc-hi) !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-ink { color: var(--ink) !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-white { color: #ffffff !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-dark { color: #1B1B2A !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-inherit { color: inherit !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-cat { color: var(--c) !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-tc { color: var(--tc) !important; }
+
+    .cv-foil {
+      background: linear-gradient(115deg, transparent 18%, rgba(255,0,122,0.4) 30%, rgba(0,255,179,0.4) 40%,
+        rgba(167,0,255,0.4) 50%, rgba(0,240,255,0.4) 60%, rgba(255,234,0,0.35) 68%, transparent 80%);
+      background-size: 260% 260%;
+      background-position: var(--px, 50%) var(--py, 50%);
+      mix-blend-mode: var(--foil-blend);
+      opacity: calc(var(--holo-o, 0) * var(--foil-o));
+      transition: opacity 300ms ease;
+    }
+    .cv-glare {
+      background: radial-gradient(circle at var(--px, 50%) var(--py, 50%), rgba(255,255,255,var(--glare-a)), transparent 52%);
+      opacity: var(--holo-o, 0);
+      transition: opacity 300ms ease;
+    }
+    .cv-sparkle {
+      background-image: radial-gradient(circle, rgba(255,255,255,0.9) 0.8px, transparent 1.4px);
+      background-size: 16px 16px;
+      background-position: calc(var(--px, 50%) / 4) calc(var(--py, 50%) / 4);
+      opacity: calc(var(--holo-o, 0) * 0.35);
+      mix-blend-mode: overlay;
+      transition: opacity 300ms ease;
+    }
+    @keyframes cv-spin { to { transform: rotate(360deg); } }
+    @keyframes cv-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.6); opacity: 0; } }
+    .cv-no-scrollbar::-webkit-scrollbar { display: none; }
+    @media (prefers-reduced-motion: reduce) { .cv-anim { animation: none !important; } }
+  `}</style>
 );
 
 // ============================================================================
@@ -431,223 +560,1091 @@ const allCerts = certCategories.flatMap((category) =>
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6">
-    <h3 className="text-[9px] sm:text-[11px] md:text-[12px] font-black text-[#00FFB3] uppercase tracking-[0.3em] sm:tracking-[0.6em] md:tracking-[1em] whitespace-nowrap">
+    <h3 className="cv-acc text-[10px] sm:text-[11px] md:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
       {label}
     </h3>
-    <div className="h-[1px] flex-1 bg-[#00FFB3]/20"></div>
-    {icon}
+    <div className="h-px flex-1 bg-[color:var(--acc-line)]" />
+    <span className="cv-acc shrink-0">{icon}</span>
   </div>
 );
 
-const CertCard = ({ cert, darkMode, onSelect }) => (
-  <div
-    onClick={() => onSelect(cert)}
-    className={`group relative flex flex-col gap-5 sm:gap-6 p-6 sm:p-8 rounded-md sm:rounded-md border backdrop-blur-md cursor-pointer transition-all duration-500 hover:-translate-y-1 ${
-      darkMode
-        ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 shadow-lg'
-        : 'bg-white/70 border-black/10 hover:border-[#00FFB3] hover:shadow-[0_10px_25px_rgba(0,255,179,0.2)]'
-    }`}
+const IssuerLogo = ({ cert, size = 'md' }) => {
+  const dims = size === 'lg' ? 'w-16 h-16 p-3' : size === 'sm' ? 'w-10 h-10 p-2' : 'w-14 h-14 p-2.5';
+  return (
+    <div className={`${dims} rounded-lg bg-white flex items-center justify-center shadow-md overflow-hidden shrink-0`}>
+      <img src={cert.logo} alt="" loading="lazy" className="w-full h-full object-contain" />
+    </div>
+  );
+};
+
+const CategoryPill = ({ category }) => (
+  <span
+    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-widest"
+    style={{ '--c': category.color, borderColor: rgba(category.color, 0.35), background: rgba(category.color, 0.1) }}
   >
-    <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex items-center gap-1 bg-[#FF007A] text-white text-[8px] sm:text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">
-      <BadgeCheck size={11} /> Verified
-    </div>
-
-    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-white flex items-center justify-center shadow-md overflow-hidden shrink-0 p-3">
-      <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
-    </div>
-
-    <div className="space-y-1.5 sm:space-y-2 pr-4">
-      <h4 className="text-base sm:text-lg font-black leading-tight text-[#1B1B2A] dark:text-white">
-        {cert.title}
-      </h4>
-      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00FFB3]/70">
-        {cert.issuer}
-      </p>
-    </div>
-
-    <div className="flex items-center justify-between pt-4 border-t border-[#00FFB3]/10">
-      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-40">
-        {cert.date}
-      </span>
-      <span className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all ${darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF] group-hover:text-[#00FFB3]'}`}>
-        View
-        <ChevronRight size={12} />
-      </span>
-    </div>
-  </div>
+    <span className="w-1.5 h-1.5 rounded-full" style={{ background: category.color }} />
+    <span className="cv-cat">{category.short}</span>
+  </span>
 );
 
-// Modal shown when a certificate card is clicked — shows the image/logo
-// alongside title, issuer, date and description instead of jumping offsite.
-const CertModal = ({ cert, darkMode, onClose }) => {
+// pointer-driven holo tilt shared by cards and the spotlight
+const useHolo = (reduced, strength = 14) => {
+  const ref = useRef(null);
+  const onPointerMove = (e) => {
+    const el = ref.current;
+    if (!el || reduced || e.pointerType !== 'mouse') return;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    el.style.setProperty('--px', `${px * 100}%`);
+    el.style.setProperty('--py', `${py * 100}%`);
+    el.style.setProperty('--holo-o', '1');
+    if (strength) {
+      el.style.transform = `perspective(900px) rotateX(${(0.5 - py) * strength}deg) rotateY(${(px - 0.5) * strength}deg) scale(1.03)`;
+    }
+  };
+  const onPointerLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (strength) el.style.transform = '';
+    el.style.setProperty('--holo-o', '0');
+  };
+  return { ref, onPointerMove, onPointerLeave };
+};
+
+const HoloLayers = () => (
+  <>
+    <div className="cv-foil pointer-events-none absolute inset-0 rounded-[inherit]" />
+    <div className="cv-sparkle pointer-events-none absolute inset-0 rounded-[inherit]" />
+    <div className="cv-glare pointer-events-none absolute inset-0 rounded-[inherit]" />
+  </>
+);
+
+const CountUp = ({ to, reduced }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
   useEffect(() => {
-    const handleKey = (e) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+    if (!inView || !ref.current) return undefined;
+    if (reduced) {
+      ref.current.textContent = pad2(to);
+      return undefined;
+    }
+    const controls = animate(0, to, {
+      duration: 1.4,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => {
+        if (ref.current) ref.current.textContent = pad2(Math.round(v));
+      },
+    });
+    return () => controls.stop();
+  }, [inView, to, reduced]);
+  return (
+    <span ref={ref} className="cv-ink tabular-nums">
+      00
+    </span>
+  );
+};
 
-  if (!cert) return null;
+// ============================================================================
+// HOLO CARD — collectible-style credential card
+// ============================================================================
 
-  const hasRealVerifyUrl = cert.verifyUrl && cert.verifyUrl !== '#';
+const HoloCard = ({ cert, index = 0, reduced, onOpen }) => {
+  const holo = useHolo(reduced);
+  const { category } = cert;
+  const Icon = category.Icon;
+
+  return (
+    <motion.div
+      layout={!reduced}
+      initial={reduced ? false : { opacity: 0, y: 28, scale: 0.94 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.18 } }}
+      transition={{ type: 'spring', stiffness: 260, damping: 26, delay: reduced ? 0 : Math.min(index, 12) * 0.035 }}
+      className="h-full"
+    >
+      <button
+        ref={holo.ref}
+        onClick={(e) => onOpen(cert, e.currentTarget)}
+        onPointerMove={holo.onPointerMove}
+        onPointerLeave={holo.onPointerLeave}
+        aria-label={`Inspect ${cert.title}`}
+        className="group relative w-full h-full flex flex-col gap-5 p-6 sm:p-7 rounded-xl border text-left overflow-hidden backdrop-blur-md border-[color:var(--line)] bg-[color:var(--surface)] hover:border-[color:var(--acc-line)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+        style={{
+          '--c': category.color,
+          boxShadow: 'var(--card-shadow)',
+          transition: 'transform 180ms ease-out, border-color 300ms ease',
+          willChange: 'transform',
+        }}
+      >
+        <span className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${category.color}, transparent)` }} />
+        <Icon
+          size={120}
+          strokeWidth={1}
+          className="pointer-events-none absolute -right-6 -bottom-6 opacity-[0.07] transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6"
+          style={{ color: category.color }}
+        />
+
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="relative">
+            <span
+              className="absolute -inset-2 rounded-xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
+              style={{ background: rgba(category.color, 0.45) }}
+            />
+            <div className="relative">
+              <IssuerLogo cert={cert} />
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span className="cv-ink font-mono text-[10px] opacity-50">
+              #{pad2(cert.n)}/{TOTAL}
+            </span>
+            {cert.verified ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#00C48C] text-[9px] font-black uppercase tracking-widest">
+                <BadgeCheck size={11} className="text-white" />
+                <span className="cv-white">Verifiable</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[color:var(--line)] text-[9px] font-black uppercase tracking-widest">
+                <Award size={11} className="opacity-60" />
+                <span className="cv-ink opacity-70">Issued</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="relative space-y-2 flex-1">
+          <h4 className="cv-ink text-base sm:text-lg font-black leading-tight line-clamp-3">{cert.title}</h4>
+          <p className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{cert.issuer}</p>
+        </div>
+
+        <div className="relative flex items-center justify-between gap-2 pt-4 border-t border-[color:var(--line)]">
+          <CategoryPill category={category} />
+          <span className="cv-ink flex items-center gap-1.5 font-mono text-[10px] opacity-60">
+            <Calendar size={11} /> {cert.date}
+          </span>
+        </div>
+
+        <HoloLayers />
+      </button>
+    </motion.div>
+  );
+};
+
+// ============================================================================
+// SPOTLIGHT — draggable 3D coverflow of headline certificates
+// ============================================================================
+
+const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const dragRef = useRef(null);
+  const suppressClick = useRef(false);
+  const holo = useHolo(reduced, 0);
+  const n = items.length;
+
+  const go = useCallback((d) => setActive((a) => (a + d + n) % n), [n]);
+
+  useEffect(() => {
+    if (reduced || paused || n < 2) return undefined;
+    const t = setInterval(() => go(1), 4200);
+    return () => clearInterval(t);
+  }, [reduced, paused, go, n]);
+
+  const rel = (i) => {
+    let d = i - active;
+    if (d > n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    return d;
+  };
+
+  const onPointerDown = (e) => {
+    dragRef.current = { x: e.clientX, dx: 0 };
+    suppressClick.current = false;
+  };
+  const onPointerMove = (e) => {
+    if (!dragRef.current) return;
+    dragRef.current.dx = e.clientX - dragRef.current.x;
+    if (Math.abs(dragRef.current.dx) > 8) suppressClick.current = true;
+  };
+  const onPointerUp = () => {
+    const d = dragRef.current?.dx ?? 0;
+    if (Math.abs(d) > 50) go(d < 0 ? 1 : -1);
+    dragRef.current = null;
+  };
+
+  const current = items[active];
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
-      onClick={onClose}
+      className="relative select-none overflow-x-clip py-4"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') go(1);
+        else if (e.key === 'ArrowLeft') go(-1);
+      }}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-lg lg:max-w-5xl max-h-[90vh] overflow-y-auto lg:overflow-hidden rounded-md sm:rounded-md border shadow-2xl animate-scale-in lg:flex lg:items-stretch ${
-          darkMode
-            ? 'bg-[#1B1B2A]/90 border-[#00FFB3]/20 text-[#FFEA00]'
-            : 'bg-white border-black/10 text-[#1B1B2A]'
-        }`}
+        className="relative touch-pan-y"
+        style={{ perspective: '1400px' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onPointerLeave={() => {
+          dragRef.current = null;
+        }}
       >
-        <div className="sticky top-0 z-10 flex justify-end p-3 sm:p-4 lg:absolute lg:top-0 lg:right-0">
-          <button
-            onClick={onClose}
-            aria-label="Close certificate details"
-            className={`p-2 rounded-full shadow-lg backdrop-blur-md transition-colors ${
-              darkMode ? 'bg-black/40 hover:bg-black/60 text-white' : 'bg-white/80 hover:bg-white text-[#1B1B2A]'
-            }`}
+        {/* sizing spacer — the cards are absolutely stacked on top of it */}
+        <div className="invisible mx-auto w-[74vw] max-w-[540px] aspect-[1.414/1]" />
+        <div
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 -bottom-6 w-[60%] h-12 rounded-full blur-2xl"
+          style={{ background: 'var(--acc-glow)', opacity: 0.6 }}
+        />
+
+        {items.map((cert, i) => {
+          const d = rel(i);
+          const abs = Math.abs(d);
+          const hidden = abs > 2;
+          const isActive = d === 0;
+          return (
+            <button
+              key={cert.id}
+              ref={isActive ? holo.ref : undefined}
+              onPointerMove={isActive ? holo.onPointerMove : undefined}
+              onPointerLeave={isActive ? holo.onPointerLeave : undefined}
+              onClick={(e) => {
+                if (suppressClick.current) return;
+                if (isActive) onOpen(cert, e.currentTarget, items);
+                else setActive(i);
+              }}
+              tabIndex={hidden ? -1 : 0}
+              aria-label={isActive ? `Inspect ${cert.title}` : `Show ${cert.title}`}
+              className="absolute left-1/2 top-0 w-[74vw] max-w-[540px] aspect-[1.414/1] rounded-xl overflow-hidden bg-white border-2 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+              style={{
+                '--holo-o': 0,
+                borderColor: isActive ? 'var(--acc)' : 'var(--line)',
+                transform: `translateX(-50%) translateX(${d * 56}%) translateZ(${-abs * 220}px) rotateY(${d * -38}deg)`,
+                zIndex: 10 - abs,
+                opacity: hidden ? 0 : 1 - abs * 0.2,
+                filter: isActive ? 'none' : `brightness(${darkMode ? 0.5 : 0.85}) blur(${abs * 1.2}px)`,
+                boxShadow: isActive ? '0 30px 60px -20px var(--acc-glow)' : 'none',
+                transition: reduced
+                  ? 'none'
+                  : 'transform 750ms cubic-bezier(0.22,1,0.36,1), opacity 500ms ease, filter 500ms ease, border-color 300ms',
+                pointerEvents: hidden ? 'none' : 'auto',
+              }}
+            >
+              <img
+                src={cert.img}
+                alt={cert.title}
+                draggable={false}
+                decoding="async"
+                className="w-full h-full object-contain pointer-events-none"
+              />
+              <div className="absolute bottom-3 left-3">
+                <IssuerLogo cert={cert} size="sm" />
+              </div>
+              {isActive && (
+                <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 text-[9px] font-black uppercase tracking-widest">
+                  <ZoomIn size={11} className="text-white" />
+                  <span className="cv-white">Inspect</span>
+                </span>
+              )}
+              {isActive && <HoloLayers />}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-12 sm:mt-14 flex flex-col items-center gap-5 text-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.id}
+            initial={reduced ? false : { opacity: 0, y: 12, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
+            transition={{ duration: 0.35 }}
+            className="space-y-2 max-w-2xl px-4"
           >
-            <X size={18} />
+            <p className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em]">
+              {current.issuer}
+            </p>
+            <h4 className="cv-ink text-xl sm:text-3xl font-black tracking-tight leading-tight">{current.title}</h4>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => go(-1)}
+            aria-label="Previous highlight"
+            className="p-2.5 rounded-full border border-[color:var(--acc-line)] text-[color:var(--acc)] hover:bg-[color:var(--acc)] hover:text-[color:var(--acc-ink)] transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <div className="flex items-center gap-2">
+            {items.map((c, i) => (
+              <button
+                key={c.id}
+                onClick={() => setActive(i)}
+                aria-label={`Go to ${c.title}`}
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{ width: i === active ? 28 : 8, background: i === active ? 'var(--acc)' : 'var(--acc-line)' }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => go(1)}
+            aria-label="Next highlight"
+            className="p-2.5 rounded-full border border-[color:var(--acc-line)] text-[color:var(--acc)] hover:bg-[color:var(--acc)] hover:text-[color:var(--acc-ink)] transition-colors"
+          >
+            <ChevronRight size={18} />
           </button>
         </div>
-
-        {cert.img ? (
-          // Certificate screenshot + issuer logo shown together:
-          // big screenshot fills the frame, small logo badge overlaps
-          // its bottom-left corner so both are visible at once.
-          // On desktop this becomes the left-hand column, wider and taller
-          // than the mobile version so the certificate itself is the focus.
-          <div className={`relative flex items-center justify-center p-4 sm:p-6 lg:p-10 max-h-[50vh] lg:max-h-none lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-black/20' : 'bg-[#F4F4F4]'}`}>
-            <img
-              src={cert.img}
-              alt={cert.title}
-              className="w-full max-h-[46vh] lg:max-h-[80vh] lg:h-full object-contain rounded-md"
-            />
-            <div
-              className={`absolute bottom-3 left-3 sm:bottom-5 sm:left-5 w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-white flex items-center justify-center shadow-lg overflow-hidden p-2 border-2 ${
-                darkMode ? 'border-[#1B1B2A]' : 'border-white'
-              }`}
-            >
-              <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
-            </div>
-          </div>
-        ) : (
-          // No screenshot yet: fall back to showing just the logo, larger.
-          <div className={`flex items-center justify-center p-8 sm:p-10 lg:w-3/5 lg:shrink-0 ${darkMode ? 'bg-white/5' : 'bg-[#F4F4F4]'}`}>
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md bg-white flex items-center justify-center shadow-lg overflow-hidden p-5">
-              <img src={cert.logo} alt={cert.issuer} className="w-full h-full object-contain" />
-            </div>
-          </div>
-        )}
-
-        <div className="p-6 sm:p-8 space-y-5 sm:space-y-6 lg:w-2/5 lg:overflow-y-auto lg:flex lg:flex-col lg:justify-center">
-          <div className="flex items-center gap-1.5 bg-[#FF007A] text-white text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest w-fit">
-            <BadgeCheck size={11} /> Verified Credential
-          </div>
-
-          <h3 className="text-xl sm:text-2xl font-black leading-tight">{cert.title}</h3>
-
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] sm:text-[11px] font-black uppercase tracking-widest opacity-60">
-            <span className="flex items-center gap-1.5">
-              <Building2 size={13} className="text-[#00FFB3]" /> {cert.issuer}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar size={13} className="text-[#00FFB3]" /> {cert.date}
-            </span>
-          </div>
-
-          {cert.description && (
-            <p className="text-sm leading-relaxed opacity-70">
-              {cert.description}
-            </p>
-          )}
-
-          {hasRealVerifyUrl && (
-            <a
-              href={cert.verifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-2 pt-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#00FFB3] hover:text-[#00FFB3] transition-colors"
-            >
-              View Original Credential <ExternalLink size={13} />
-            </a>
-          )}
-        </div>
+        <p className="cv-ink flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] opacity-50">
+          <Hand size={12} /> Drag, swipe, or use ← → · click the front card to inspect
+        </p>
       </div>
     </div>
   );
 };
 
 // ============================================================================
-// FULL CERTIFICATIONS PAGE (all categories, all certs)
+// DOMAIN RING — interactive donut of certificates per category
+// ============================================================================
+
+const DomainRing = ({ filter, onPick, reduced }) => {
+  const [hover, setHover] = useState(null);
+  const wrapRef = useRef(null);
+  const inView = useInView(wrapRef, { once: true, margin: '-60px' });
+  const drawn = inView || reduced;
+
+  const R = 78;
+  const STROKE = 20;
+  const CIRC = 2 * Math.PI * R;
+  const GAP = 3;
+  const maxCount = Math.max(...Object.values(categoryCounts));
+
+  let offset = 0;
+  const segments = certCategories.map((cat, i) => {
+    const len = (categoryCounts[cat.id] / TOTAL) * CIRC;
+    const seg = { cat, i, len: Math.max(0, len - GAP), offset };
+    offset += len;
+    return seg;
+  });
+
+  const focusId = hover ?? (filter !== 'all' ? filter : null);
+  const focus = focusId ? certCategories.find((c) => c.id === focusId) : null;
+
+  return (
+    <div ref={wrapRef} className="grid grid-cols-1 sm:grid-cols-[auto_1fr] items-center gap-8 sm:gap-10">
+      <div className="relative mx-auto w-52 h-52 sm:w-60 sm:h-60">
+        <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90" role="img" aria-label="Certificates by domain">
+          <circle cx="100" cy="100" r={R} fill="none" stroke="var(--line)" strokeWidth={STROKE} />
+          {segments.map((s) => {
+            const isFocus = focusId === s.cat.id;
+            const dim = focusId && !isFocus;
+            return (
+              <circle
+                key={s.cat.id}
+                cx="100"
+                cy="100"
+                r={R}
+                fill="none"
+                stroke={s.cat.color}
+                strokeWidth={isFocus ? STROKE + 8 : STROKE}
+                strokeDasharray={drawn ? `${s.len} ${CIRC}` : `0 ${CIRC}`}
+                strokeDashoffset={-s.offset}
+                onMouseEnter={() => setHover(s.cat.id)}
+                onMouseLeave={() => setHover(null)}
+                onClick={() => onPick(filter === s.cat.id ? 'all' : s.cat.id)}
+                style={{
+                  cursor: 'pointer',
+                  opacity: dim ? 0.3 : 1,
+                  filter: isFocus ? `drop-shadow(0 0 6px ${s.cat.color})` : 'none',
+                  transition: `stroke-dasharray 1100ms cubic-bezier(0.22,1,0.36,1) ${reduced ? 0 : s.i * 90}ms, stroke-width 250ms ease, opacity 250ms ease`,
+                }}
+              >
+                <title>{`${s.cat.label}: ${categoryCounts[s.cat.id]}`}</title>
+              </circle>
+            );
+          })}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center px-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={focus?.id ?? 'total'}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className="cv-ink text-4xl sm:text-5xl font-black tracking-tighter tabular-nums leading-none">
+                {pad2(focus ? categoryCounts[focus.id] : TOTAL)}
+              </p>
+              <p
+                className={`${focus ? 'cv-cat' : 'cv-acc'} mt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] leading-tight`}
+                style={focus ? { '--c': focus.color } : undefined}
+              >
+                {focus ? focus.label : 'Credentials'}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <ul className="space-y-1.5">
+        {certCategories.map((cat) => {
+          const count = categoryCounts[cat.id];
+          const isOn = filter === cat.id;
+          const dim = focusId && focusId !== cat.id;
+          return (
+            <li key={cat.id}>
+              <button
+                onClick={() => onPick(isOn ? 'all' : cat.id)}
+                onMouseEnter={() => setHover(cat.id)}
+                onMouseLeave={() => setHover(null)}
+                aria-pressed={isOn}
+                className={`w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
+                  isOn ? 'bg-[color:var(--acc-soft)]' : 'hover:bg-[color:var(--surface-strong)]'
+                }`}
+                style={{ opacity: dim ? 0.45 : 1 }}
+              >
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: cat.color, boxShadow: `0 0 8px ${cat.color}` }} />
+                <span className="min-w-0">
+                  <span className="cv-ink block text-xs sm:text-sm font-black truncate">{cat.label}</span>
+                  <span className="block h-1 mt-1 rounded-full bg-[color:var(--line)] overflow-hidden">
+                    <span
+                      className="block h-full rounded-full"
+                      style={{
+                        width: drawn ? `${(count / maxCount) * 100}%` : '0%',
+                        background: cat.color,
+                        transition: 'width 1000ms cubic-bezier(0.22,1,0.36,1) 300ms',
+                      }}
+                    />
+                  </span>
+                </span>
+                <span className="cv-ink font-mono text-xs opacity-70 tabular-nums">{pad2(count)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+// ============================================================================
+// TIMELINE — every credential in date order, line draws as you scroll
+// ============================================================================
+
+const Timeline = ({ certs, reduced, onOpen }) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 60%'] });
+  const lineScale = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
+
+  const groups = useMemo(() => {
+    const sorted = [...certs].sort((a, b) => b.time - a.time);
+    const map = new Map();
+    sorted.forEach((c) => {
+      const key = new Date(c.time).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(c);
+    });
+    return [...map.entries()];
+  }, [certs]);
+
+  return (
+    <div ref={ref} className="relative pl-8 sm:pl-12">
+      <div className="absolute left-3 sm:left-5 top-2 bottom-2 w-px bg-[color:var(--line)]" />
+      <motion.div
+        className="absolute left-3 sm:left-5 top-2 bottom-2 w-px origin-top"
+        style={{
+          scaleY: reduced ? 1 : lineScale,
+          background: 'linear-gradient(to bottom, var(--acc), var(--acc2))',
+          boxShadow: '0 0 10px var(--acc-glow)',
+        }}
+      />
+
+      <div className="space-y-10">
+        {groups.map(([month, list]) => (
+          <section key={month} className="space-y-4">
+            <div className="relative">
+              <span className="absolute -left-[26px] sm:-left-[34px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-[color:var(--acc)] bg-[color:var(--surface-strong)]" />
+              <h4 className="cv-acc font-mono text-[11px] sm:text-xs font-black uppercase tracking-[0.3em]">{month}</h4>
+            </div>
+            {list.map((cert, i) => (
+              <motion.button
+                key={cert.id}
+                initial={reduced ? false : { opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                onClick={(e) => onOpen(cert, e.currentTarget)}
+                className="group relative w-full grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-4 p-4 sm:p-5 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md text-left hover:border-[color:var(--acc-line)] hover:translate-x-1 transition-[transform,border-color] duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+              >
+                <span className="absolute -left-[22px] sm:-left-[30px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style={{ background: cert.category.color }}>
+                  <span
+                    className="cv-anim absolute inset-0 rounded-full"
+                    style={{ background: cert.category.color, animation: 'cv-pulse 1.8s ease-out infinite' }}
+                  />
+                </span>
+                <IssuerLogo cert={cert} size="sm" />
+                <span className="min-w-0 space-y-1">
+                  <span className="cv-ink block text-sm sm:text-base font-black leading-snug">{cert.title}</span>
+                  <span className="cv-acc block text-[10px] font-black uppercase tracking-widest truncate">{cert.issuer}</span>
+                </span>
+                <span className="col-span-2 sm:col-span-1 flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
+                  <CategoryPill category={cert.category} />
+                  <span className="cv-ink font-mono text-[10px] opacity-60">{cert.date}</span>
+                </span>
+              </motion.button>
+            ))}
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MAGNIFIER — zoom lens that follows the cursor over the certificate image
+// ============================================================================
+
+const LENS = 150;
+const ZOOM = 2.6;
+
+const Magnifier = ({ src, alt }) => {
+  const [lens, setLens] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+
+  const onMove = (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setLens({ x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height });
+  };
+
+  return (
+    <div
+      className="relative inline-block max-w-full cursor-zoom-in"
+      onPointerMove={onMove}
+      onPointerLeave={() => setLens(null)}
+    >
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="cv-anim w-10 h-10 rounded-full border-2 border-[color:var(--line)] border-t-[color:var(--acc)]"
+            style={{ animation: 'cv-spin 0.8s linear infinite' }}
+          />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        className="block max-w-full max-h-[44vh] lg:max-h-[72vh] w-auto h-auto rounded-md shadow-xl"
+        style={{
+          opacity: loaded ? 1 : 0,
+          transform: loaded ? 'scale(1)' : 'scale(0.96)',
+          transition: 'opacity 400ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1)',
+          minWidth: loaded ? undefined : 240,
+          minHeight: loaded ? undefined : 170,
+        }}
+      />
+      {lens && loaded && (
+        <div
+          className="pointer-events-none absolute rounded-full border-2 border-white"
+          style={{
+            width: LENS,
+            height: LENS,
+            left: lens.x - LENS / 2,
+            top: lens.y - LENS / 2,
+            backgroundImage: `url(${src})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: `${lens.w * ZOOM}px ${lens.h * ZOOM}px`,
+            backgroundPosition: `${-(lens.x * ZOOM - LENS / 2)}px ${-(lens.y * ZOOM - LENS / 2)}px`,
+            boxShadow: '0 12px 30px rgba(0,0,0,0.45), 0 0 0 4px var(--acc-line)',
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// INSPECT MODAL — springs out of the clicked card, swipe / ← → to browse
+// ============================================================================
+
+const CertModal = ({ open, darkMode, onClose, onNav }) => {
+  const reduced = useReducedMotion();
+  const cert = open?.cert;
+  const list = open?.list ?? [];
+  const index = cert ? list.findIndex((c) => c.id === cert.id) : -1;
+  const hasNav = list.length > 1;
+  const dirRef = useRef(1);
+
+  const nav = useCallback(
+    (d) => {
+      dirRef.current = d;
+      onNav(d);
+    },
+    [onNav]
+  );
+
+  useEffect(() => {
+    if (!cert) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight' && hasNav) nav(1);
+      else if (e.key === 'ArrowLeft' && hasNav) nav(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [cert, hasNav, nav, onClose]);
+
+  const origin = useMemo(() => {
+    const r = open?.rect;
+    if (!r || typeof window === 'undefined') return { x: 0, y: 40, scale: 0.85 };
+    return {
+      x: r.left + r.width / 2 - window.innerWidth / 2,
+      y: r.top + r.height / 2 - window.innerHeight / 2,
+      scale: 0.25,
+    };
+    // the origin is fixed per opening, not per navigation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open?.openId]);
+
+  if (typeof document === 'undefined') return null;
+  const palette = getPalette(darkMode);
+
+  return createPortal(
+    <div className="cv-scope" style={vaultVars(darkMode)}>
+      <AnimatePresence>
+        {cert && (
+          <motion.div
+            key="cv-modal"
+            className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={cert.title}
+              initial={reduced ? { opacity: 0 } : { opacity: 0, ...origin, rotateX: 18 }}
+              animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 30 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+              className="relative w-full max-w-lg lg:max-w-6xl max-h-[92vh] overflow-y-auto lg:overflow-hidden rounded-2xl border shadow-2xl lg:flex"
+              style={{
+                background: darkMode ? 'rgba(20,20,34,0.96)' : 'rgba(255,253,245,0.98)',
+                borderColor: rgba(cert.category.color, 0.45),
+                color: palette.ink,
+                transformPerspective: 1200,
+              }}
+            >
+              <span
+                className="absolute inset-x-0 top-0 h-1 z-10"
+                style={{ background: `linear-gradient(90deg, ${cert.category.color}, var(--acc2), transparent)` }}
+              />
+              <button
+                onClick={onClose}
+                aria-label="Close certificate"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+              >
+                <X size={18} />
+              </button>
+
+              <AnimatePresence mode="wait" custom={dirRef.current}>
+                <motion.div
+                  key={cert.id}
+                  custom={dirRef.current}
+                  initial={reduced ? false : { opacity: 0, x: dirRef.current * 60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, x: dirRef.current * -60 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  drag={hasNav ? 'x' : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.2}
+                  dragSnapToOrigin
+                  onDragEnd={(e, info) => {
+                    if (info.offset.x < -90) nav(1);
+                    else if (info.offset.x > 90) nav(-1);
+                  }}
+                  className="w-full lg:flex"
+                >
+                  <div
+                    className="relative flex items-center justify-center p-5 sm:p-8 lg:p-10 lg:w-3/5 lg:shrink-0 min-h-[220px]"
+                    style={{
+                      background: darkMode
+                        ? `radial-gradient(circle at 50% 40%, ${rgba(cert.category.color, 0.18)}, rgba(0,0,0,0.25) 70%)`
+                        : `radial-gradient(circle at 50% 40%, ${rgba(cert.category.color, 0.14)}, #F4F1E8 70%)`,
+                    }}
+                  >
+                    <Magnifier src={cert.img} alt={cert.title} />
+                    <span className="hidden lg:inline-flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 text-[9px] font-black uppercase tracking-widest">
+                      <ZoomIn size={11} className="text-white" />
+                      <span className="cv-white">Hover to magnify</span>
+                    </span>
+                  </div>
+
+                  <div className="p-6 sm:p-8 lg:p-10 space-y-5 lg:w-2/5 lg:flex lg:flex-col lg:justify-center">
+                    <div className="flex flex-wrap items-center gap-2 pr-10">
+                      <CategoryPill category={cert.category} />
+                      <span className="cv-ink font-mono text-[10px] opacity-50">
+                        Credential #{pad2(cert.n)} / {TOTAL}
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <IssuerLogo cert={cert} size="lg" />
+                      <h3 className="cv-ink text-xl sm:text-2xl lg:text-3xl font-black leading-tight tracking-tight">
+                        {cert.title}
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 text-[11px] font-black uppercase tracking-widest">
+                      <span className="flex items-center gap-2">
+                        <Building2 size={14} style={{ color: cert.category.color }} />
+                        <span className="cv-ink opacity-75">{cert.issuer}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Calendar size={14} style={{ color: cert.category.color }} />
+                        <span className="cv-ink opacity-75">{cert.date}</span>
+                      </span>
+                    </div>
+
+                    {cert.description && (
+                      <p className="cv-ink text-sm leading-relaxed opacity-80">{cert.description}</p>
+                    )}
+
+                    {cert.verified ? (
+                      <a
+                        href={cert.verifyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/v inline-flex w-fit items-center gap-2 px-5 py-3 rounded-md font-black text-[11px] uppercase tracking-[0.18em] transition-transform hover:-translate-y-0.5 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+                        style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+                      >
+                        <BadgeCheck size={15} /> Verify credential
+                        <ExternalLink size={13} className="transition-transform group-hover/v:translate-x-0.5" />
+                      </a>
+                    ) : (
+                      <p className="cv-ink flex items-center gap-2 text-[11px] font-black uppercase tracking-widest opacity-60">
+                        <Award size={14} /> Issued certificate · no public verify link
+                      </p>
+                    )}
+
+                    {hasNav && (
+                      <div className="flex items-center justify-between gap-3 pt-5 border-t border-[color:var(--line)]">
+                        <button
+                          onClick={() => nav(-1)}
+                          aria-label="Previous certificate"
+                          className="p-2.5 rounded-full border border-[color:var(--acc-line)] text-[color:var(--acc)] hover:bg-[color:var(--acc)] hover:text-[color:var(--acc-ink)] transition-colors"
+                        >
+                          <ChevronLeft size={18} />
+                        </button>
+                        <span className="cv-ink font-mono text-[10px] uppercase tracking-[0.2em] opacity-60 text-center">
+                          {pad2(index + 1)} / {pad2(list.length)}
+                          <span className="hidden sm:inline"> · ← → or swipe</span>
+                        </span>
+                        <button
+                          onClick={() => nav(1)}
+                          aria-label="Next certificate"
+                          className="p-2.5 rounded-full border border-[color:var(--acc-line)] text-[color:var(--acc)] hover:bg-[color:var(--acc)] hover:text-[color:var(--acc-ink)] transition-colors"
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>,
+    document.body
+  );
+};
+
+// open / close / browse state for the modal, shared by both exports
+const useCertModal = () => {
+  const [open, setOpen] = useState(null);
+  const openCert = useCallback((cert, el, list) => {
+    setOpen({ cert, list: list ?? [cert], rect: el?.getBoundingClientRect?.() ?? null, openId: Date.now() });
+  }, []);
+  const close = useCallback(() => setOpen(null), []);
+  const nav = useCallback((d) => {
+    setOpen((o) => {
+      if (!o || o.list.length < 2) return o;
+      const i = o.list.findIndex((c) => c.id === o.cert.id);
+      return { ...o, cert: o.list[(i + d + o.list.length) % o.list.length] };
+    });
+  }, []);
+  return { open, openCert, close, nav };
+};
+
+// ============================================================================
+// FULL CERTIFICATIONS PAGE
 // Used on its own nav section, e.g. activeSection === 'certificates'.
 // ============================================================================
 
+const ToggleGroup = ({ id, value, options, onChange }) => (
+  <div className="relative inline-flex p-1 rounded-md border border-[color:var(--line)] bg-[color:var(--surface)]">
+    {options.map(({ value: v, label, Icon }) => {
+      const on = value === v;
+      return (
+        <button
+          key={v}
+          onClick={() => onChange(v)}
+          aria-pressed={on}
+          className="relative flex items-center gap-2 px-3.5 py-2 rounded text-[10px] font-black uppercase tracking-[0.18em]"
+        >
+          {on && (
+            <motion.span
+              layoutId={`${id}-pill`}
+              className="absolute inset-0 rounded bg-[color:var(--acc)]"
+              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            />
+          )}
+          <span className="cv-tc relative flex items-center gap-2" style={{ '--tc': on ? 'var(--acc-ink)' : 'var(--ink)' }}>
+            <Icon size={13} />
+            <span className="cv-inherit">{label}</span>
+          </span>
+        </button>
+      );
+    })}
+  </div>
+);
+
 export default function Certifications({ darkMode = true }) {
-  const [selectedCert, setSelectedCert] = useState(null);
+  const reduced = useReducedMotion();
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState('grid');
+  const collectionRef = useRef(null);
+  const modal = useCertModal();
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allCerts.filter(
+      (c) =>
+        (filter === 'all' || c.category.id === filter) &&
+        (!q || c.title.toLowerCase().includes(q) || c.issuer.toLowerCase().includes(q))
+    );
+  }, [filter, query]);
+
+  const pickFromRing = (id) => {
+    setFilter(id);
+    collectionRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  };
+
+  const openFromCollection = (cert, el) => modal.openCert(cert, el, filtered);
+
+  const chips = [{ id: 'all', short: 'All', color: null, count: TOTAL }].concat(
+    certCategories.map((c) => ({ id: c.id, short: c.short, color: c.color, count: categoryCounts[c.id] }))
+  );
+
+  const reveal = (delay = 0) =>
+    reduced
+      ? {}
+      : {
+          initial: { opacity: 0, y: 30 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, margin: '-60px' },
+          transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] },
+        };
 
   return (
-    <section className="space-y-14 sm:space-y-20 pt-6 sm:pt-10">
-      <CertModal cert={selectedCert} darkMode={darkMode} onClose={() => setSelectedCert(null)} />
+    <section className="cv-scope space-y-16 sm:space-y-24 pt-6 sm:pt-10" style={vaultVars(darkMode)}>
+      <VaultStyles />
+      <CertModal open={modal.open} darkMode={darkMode} onClose={modal.close} onNav={modal.nav} />
 
-      {certCategories.map((category) => (
-        <div key={category.id} className="space-y-8 sm:space-y-10">
-          <SectionEyebrow label={category.label} icon={category.icon} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            {category.certs.map((cert, idx) => (
-              <CertCard
-                key={`${category.id}-${idx}`}
-                cert={cert}
-                darkMode={darkMode}
-                onSelect={setSelectedCert}
-              />
+      {/* ================= HEADER ================= */}
+      <header className="space-y-5 sm:space-y-6">
+        <motion.p {...reveal(0)} className="cv-acc font-mono text-[11px] uppercase tracking-[0.4em]">
+          ~/credentials
+        </motion.p>
+        <motion.h2 {...reveal(0.08)} className="cv-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
+          The Credential <span className="cv-acc">Vault.</span>
+        </motion.h2>
+        <motion.p {...reveal(0.16)} className="cv-ink text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
+          {TOTAL} certificates across {certCategories.length} domains — from university courses on Coursera to the
+          Accenture Technology Academy. Hover a card to catch the foil, click it to inspect the certificate up close.
+        </motion.p>
+      </header>
+
+      {/* ================= SPOTLIGHT ================= */}
+      <motion.div {...reveal(0)} className="space-y-10 sm:space-y-12">
+        <SectionEyebrow label="Spotlight" icon={<Sparkles size={16} />} />
+        <Spotlight items={featuredCerts} reduced={reduced} darkMode={darkMode} onOpen={modal.openCert} />
+      </motion.div>
+
+      {/* ================= STATS + DOMAIN RING ================= */}
+      <motion.div {...reveal(0)} className="space-y-8 sm:space-y-10">
+        <SectionEyebrow label="By the numbers" icon={<ShieldCheck size={16} />} />
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 sm:gap-8">
+          <div className="p-6 sm:p-10 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md">
+            <DomainRing filter={filter} onPick={pickFromRing} reduced={reduced} />
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:gap-6">
+            {STATS.map((s) => (
+              <div
+                key={s.label}
+                className="flex flex-col justify-between gap-6 p-5 sm:p-7 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md"
+              >
+                <span className="text-4xl sm:text-6xl font-black tracking-tighter leading-none">
+                  <CountUp to={s.value} reduced={reduced} />
+                </span>
+                <span className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em]">{s.label}</span>
+              </div>
             ))}
           </div>
         </div>
-      ))}
+      </motion.div>
+
+      {/* ================= COLLECTION ================= */}
+      <div ref={collectionRef} className="space-y-8 sm:space-y-10 scroll-mt-28">
+        <SectionEyebrow label="The Collection" icon={<Award size={16} />} />
+
+        <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:justify-between">
+          <div className="cv-no-scrollbar -mx-4 px-4 flex gap-2 overflow-x-auto xl:flex-wrap xl:overflow-visible xl:mx-0 xl:px-0" style={{ scrollbarWidth: 'none' }}>
+            {chips.map((chip) => {
+              const on = filter === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  onClick={() => setFilter(chip.id)}
+                  aria-pressed={on}
+                  className={`relative shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-md border text-[10px] font-black uppercase tracking-[0.18em] transition-colors ${
+                    on ? 'border-transparent' : 'border-[color:var(--line)] hover:border-[color:var(--acc-line)]'
+                  }`}
+                >
+                  {on && (
+                    <motion.span
+                      layoutId="cv-chip-pill"
+                      className="absolute inset-0 rounded-md bg-[color:var(--acc)]"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                  <span className="cv-tc relative flex items-center gap-2" style={{ '--tc': on ? 'var(--acc-ink)' : 'var(--ink)' }}>
+                    {chip.color && <span className="w-2 h-2 rounded-full" style={{ background: chip.color }} />}
+                    <span className="cv-inherit">{chip.short}</span>
+                    <span className="cv-inherit font-mono opacity-60">{pad2(chip.count)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="relative flex-1 min-w-[200px] xl:w-64 xl:flex-none">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 text-[color:var(--ink)]" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search title or issuer…"
+                aria-label="Search certificates"
+                className="w-full pl-9 pr-3 py-2.5 rounded-md border border-[color:var(--line)] bg-[color:var(--surface)] text-sm font-medium text-[color:var(--ink)] placeholder:opacity-50 outline-none focus:border-[color:var(--acc)] transition-colors"
+              />
+            </label>
+            <ToggleGroup
+              id="cv-view"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'grid', label: 'Grid', Icon: LayoutGrid },
+                { value: 'timeline', label: 'Timeline', Icon: History },
+              ]}
+            />
+          </div>
+        </div>
+
+        <p className="cv-ink font-mono text-[11px] uppercase tracking-[0.2em] opacity-55">
+          Showing {pad2(filtered.length)} of {TOTAL}
+          {filter !== 'all' && ` · ${certCategories.find((c) => c.id === filter)?.label}`}
+          {query && ` · “${query}”`}
+        </p>
+
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center space-y-4 rounded-xl border border-dashed border-[color:var(--line)]">
+            <p className="cv-ink text-lg font-black">No credentials match that.</p>
+            <button
+              onClick={() => {
+                setFilter('all');
+                setQuery('');
+              }}
+              className="px-4 py-2 rounded-md border border-[color:var(--acc-line)] text-[11px] font-black uppercase tracking-widest text-[color:var(--acc)] hover:bg-[color:var(--acc-soft)]"
+            >
+              Reset filters
+            </button>
+          </div>
+        ) : view === 'grid' ? (
+          <motion.div layout={!reduced} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6">
+            <AnimatePresence>
+              {filtered.map((cert, idx) => (
+                <HoloCard key={cert.id} cert={cert} index={idx} reduced={reduced} onOpen={openFromCollection} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <Timeline certs={filtered} reduced={reduced} onOpen={openFromCollection} />
+        )}
+      </div>
     </section>
   );
 }
 
 // ============================================================================
-// HOMEPAGE PREVIEW (a handful of certs + a "View All" card leading to the
+// HOMEPAGE PREVIEW (headline certs + a "View All" button leading to the
 // full Certificates nav section)
 // ============================================================================
 
 export function CertificationsPreview({ darkMode = true, count = 4, onViewAll }) {
-  const [selectedCert, setSelectedCert] = useState(null);
-  const featured = allCerts.slice(0, count);
+  const reduced = useReducedMotion();
+  const modal = useCertModal();
+  const featured = featuredCerts.concat(allCerts.filter((c) => !FEATURED_IDS.includes(c.id))).slice(0, count);
 
   return (
-    <section className="space-y-8 sm:space-y-10">
-      <CertModal cert={selectedCert} darkMode={darkMode} onClose={() => setSelectedCert(null)} />
+    <section className="cv-scope space-y-8 sm:space-y-10" style={vaultVars(darkMode)}>
+      <VaultStyles />
+      <CertModal open={modal.open} darkMode={darkMode} onClose={modal.close} onNav={modal.nav} />
 
-      <SectionEyebrow
-        label="Certifications"
-        icon={<ShieldCheck size={16} className="text-[#00FFB3] shrink-0" />}
-      />
+      <SectionEyebrow label="Certifications" icon={<ShieldCheck size={16} />} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {featured.map((cert, idx) => (
-          <CertCard key={idx} cert={cert} darkMode={darkMode} onSelect={setSelectedCert} />
+          <HoloCard
+            key={cert.id}
+            cert={cert}
+            index={idx}
+            reduced={reduced}
+            onOpen={(c, el) => modal.openCert(c, el, featured)}
+          />
         ))}
       </div>
 
       {onViewAll && (
         <button
           onClick={onViewAll}
-          className={`w-full flex items-center justify-center gap-3 py-5 sm:py-6 rounded-md sm:rounded-md border font-black text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 ${
-            darkMode
-              ? 'bg-white/5 border-[#00FFB3]/10 hover:border-[#00FFB3]/30 text-[#00FFB3] hover:text-white'
-              : 'bg-white/70 border-black/10 hover:border-[#00FFB3] text-[#A700FF] hover:text-[#00FFB3]'
-          }`}
+          className="group w-full flex items-center justify-center gap-3 py-5 sm:py-6 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] font-black text-xs uppercase tracking-widest text-[color:var(--acc)] hover:border-[color:var(--acc)] hover:-translate-y-0.5 transition-all"
         >
-          View All Certificates <ArrowRight size={16} />
+          Open the Credential Vault · {TOTAL} certificates
+          <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </button>
       )}
     </section>
