@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion, useInView } from 'framer-motion';
 import {
   Code2,
   Server,
@@ -10,25 +10,21 @@ import {
   Zap,
   RefreshCw,
   GitBranch,
+  GitFork,
   Waves,
   LayoutDashboard,
-  Workflow,
-  Play,
-  Pause,
-  Box,
-  Tag,
-  Hand,
-  Orbit,
-  Sun,
-  X,
+  Workflow as WorkflowIcon,
+  Route,
+  RotateCcw,
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
 
 // ============================================================================
-// STACKS.JSX — "My Tech Universe"
-// The toolkit rendered as a solar system: the sun is the stack itself, each
-// category is an orbit, and every tool is a planet travelling around it.
+// STACKS.JSX — "The Tech Tree"
+// The toolkit drawn as a skill tree: one root, a branch per category, and a
+// leaf per tool. Branches grow in on scroll, sap pulses flow root → leaf, and
+// hovering a leaf (or tracing a project) lights its whole path.
 // ============================================================================
 
 // ----------------------------------------------------------------------------
@@ -47,8 +43,7 @@ const LOBE = (slug) =>
 
 const PORTFOLIO = 'This portfolio';
 
-// Ordered innermost orbit → outermost. Outer orbits are longer, so the
-// categories with the most tools sit furthest out.
+// Grouped by theme; BRANCH_ORDER below sets the left → right order in the tree.
 const stackCategories = [
   {
     id: 'mobile',
@@ -159,45 +154,28 @@ const methodologies = [
   { name: 'Kanban', Icon: LayoutDashboard, desc: 'Visualizing flow with a living task board.' },
 ];
 
-// Orbit geometry: radius as a % of the system's width, and seconds per lap.
-const ORBIT_RADII = [14, 21.5, 28.5, 35.5, 42.5, 49];
-const ORBIT_PERIODS = [24, 34, 46, 60, 76, 94];
+// Left → right branch order for the tree (data above stays grouped by theme).
+const BRANCH_ORDER = ['frontend', 'backend', 'mobile', 'design', 'ai', 'ship'];
 
-const orbits = stackCategories.map((category, i) => ({
+const branches = BRANCH_ORDER.map((id) => stackCategories.find((c) => c.id === id)).map((category, ci) => ({
   ...category,
-  ring: i,
-  radius: ORBIT_RADII[i],
-  period: ORBIT_PERIODS[i],
-  dir: i % 2 === 0 ? 1 : -1,
-  planets: category.items.map((tool, j) => ({
+  ci,
+  tools: category.items.map((tool, ti) => ({
     ...tool,
-    key: `${category.id}-${j}`,
+    key: `${category.id}-${ti}`,
+    ti,
     category,
-    ring: i,
-    // spread planets evenly and stagger each ring so they don't line up
-    theta: (j / category.items.length) * Math.PI * 2 + i * 0.7,
   })),
 }));
 
-const allTools = orbits.flatMap((o) => o.planets);
+const allTools = branches.flatMap((b) => b.tools);
 const TOOL_COUNT = allTools.length;
+const PROJECTS = ['TIDE', 'Poopipoo', 'Neo Chess XD', 'SweepXpress', PORTFOLIO];
 const pad2 = (n) => String(n).padStart(2, '0');
 
-// deterministic star field so it doesn't reshuffle on every render
-const STARS = (() => {
-  let seed = 7;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-  return Array.from({ length: 90 }, () => ({
-    x: rand() * 100,
-    y: rand() * 100,
-    s: 1 + rand() * 1.8,
-    d: rand() * 4,
-    t: 2.5 + rand() * 3.5,
-  }));
-})();
+// Breakpoint (container width) where the six branches fit side by side;
+// below it the tree is drawn as a vertical, file-explorer style tree.
+const TREE_MIN_WIDTH = 1100;
 
 // ============================================================================
 // STYLES — scoped colour classes beat the global `.light/.dark h1..span`
@@ -212,16 +190,9 @@ const StackStyles = () => (
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-dark { color: #1B1B2A !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-cat { color: var(--c) !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-tc { color: var(--tc) !important; }
-    @keyframes sc-twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
     @keyframes sc-spin { to { transform: rotate(360deg); } }
-    @keyframes sc-corona { 0%, 100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.12); opacity: 0.85; } }
-    @keyframes sc-ping { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.9); opacity: 0; } }
-    @keyframes sc-shoot {
-      0% { transform: translate(0, 0) rotate(-35deg); opacity: 0; }
-      4% { opacity: 1; }
-      12% { transform: translate(-340px, 240px) rotate(-35deg); opacity: 0; }
-      100% { transform: translate(-340px, 240px) rotate(-35deg); opacity: 0; }
-    }
+    @keyframes sc-halo { 0%, 100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.18); opacity: 0.9; } }
+    @keyframes sc-ping { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.2); opacity: 0; } }
     @media (prefers-reduced-motion: reduce) { .sc-anim { animation: none !important; } }
   `}</style>
 );
@@ -240,13 +211,11 @@ const SectionEyebrow = ({ label, icon }) => (
   </div>
 );
 
-const ToolLogo = ({ tool, className = '' }) => {
+const ToolLogo = ({ tool }) => {
   const [failed, setFailed] = useState(!tool.logo);
   if (failed) {
     return (
-      <span className="sc-dark font-black leading-none tracking-tight" style={{ fontSize: '0.95em' }}>
-        {tool.glyph ?? tool.name.slice(0, 2)}
-      </span>
+      <span className="sc-dark font-black leading-none tracking-tight text-[9px]">{tool.glyph ?? tool.name.slice(0, 2)}</span>
     );
   }
   return (
@@ -256,408 +225,600 @@ const ToolLogo = ({ tool, className = '' }) => {
       loading="lazy"
       draggable={false}
       onError={() => setFailed(true)}
-      className={`w-full h-full object-contain pointer-events-none ${className}`}
+      className="w-full h-full object-contain pointer-events-none"
     />
   );
 };
 
-const ControlButton = ({ on, onClick, label, children }) => (
-  <button
-    onClick={onClick}
-    aria-pressed={on}
-    title={label}
-    className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-[10px] font-black uppercase tracking-[0.18em] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)] ${
-      on
-        ? 'bg-[color:var(--acc)] border-[color:var(--acc)]'
-        : 'border-[color:var(--line)] bg-[color:var(--surface)] hover:border-[color:var(--acc-line)]'
-    }`}
-  >
-    <span className="sc-tc flex items-center gap-2" style={{ '--tc': on ? 'var(--acc-ink)' : 'var(--ink)' }}>
-      {children}
-    </span>
-  </button>
-);
+// position of `el` relative to `root`, ignoring CSS transforms (so the
+// pop-in scale animation never skews the measured branch endpoints)
+const offsetWithin = (el, root) => {
+  let x = 0;
+  let y = 0;
+  let n = el;
+  while (n && n !== root) {
+    x += n.offsetLeft;
+    y += n.offsetTop;
+    n = n.offsetParent;
+  }
+  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+};
 
 // ============================================================================
-// SOLAR SYSTEM — rAF-driven orbits, drag to spin, optional 3D tilt
+// TECH TREE
 // ============================================================================
 
-const TILT_3D = 58;
-
-const SolarSystem = ({ darkMode, reduced, playing, speed, tilted, showLabels, selected, focusCat, onSelect, onSunClick }) => {
+const TechTree = ({ darkMode, reduced }) => {
   const wrapRef = useRef(null);
-  const planeRef = useRef(null);
-  const sunRef = useRef(null);
-  const ringRefs = useRef([]);
-  const billboardRefs = useRef({});
-  const anglesRef = useRef(orbits.map((_, i) => i * 37));
-  const multRef = useRef(0);
-  const tiltRef = useRef(0);
-  const hoverRef = useRef(false);
-  const spinRef = useRef(0);
-  const dragRef = useRef(null);
-  const suppressClick = useRef(false);
-  const liveRef = useRef({ playing, speed, tilted, reduced });
-  liveRef.current = { playing, speed, tilted, reduced };
+  const rootRef = useRef(null);
+  const catRefs = useRef({});
+  const toolRefs = useRef({});
+  const blockRefs = useRef({});
 
-  const [hovered, setHovered] = useState(null);
+  const [mode, setMode] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth >= TREE_MIN_WIDTH + 120 ? 'tree' : 'list'
+  );
+  const [geo, setGeo] = useState({ w: 0, h: 0, edges: [] });
+  const [grown, setGrown] = useState(false);
+  const [settled, setSettled] = useState(false);
+  const [growKey, setGrowKey] = useState(0);
+  const [hover, setHover] = useState(null);
+  const [pinned, setPinned] = useState(null);
+  const [trace, setTrace] = useState(null);
 
+  const inView = useInView(wrapRef, { once: true, margin: '-120px' });
+
+  // grow once scrolled into view, and again whenever "Replay" is pressed
   useEffect(() => {
-    let raf;
-    let last = performance.now();
-    const frame = (now) => {
-      const dt = Math.min(64, now - last) / 1000;
-      last = now;
-      const live = liveRef.current;
-
-      const targetMult = live.reduced || !live.playing ? 0 : live.speed * (hoverRef.current ? 0.06 : 1);
-      multRef.current += (targetMult - multRef.current) * 0.07;
-      const targetTilt = live.tilted ? TILT_3D : 0;
-      tiltRef.current += (targetTilt - tiltRef.current) * 0.08;
-      if (!dragRef.current) spinRef.current *= 0.94;
-
-      const tilt = tiltRef.current;
-      if (planeRef.current) planeRef.current.style.transform = `rotateX(${tilt}deg)`;
-      if (sunRef.current) sunRef.current.style.transform = `rotateX(${-tilt}deg)`;
-
-      orbits.forEach((o, i) => {
-        anglesRef.current[i] += (360 / o.period) * o.dir * multRef.current * dt + spinRef.current;
-        const a = anglesRef.current[i];
-        const ring = ringRefs.current[i];
-        if (ring) ring.style.transform = `rotate(${a}deg)`;
-        o.planets.forEach((p) => {
-          const el = billboardRefs.current[p.key];
-          if (el) el.style.transform = `rotate(${-a}deg) rotateX(${-tilt}deg)`;
-        });
-      });
-
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  // drag anywhere on the system to spin every orbit, with inertia on release
-  const pointerAngle = (e) => {
-    const r = wrapRef.current.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-    const squash = Math.max(0.35, Math.cos((tiltRef.current * Math.PI) / 180));
-    return (Math.atan2((e.clientY - cy) / squash, e.clientX - cx) * 180) / Math.PI;
-  };
-
-  const onPointerDown = (e) => {
-    dragRef.current = { last: pointerAngle(e), startX: e.clientX, startY: e.clientY };
-    suppressClick.current = false;
-  };
-  const onPointerMove = (e) => {
-    const d = dragRef.current;
-    if (!d) return;
-    if (!suppressClick.current && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
-      suppressClick.current = true;
-      e.currentTarget.setPointerCapture?.(e.pointerId);
+    if (!inView) return undefined;
+    if (reduced) {
+      setGrown(true);
+      setSettled(true);
+      return undefined;
     }
-    if (!suppressClick.current) return;
-    const a = pointerAngle(e);
-    let delta = a - d.last;
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-    d.last = a;
-    orbits.forEach((_, i) => {
-      anglesRef.current[i] += delta;
+    setGrown(false);
+    setSettled(false);
+    const t1 = setTimeout(() => setGrown(true), 60);
+    // after the last leaf lands, drop the stagger so hover feedback is instant
+    const t2 = setTimeout(() => setSettled(true), 3200);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [inView, reduced, growKey]);
+
+  // measure nodes → build branch paths; re-run on resize and layout mode changes
+  const measure = useCallback(() => {
+    const wrap = wrapRef.current;
+    const rootEl = rootRef.current;
+    if (!wrap || !rootEl) return;
+    const nextMode = wrap.offsetWidth >= TREE_MIN_WIDTH ? 'tree' : 'list';
+    if (nextMode !== mode) {
+      setMode(nextMode);
+      return;
+    }
+    const r = offsetWithin(rootEl, wrap);
+    const edges = [];
+
+    branches.forEach((b) => {
+      const catEl = catRefs.current[b.id];
+      if (!catEl) return;
+      const c = offsetWithin(catEl, wrap);
+      const stemX = c.x + 22;
+
+      if (mode === 'tree') {
+        const x1 = r.x + r.w / 2;
+        const y1 = r.y + r.h;
+        const x2 = c.x + c.w / 2;
+        const y2 = c.y;
+        const my = (y1 + y2) / 2;
+        edges.push({ id: `root-${b.id}`, kind: 'root', catId: b.id, color: b.color, d: `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`, delay: b.ci * 90 });
+        b.tools.forEach((t) => {
+          const el = toolRefs.current[t.key];
+          if (!el) return;
+          const p = offsetWithin(el, wrap);
+          const ty = p.y + p.h / 2;
+          edges.push({
+            id: `leaf-${t.key}`,
+            kind: 'leaf',
+            catId: b.id,
+            toolKey: t.key,
+            color: b.color,
+            d: `M${stemX},${c.y + c.h} V${ty - 10} Q${stemX},${ty} ${stemX + 10},${ty} H${p.x}`,
+            delay: 650 + b.ci * 90 + t.ti * 55,
+          });
+        });
+      } else {
+        const trunkX = r.x + 28;
+        const cy = c.y + c.h / 2;
+        edges.push({
+          id: `root-${b.id}`,
+          kind: 'root',
+          catId: b.id,
+          color: b.color,
+          d: `M${trunkX},${r.y + r.h} V${cy - 12} Q${trunkX},${cy} ${trunkX + 12},${cy} H${c.x}`,
+          delay: b.ci * 110,
+        });
+        const blockEl = blockRefs.current[b.id];
+        if (blockEl) {
+          const k = offsetWithin(blockEl, wrap);
+          edges.push({
+            id: `stem-${b.id}`,
+            kind: 'stem',
+            catId: b.id,
+            color: b.color,
+            d: `M${stemX},${c.y + c.h} V${k.y + k.h - 6}`,
+            delay: 500 + b.ci * 110,
+          });
+        }
+      }
     });
-    spinRef.current = Math.max(-6, Math.min(6, delta));
-  };
-  const endDrag = () => {
-    dragRef.current = null;
-  };
 
-  const setHover = (key) => {
-    hoverRef.current = !!key;
-    setHovered(key);
-  };
+    setGeo({ w: wrap.offsetWidth, h: wrap.offsetHeight, edges });
+  }, [mode]);
 
-  const sunGradient = darkMode
-    ? 'radial-gradient(circle at 35% 30%, #FFFFFF 0%, #7DFFE0 18%, #00FFB3 42%, #A700FF 100%)'
-    : 'radial-gradient(circle at 35% 30%, #FFFFFF 0%, #FFD36E 20%, #FF8A00 45%, #FF007A 100%)';
-  const sunGlow = darkMode ? 'rgba(0,255,179,0.55)' : 'rgba(255,0,122,0.45)';
+  useLayoutEffect(() => {
+    measure();
+    const wrap = wrapRef.current;
+    if (!wrap || typeof ResizeObserver === 'undefined') return undefined;
+    let raf;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    });
+    ro.observe(wrap);
+    document.fonts?.ready?.then(measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [measure]);
+
+  // ---- what is lit right now -------------------------------------------------
+  const focus = hover ?? pinned;
+  const lit = useMemo(() => {
+    const tools = new Set();
+    const cats = new Set();
+    if (focus?.type === 'tool') {
+      tools.add(focus.tool.key);
+      cats.add(focus.tool.category.id);
+    } else if (focus?.type === 'cat') {
+      cats.add(focus.id);
+      branches.find((b) => b.id === focus.id)?.tools.forEach((t) => tools.add(t.key));
+    } else if (trace) {
+      allTools.forEach((t) => {
+        if (t.usedIn?.includes(trace)) {
+          tools.add(t.key);
+          cats.add(t.category.id);
+        }
+      });
+    }
+    return { tools, cats, any: tools.size > 0 || cats.size > 0 };
+  }, [focus, trace]);
+
+  const edgeLit = (e) => (e.kind === 'leaf' ? lit.tools.has(e.toolKey) : lit.cats.has(e.catId));
+
+  const inspected = focus?.type === 'tool' ? focus.tool : null;
+  const inspectedBranch = focus?.type === 'cat' ? branches.find((b) => b.id === focus.id) : null;
+  const tracedCount = trace ? allTools.filter((t) => t.usedIn?.includes(trace)).length : 0;
+
+  const baseStroke = darkMode ? 'rgba(255,255,255,0.13)' : 'rgba(27,27,42,0.16)';
+  const nodeIn = (delay) => ({
+    opacity: grown ? 1 : 0,
+    transform: grown ? 'none' : 'scale(0.6) translateY(10px)',
+    transition:
+      reduced || !grown
+        ? 'none'
+        : settled
+          ? 'opacity 250ms ease, transform 250ms ease, translate 250ms ease, border-color 250ms, background 250ms, box-shadow 250ms'
+          : `opacity 500ms ease ${delay}ms, transform 600ms cubic-bezier(0.34,1.56,0.64,1) ${delay}ms, translate 250ms ease, border-color 250ms, background 250ms, box-shadow 250ms`,
+  });
+
+  const resetAll = () => {
+    setPinned(null);
+    setTrace(null);
+    setHover(null);
+  };
 
   return (
-    <div
-      ref={wrapRef}
-      className="relative w-full select-none touch-pan-y cursor-grab active:cursor-grabbing"
-      style={{ paddingBottom: tilted ? '64%' : '100%', transition: 'padding-bottom 800ms cubic-bezier(0.22,1,0.36,1)' }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-    >
-      <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '1600px' }}>
-        <div className="relative w-full aspect-square pointer-events-none" style={{ transformStyle: 'preserve-3d' }} ref={planeRef}>
-          {/* orbits + planets — every wrapper is click-through so stacked ring
-              boxes and the tilted plane never swallow clicks meant for a planet */}
-          {orbits.map((o, i) => {
-            const dim = focusCat && focusCat !== o.id;
-            const lit = focusCat === o.id;
-            return (
-              <div
-                key={o.id}
-                ref={(el) => {
-                  ringRefs.current[i] = el;
-                }}
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  left: `${50 - o.radius}%`,
-                  top: `${50 - o.radius}%`,
-                  width: `${o.radius * 2}%`,
-                  height: `${o.radius * 2}%`,
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                <div
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    border: `${lit ? 2 : 1}px ${lit ? 'solid' : 'dashed'} ${rgba(o.color, lit ? 0.8 : darkMode ? 0.32 : 0.4)}`,
-                    boxShadow: lit ? `0 0 24px ${rgba(o.color, 0.45)}, inset 0 0 24px ${rgba(o.color, 0.25)}` : 'none',
-                    opacity: dim ? 0.35 : 1,
-                    transition: 'opacity 300ms, box-shadow 300ms',
+    <div className="space-y-5">
+      {/* ---- controls: project tracer + inspector ---- */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(0,440px)] gap-4">
+        <div className="p-4 sm:p-5 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="sc-acc flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]">
+              <Route size={12} /> Trace a project
+            </p>
+            <button
+              onClick={() => setGrowKey((k) => k + 1)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[color:var(--line)] text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--ink)] hover:border-[color:var(--acc)] transition-colors"
+            >
+              <RotateCcw size={11} /> Replay growth
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PROJECTS.map((proj) => {
+              const on = trace === proj;
+              return (
+                <button
+                  key={proj}
+                  onClick={() => {
+                    setPinned(null);
+                    setTrace(on ? null : proj);
                   }}
-                />
-                {o.planets.map((p) => {
-                  const isSel = selected?.key === p.key;
-                  const isHover = hovered === p.key;
-                  const pDim = (focusCat && focusCat !== o.id) || (hovered && !isHover && !isSel);
-                  const labelOn = showLabels || isHover || isSel;
-                  return (
-                    <div
-                      key={p.key}
-                      className="absolute pointer-events-none"
-                      style={{
-                        left: `calc(${50 + 50 * Math.cos(p.theta)}% - var(--planet) / 2)`,
-                        top: `calc(${50 + 50 * Math.sin(p.theta)}% - var(--planet) / 2)`,
-                        width: 'var(--planet)',
-                        height: 'var(--planet)',
-                        transformStyle: 'preserve-3d',
-                      }}
-                    >
-                      <div
+                  aria-pressed={on}
+                  className={`px-3 py-1.5 rounded-md border text-[10px] sm:text-[11px] font-black uppercase tracking-[0.16em] transition-all ${
+                    on
+                      ? 'bg-[color:var(--acc)] border-[color:var(--acc)] shadow-[0_0_20px_var(--acc-glow)]'
+                      : 'border-[color:var(--line)] hover:border-[color:var(--acc-line)]'
+                  }`}
+                  style={{ color: on ? 'var(--acc-ink)' : 'var(--ink)' }}
+                >
+                  {proj}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden p-4 sm:p-5 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md min-h-[104px] flex items-center">
+          <AnimatePresence mode="wait">
+            {inspected ? (
+              <motion.div
+                key={inspected.key}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                className="flex items-center gap-4 w-full"
+              >
+                <span
+                  className="w-14 h-14 shrink-0 rounded-xl bg-white flex items-center justify-center p-3"
+                  style={{ border: `2px solid ${inspected.category.color}`, boxShadow: `0 0 22px ${rgba(inspected.category.color, 0.55)}` }}
+                >
+                  <ToolLogo tool={inspected} />
+                </span>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="sc-ink text-lg font-black leading-tight truncate">{inspected.name}</p>
+                  <p className="sc-cat text-[10px] font-black uppercase tracking-[0.2em]" style={{ '--c': inspected.category.color }}>
+                    {inspected.category.title}
+                  </p>
+                  <p className="sc-ink text-[11px] opacity-65 truncate">
+                    {inspected.usedIn?.length ? `Used in ${inspected.usedIn.join(' · ')}` : inspected.category.subtitle}
+                  </p>
+                </div>
+              </motion.div>
+            ) : inspectedBranch ? (
+              <motion.div
+                key={inspectedBranch.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                className="flex items-center gap-4 w-full"
+              >
+                <span
+                  className="w-14 h-14 shrink-0 rounded-xl flex items-center justify-center"
+                  style={{ background: rgba(inspectedBranch.color, 0.16), border: `2px solid ${inspectedBranch.color}`, color: inspectedBranch.color }}
+                >
+                  <inspectedBranch.Icon size={22} />
+                </span>
+                <div className="min-w-0 space-y-1">
+                  <p className="sc-ink text-lg font-black leading-tight">{inspectedBranch.title}</p>
+                  <p className="sc-ink text-[11px] opacity-65">
+                    {inspectedBranch.tools.length} tools · {inspectedBranch.subtitle}
+                  </p>
+                </div>
+              </motion.div>
+            ) : trace ? (
+              <motion.div
+                key={`trace-${trace}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                className="space-y-1"
+              >
+                <p className="sc-acc font-mono text-[10px] uppercase tracking-[0.3em]">Tracing</p>
+                <p className="sc-ink text-lg font-black leading-tight">
+                  {trace} runs on {pad2(tracedCount)} {tracedCount === 1 ? 'branch tip' : 'branch tips'}
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                className="space-y-1"
+              >
+                <p className="sc-acc font-mono text-[10px] uppercase tracking-[0.3em]">Inspector</p>
+                <p className="sc-ink text-sm opacity-75 leading-relaxed">
+                  Hover or tap a leaf to light up its path back to the root — or trace a project to see what it&apos;s
+                  built from.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ---- the tree ---- */}
+      <div
+        ref={wrapRef}
+        className="relative rounded-2xl border border-[color:var(--line)] p-4 sm:p-8 xl:p-10 overflow-hidden"
+        style={{
+          background: darkMode
+            ? 'radial-gradient(ellipse at 50% 0%, rgba(0,255,179,0.10), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(167,0,255,0.12), transparent 60%), rgba(255,255,255,0.02)'
+            : 'radial-gradient(ellipse at 50% 0%, rgba(255,0,122,0.08), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(167,0,255,0.08), transparent 60%), rgba(255,255,255,0.55)',
+        }}
+        onPointerLeave={() => setHover(null)}
+      >
+        {/* blueprint grid */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(${baseStroke} 1px, transparent 1px), linear-gradient(90deg, ${baseStroke} 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+            maskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 80%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 80%)',
+          }}
+        />
+
+        {/* branches */}
+        <svg
+          className="absolute left-0 top-0 pointer-events-none overflow-visible"
+          width={geo.w}
+          height={geo.h}
+          aria-hidden="true"
+        >
+          <defs>
+            <filter id="sc-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {geo.edges.map((e) => {
+            const on = edgeLit(e);
+            const dim = lit.any && !on;
+            const rootish = e.kind !== 'leaf';
+            return (
+              <path
+                key={e.id}
+                d={e.d}
+                fill="none"
+                pathLength="1"
+                strokeDasharray="1"
+                strokeLinecap="round"
+                strokeDashoffset={grown ? 0 : 1}
+                stroke={on ? e.color : rootish ? rgba(e.color, darkMode ? 0.55 : 0.6) : baseStroke}
+                strokeWidth={on ? 2.6 : rootish ? 2 : 1.4}
+                filter={on ? 'url(#sc-glow)' : undefined}
+                style={{
+                  opacity: dim ? 0.22 : 1,
+                  transition: reduced || !grown
+                    ? 'none'
+                    : `stroke-dashoffset ${rootish ? 900 : 650}ms cubic-bezier(0.65,0,0.35,1) ${e.delay}ms, stroke 250ms, stroke-width 250ms, opacity 250ms`,
+                }}
+              />
+            );
+          })}
+          {/* sap: pulses travelling from the root out to the leaves */}
+          {grown &&
+            !reduced &&
+            geo.edges.map((e, i) => {
+              const on = edgeLit(e);
+              if (lit.any && !on) return null;
+              if (!lit.any && e.kind === 'leaf' && i % 3 !== 0) return null;
+              const dur = e.kind === 'leaf' ? 1.6 + (i % 5) * 0.25 : 2.4 + (i % 4) * 0.3;
+              return (
+                <circle
+                  key={`pulse-${e.id}-${on ? 'on' : 'off'}`}
+                  r={on ? 3.6 : 2.4}
+                  fill={on ? '#FFFFFF' : e.color}
+                  opacity={on ? 1 : 0.75}
+                  style={{ filter: `drop-shadow(0 0 ${on ? 6 : 3}px ${e.color})` }}
+                >
+                  <animateMotion dur={`${on ? dur * 0.7 : dur}s`} begin={`${(i % 7) * 0.35}s`} repeatCount="indefinite" path={e.d} />
+                </circle>
+              );
+            })}
+        </svg>
+
+        {/* root */}
+        <div className={`relative flex ${mode === 'tree' ? 'justify-center' : 'justify-start'}`}>
+          <button
+            ref={rootRef}
+            onClick={resetAll}
+            aria-label="Reset the tree"
+            className="relative z-10 flex items-center gap-4 pl-2 pr-6 py-2 rounded-full border border-[color:var(--acc-line)] bg-[color:var(--surface-strong)] backdrop-blur-md shadow-[0_0_40px_var(--acc-glow)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+            style={nodeIn(0)}
+          >
+            <span className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+              <span
+                className="sc-anim absolute -inset-2 rounded-full"
+                style={{ background: 'radial-gradient(circle, var(--acc-glow), transparent 70%)', animation: 'sc-halo 3s ease-in-out infinite' }}
+              />
+              <span
+                className="sc-anim absolute -inset-0.5 rounded-full"
+                style={{ background: 'conic-gradient(from 0deg, var(--acc), var(--acc2), transparent 60%, var(--acc))', animation: 'sc-spin 4s linear infinite' }}
+              />
+              <span className="absolute inset-[3px] rounded-full flex items-center justify-center bg-[color:var(--acc)]">
+                <span className="sc-tc font-black text-sm sm:text-base tracking-tighter" style={{ '--tc': 'var(--acc-ink)' }}>
+                  BF
+                </span>
+              </span>
+            </span>
+            <span className="text-left">
+              <span className="sc-ink block text-sm sm:text-base font-black leading-tight">Brian Francisco</span>
+              <span className="sc-acc block font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.25em]">
+                root · {TOOL_COUNT} tools
+              </span>
+            </span>
+          </button>
+        </div>
+
+        {/* branches + leaves */}
+        <div
+          className={
+            mode === 'tree'
+              ? 'relative grid grid-cols-6 gap-4 mt-20'
+              : 'relative flex flex-col gap-8 mt-8 pl-10 sm:pl-14'
+          }
+        >
+          {branches.map((b) => {
+            const catLit = lit.cats.has(b.id);
+            const catDim = lit.any && !catLit;
+            const pinnedCat = pinned?.type === 'cat' && pinned.id === b.id;
+            return (
+              <div key={b.id} className="relative min-w-0">
+                <button
+                  ref={(el) => {
+                    catRefs.current[b.id] = el;
+                  }}
+                  onClick={() => {
+                    setTrace(null);
+                    setPinned(pinnedCat ? null : { type: 'cat', id: b.id });
+                  }}
+                  onPointerEnter={() => setHover({ type: 'cat', id: b.id })}
+                  onPointerLeave={() => setHover(null)}
+                  aria-pressed={pinnedCat}
+                  className="relative z-10 w-full flex items-center gap-3 p-2 pr-3 rounded-xl border text-left backdrop-blur-md outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+                  style={{
+                    ...nodeIn(250 + b.ci * 90),
+                    opacity: grown ? (catDim ? 0.35 : 1) : 0,
+                    borderColor: catLit ? b.color : rgba(b.color, 0.35),
+                    background: `linear-gradient(135deg, ${rgba(b.color, catLit ? 0.28 : 0.14)}, ${rgba(b.color, 0.03)})`,
+                    boxShadow: catLit ? `0 0 28px ${rgba(b.color, 0.45)}` : 'none',
+                  }}
+                >
+                  <span
+                    className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-lg flex items-center justify-center"
+                    style={{ background: b.color, color: '#FFFFFF' }}
+                  >
+                    <b.Icon size={15} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="sc-ink block text-xs sm:text-sm font-black leading-tight truncate">{b.title}</span>
+                    <span className="sc-cat block font-mono text-[9px] uppercase tracking-[0.2em]" style={{ '--c': b.color }}>
+                      {pad2(b.tools.length)} leaves
+                    </span>
+                  </span>
+                </button>
+
+                <div
+                  ref={(el) => {
+                    blockRefs.current[b.id] = el;
+                  }}
+                  className={
+                    mode === 'tree'
+                      ? 'flex flex-col gap-2.5 mt-6 pl-10'
+                      : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5 mt-4 pl-8 sm:pl-10'
+                  }
+                >
+                  {b.tools.map((t) => {
+                    const on = lit.tools.has(t.key);
+                    const dim = lit.any && !on;
+                    const isPinned = pinned?.type === 'tool' && pinned.tool.key === t.key;
+                    return (
+                      <button
+                        key={t.key}
                         ref={(el) => {
-                          billboardRefs.current[p.key] = el;
+                          toolRefs.current[t.key] = el;
                         }}
-                        className="relative w-full h-full pointer-events-none"
-                        style={{ transformStyle: 'preserve-3d' }}
+                        onClick={() => {
+                          setTrace(null);
+                          setPinned(isPinned ? null : { type: 'tool', tool: t });
+                        }}
+                        onPointerEnter={() => setHover({ type: 'tool', tool: t })}
+                        onPointerLeave={() => setHover(null)}
+                        onFocus={() => setHover({ type: 'tool', tool: t })}
+                        onBlur={() => setHover(null)}
+                        aria-pressed={isPinned}
+                        className="group relative z-10 flex items-center gap-2 sm:gap-2.5 p-1.5 pr-2.5 sm:pr-3 rounded-lg border text-left backdrop-blur-md outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+                        style={{
+                          ...nodeIn(900 + b.ci * 90 + t.ti * 55),
+                          opacity: grown ? (dim ? 0.3 : 1) : 0,
+                          borderColor: on ? b.color : 'var(--line)',
+                          background: on ? rgba(b.color, 0.16) : 'var(--surface-strong)',
+                          boxShadow: on ? `0 0 22px ${rgba(b.color, 0.5)}` : 'none',
+                          translate: on ? '4px 0' : '0 0',
+                        }}
                       >
-                        {isSel && (
+                        {isPinned && (
                           <span
-                            className="sc-anim absolute -inset-1.5 rounded-full pointer-events-none"
-                            style={{ border: `2px solid ${o.color}`, animation: 'sc-ping 1.6s ease-out infinite' }}
+                            className="sc-anim absolute inset-0 rounded-lg pointer-events-none"
+                            style={{ border: `2px solid ${b.color}`, animation: 'sc-ping 1.6s ease-out infinite' }}
                           />
                         )}
-                        <button
-                          onClick={() => {
-                            if (suppressClick.current) return;
-                            onSelect(isSel ? null : p);
-                          }}
-                          onPointerEnter={() => setHover(p.key)}
-                          onPointerLeave={() => setHover(null)}
-                          onFocus={() => setHover(p.key)}
-                          onBlur={() => setHover(null)}
-                          aria-label={`${p.name} — ${o.title}`}
-                          aria-pressed={isSel}
-                          className="pointer-events-auto relative w-full h-full rounded-full bg-white flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
-                          style={{
-                            padding: '20%',
-                            fontSize: 'calc(var(--planet) * 0.34)',
-                            border: `2px solid ${rgba(o.color, isSel || isHover ? 1 : 0.55)}`,
-                            boxShadow:
-                              isSel || isHover
-                                ? `0 0 0 4px ${rgba(o.color, 0.25)}, 0 0 28px ${rgba(o.color, 0.8)}`
-                                : `0 4px 14px ${darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(27,27,42,0.2)'}`,
-                            transform: isHover || isSel ? 'scale(1.35)' : 'scale(1)',
-                            opacity: pDim ? 0.3 : 1,
-                            transition: 'transform 250ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 250ms, opacity 250ms, border-color 250ms',
-                          }}
-                        >
-                          <ToolLogo tool={p} />
-                        </button>
-                        <span
-                          className="sc-ink absolute left-1/2 top-full mt-2 whitespace-nowrap px-1.5 py-0.5 rounded font-black uppercase tracking-wider pointer-events-none"
-                          style={{
-                            fontSize: 'clamp(8px, 1.1vw, 10px)',
-                            background: isHover || isSel ? rgba(o.color, 0.9) : darkMode ? 'rgba(11,11,22,0.75)' : 'rgba(255,255,255,0.85)',
-                            opacity: labelOn ? (pDim ? 0.4 : 1) : 0,
-                            transform: `translateX(-50%) translateY(${labelOn ? 0 : -4}px)`,
-                            transition: 'opacity 200ms, transform 200ms',
-                          }}
-                        >
-                          {p.name}
+                        <span className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-md bg-white flex items-center justify-center p-1 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                          <ToolLogo tool={t} />
                         </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                        <span className={`sc-ink text-[11px] sm:text-xs font-black leading-tight ${mode === 'tree' ? 'truncate' : 'break-words min-w-0'}`}>{t.name}</span>
+                        {t.usedIn?.length > 0 && (
+                          <span
+                            className="ml-auto w-1.5 h-1.5 shrink-0 rounded-full"
+                            style={{ background: b.color }}
+                            title={`Used in ${t.usedIn.join(', ')}`}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
-
-          {/* sun */}
-          <div className="absolute left-1/2 top-1/2 w-[17%] aspect-square -ml-[8.5%] -mt-[8.5%] pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
-            <div ref={sunRef} className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
-              <span
-                className="sc-anim absolute -inset-[35%] rounded-full pointer-events-none"
-                style={{ background: `radial-gradient(circle, ${sunGlow} 0%, transparent 65%)`, animation: 'sc-corona 4s ease-in-out infinite' }}
-              />
-              <span
-                className="sc-anim absolute -inset-[12%] rounded-full pointer-events-none opacity-70"
-                style={{
-                  background: darkMode
-                    ? 'conic-gradient(from 0deg, transparent, rgba(0,255,179,0.6), transparent 30%, rgba(167,0,255,0.6), transparent 60%, rgba(0,255,179,0.6), transparent)'
-                    : 'conic-gradient(from 0deg, transparent, rgba(255,138,0,0.6), transparent 30%, rgba(255,0,122,0.6), transparent 60%, rgba(255,138,0,0.6), transparent)',
-                  animation: 'sc-spin 12s linear infinite',
-                  filter: 'blur(6px)',
-                }}
-              />
-              <button
-                onClick={() => {
-                  if (!suppressClick.current) onSunClick();
-                }}
-                aria-label="Reset the system view"
-                className="pointer-events-auto relative w-full h-full rounded-full flex flex-col items-center justify-center text-center outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
-                style={{ background: sunGradient, boxShadow: `0 0 60px ${sunGlow}, inset -8px -10px 24px rgba(0,0,0,0.25)` }}
-              >
-                <span className="sc-dark font-black leading-none tracking-tighter" style={{ fontSize: 'clamp(14px, 3.4vw, 34px)' }}>
-                  {TOOL_COUNT}
-                </span>
-                <span className="sc-dark font-black uppercase leading-none mt-0.5" style={{ fontSize: 'clamp(5px, 0.9vw, 9px)', letterSpacing: '0.18em' }}>
-                  My Stack
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
+
+        <p className="sc-ink relative mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] opacity-50">
+          <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--acc)]" /> dot = shipped in a live project
+        </p>
       </div>
     </div>
   );
 };
 
 // ============================================================================
-// MISSION CONTROL — details for the selected planet / orbit legend
+// WORKFLOW — methodologies as one connected pipeline
 // ============================================================================
 
-const MissionControl = ({ selected, focusCat, onFocusCat, onClear }) => {
-  const orbit = selected ? orbits[selected.ring] : null;
-  return (
-    <div className="flex flex-col gap-6 p-6 sm:p-7 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md h-full">
-      <div className="flex items-center justify-between">
-        <p className="sc-acc font-mono text-[10px] uppercase tracking-[0.35em]">Mission Control</p>
-        <span className="relative flex h-2 w-2">
-          <span className="sc-anim animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--acc)] opacity-70" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--acc)]" />
-        </span>
-      </div>
-
-      <AnimatePresence mode="wait">
-        {selected ? (
-          <motion.div
-            key={selected.key}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-5"
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 shrink-0 rounded-full bg-white flex items-center justify-center p-3.5"
-                style={{ fontSize: 22, border: `2px solid ${orbit.color}`, boxShadow: `0 0 24px ${rgba(orbit.color, 0.6)}` }}
-              >
-                <ToolLogo tool={selected} />
-              </div>
-              <div className="min-w-0">
-                <h4 className="sc-ink text-2xl font-black tracking-tight leading-tight">{selected.name}</h4>
-                <p className="sc-cat text-[10px] font-black uppercase tracking-[0.2em]" style={{ '--c': orbit.color }}>
-                  {orbit.title}
-                </p>
-              </div>
-              <button
-                onClick={onClear}
-                aria-label="Clear selection"
-                className="ml-auto p-1.5 rounded-full border border-[color:var(--line)] text-[color:var(--ink)] hover:border-[color:var(--acc)] transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 font-mono text-[10px] uppercase tracking-[0.15em]">
-              <div className="p-3 rounded-md border border-[color:var(--line)]">
-                <p className="sc-ink opacity-50">Orbit</p>
-                <p className="sc-ink font-black text-sm mt-1">#{pad2(orbit.ring + 1)}</p>
-              </div>
-              <div className="p-3 rounded-md border border-[color:var(--line)]">
-                <p className="sc-ink opacity-50">Lap time</p>
-                <p className="sc-ink font-black text-sm mt-1">{orbit.period}s</p>
-              </div>
-            </div>
-
-            <p className="sc-ink text-sm opacity-75 leading-relaxed">{orbit.subtitle}.</p>
-
-            {selected.usedIn?.length > 0 && (
-              <div className="space-y-2">
-                <p className="sc-ink font-mono text-[10px] uppercase tracking-[0.25em] opacity-50">Spotted in</p>
-                <div className="flex flex-wrap gap-2">
-                  {selected.usedIn.map((proj) => (
-                    <span
-                      key={proj}
-                      className="sc-acc px-2.5 py-1 rounded-md border border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] text-[10px] font-black uppercase tracking-widest"
-                    >
-                      {proj}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="idle"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-2"
-          >
-            <h4 className="sc-ink text-xl font-black tracking-tight">Pick a planet.</h4>
-            <p className="sc-ink text-sm opacity-70 leading-relaxed">
-              Every planet is a tool I build with. Click one to scan it, drag the system to spin it, or lock onto an
-              orbit below.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="mt-auto space-y-1.5 pt-5 border-t border-[color:var(--line)]">
-        <p className="sc-ink font-mono text-[10px] uppercase tracking-[0.25em] opacity-50 mb-2">Orbits</p>
-        {orbits.map((o) => {
-          const on = focusCat === o.id;
-          return (
-            <button
-              key={o.id}
-              onClick={() => onFocusCat(on ? null : o.id)}
-              aria-pressed={on}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors ${
-                on ? 'bg-[color:var(--acc-soft)]' : 'hover:bg-[color:var(--surface-strong)]'
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: o.color, boxShadow: `0 0 8px ${o.color}` }} />
-              <span className="sc-ink text-xs sm:text-sm font-black flex-1 truncate">{o.title}</span>
-              <span className="sc-ink font-mono text-[10px] opacity-60">{pad2(o.planets.length)}</span>
-            </button>
-          );
-        })}
-      </div>
+const Workflow = ({ reduced }) => (
+  <div className="relative">
+    <div className="hidden md:block absolute left-[10%] right-[10%] top-8 h-px bg-[color:var(--acc-line)]" />
+    {!reduced && (
+      <motion.span
+        className="hidden md:block absolute top-8 -mt-[3px] w-1.5 h-1.5 rounded-full bg-[color:var(--acc)] shadow-[0_0_12px_var(--acc)]"
+        initial={{ left: '10%' }}
+        animate={{ left: ['10%', '90%'] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', repeatType: 'reverse' }}
+      />
+    )}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-5">
+      {methodologies.map((m, i) => (
+        <motion.div
+          key={m.name}
+          initial={reduced ? false : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: reduced ? 0 : i * 0.08 }}
+          className="group relative flex flex-col items-center text-center gap-3"
+        >
+          <span className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center bg-[color:var(--surface-strong)] border-2 border-[color:var(--acc-line)] text-[color:var(--acc)] backdrop-blur-md transition-all duration-500 group-hover:border-[color:var(--acc)] group-hover:shadow-[0_0_30px_var(--acc-glow)] group-hover:rotate-[360deg]">
+            <m.Icon size={22} />
+          </span>
+          <span className="sc-ink font-mono text-[10px] opacity-50">{pad2(i + 1)}</span>
+          <p className="sc-acc text-xs font-black uppercase tracking-[0.2em]">{m.name}</p>
+          <p className="sc-ink text-xs opacity-60 leading-relaxed max-w-[200px]">{m.desc}</p>
+        </motion.div>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
 // ============================================================================
 // MAIN
@@ -665,36 +826,10 @@ const MissionControl = ({ selected, focusCat, onFocusCat, onClear }) => {
 
 function Stacks({ darkMode = true }) {
   const reduced = useReducedMotion();
-  const [playing, setPlaying] = useState(true);
-  const [speed, setSpeed] = useState(1);
-  const [tilted, setTilted] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= 1024
-  );
-  const [showLabels, setShowLabels] = useState(false);
-  const [selected, setSelected] = useState(null);
-  const [focusCat, setFocusCat] = useState(null);
-  const systemRef = useRef(null);
-
-  const palette = getPalette(darkMode);
   const vars = useMemo(
-    () => ({
-      ...cssVars(palette),
-      '--planet': 'clamp(26px, 5.2vw, 50px)',
-    }),
-    // palette is derived from darkMode alone
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => cssVars(getPalette(darkMode)),
     [darkMode]
   );
-
-  const selectTool = useCallback((tool) => {
-    setSelected(tool);
-    if (tool) setFocusCat(null);
-  }, []);
-
-  const pickFromManifest = (tool) => {
-    selectTool(tool);
-    systemRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-  };
 
   const reveal = (delay = 0) =>
     reduced
@@ -706,195 +841,32 @@ function Stacks({ darkMode = true }) {
           transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] },
         };
 
-  const spaceBg = darkMode
-    ? 'radial-gradient(ellipse at 50% 45%, rgba(167,0,255,0.18), transparent 60%), radial-gradient(ellipse at 50% 50%, #12122a 0%, #07070f 75%)'
-    : 'radial-gradient(ellipse at 50% 45%, rgba(255,0,122,0.12), transparent 60%), radial-gradient(ellipse at 50% 50%, #FFFDF5 0%, #F6EEFF 80%)';
-
   return (
     <div className="sc-scope space-y-16 sm:space-y-20 pt-6 sm:pt-10" style={vars}>
       <StackStyles />
 
-      {/* ================= HEADER ================= */}
       <header className="space-y-5 sm:space-y-6">
         <motion.p {...reveal(0)} className="sc-acc font-mono text-[11px] uppercase tracking-[0.4em]">
           ~/stack
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="sc-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-          My Tech <span className="sc-acc">Universe.</span>
+          The Tech <span className="sc-acc">Tree.</span>
         </motion.h2>
         <motion.p {...reveal(0.16)} className="sc-ink text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
-          {TOOL_COUNT} tools in {orbits.length} orbits — frontend, backend, mobile, design, AI and shipping — all
-          circling the same goal: turning ideas into real, deployed products.
+          {TOOL_COUNT} tools growing from one root — {branches.length} branches spanning frontend, backend, mobile,
+          design, AI and shipping. Every leaf is something I actually build with.
         </motion.p>
       </header>
 
-      {/* ================= SOLAR SYSTEM ================= */}
-      <motion.section {...reveal(0)} className="space-y-6">
-        <SectionEyebrow label="The System" icon={<Orbit size={16} />} />
+      <section className="space-y-6">
+        <SectionEyebrow label="Skill Tree" icon={<GitFork size={16} />} />
+        <TechTree darkMode={darkMode} reduced={reduced} />
+      </section>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <ControlButton on={!playing} onClick={() => setPlaying((p) => !p)} label={playing ? 'Pause orbits' : 'Play orbits'}>
-            {playing ? <Pause size={13} /> : <Play size={13} />}
-            <span className="sc-tc">{playing ? 'Pause' : 'Play'}</span>
-          </ControlButton>
-          {[0.5, 1, 3].map((s) => (
-            <ControlButton key={s} on={speed === s && playing} onClick={() => { setSpeed(s); setPlaying(true); }} label={`${s}× speed`}>
-              <span className="sc-tc">{s}×</span>
-            </ControlButton>
-          ))}
-          <span className="w-px h-6 bg-[color:var(--line)] mx-1" />
-          <ControlButton on={tilted} onClick={() => setTilted((t) => !t)} label="Toggle 3D tilt">
-            <Box size={13} />
-            <span className="sc-tc">3D</span>
-          </ControlButton>
-          <ControlButton on={showLabels} onClick={() => setShowLabels((l) => !l)} label="Toggle labels">
-            <Tag size={13} />
-            <span className="sc-tc">Labels</span>
-          </ControlButton>
-          <span className="sc-ink hidden md:flex items-center gap-2 ml-auto font-mono text-[10px] uppercase tracking-[0.25em] opacity-50">
-            <Hand size={12} /> Drag to spin · hover to slow time · click to scan
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-          <div
-            ref={systemRef}
-            className="relative overflow-hidden rounded-2xl border border-[color:var(--line)] p-3 sm:p-8"
-            style={{ background: spaceBg }}
-          >
-            {/* star field */}
-            <div className="absolute inset-0 pointer-events-none">
-              {STARS.map((s, i) => (
-                <span
-                  key={i}
-                  className="sc-anim absolute rounded-full"
-                  style={{
-                    left: `${s.x}%`,
-                    top: `${s.y}%`,
-                    width: s.s,
-                    height: s.s,
-                    background: darkMode ? '#FFFFFF' : '#A700FF',
-                    opacity: darkMode ? 0.6 : 0.35,
-                    animation: `sc-twinkle ${s.t}s ease-in-out ${s.d}s infinite`,
-                  }}
-                />
-              ))}
-              <span
-                className="sc-anim absolute top-[8%] right-[6%] w-28 h-px rounded-full"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${darkMode ? '#FFFFFF' : '#FF007A'})`,
-                  animation: 'sc-shoot 9s ease-in 2s infinite',
-                }}
-              />
-            </div>
-
-            <div className="relative mx-auto max-w-[820px]">
-              <SolarSystem
-                darkMode={darkMode}
-                reduced={reduced}
-                playing={playing}
-                speed={speed}
-                tilted={tilted}
-                showLabels={showLabels}
-                selected={selected}
-                focusCat={focusCat}
-                onSelect={selectTool}
-                onSunClick={() => {
-                  setSelected(null);
-                  setFocusCat(null);
-                }}
-              />
-            </div>
-
-            <p className="sc-ink md:hidden relative mt-2 text-center font-mono text-[9px] uppercase tracking-[0.25em] opacity-50">
-              Drag to spin · tap a planet to scan
-            </p>
-          </div>
-
-          <MissionControl
-            selected={selected}
-            focusCat={focusCat}
-            onFocusCat={(id) => {
-              setFocusCat(id);
-              if (id) setSelected(null);
-            }}
-            onClear={() => setSelected(null)}
-          />
-        </div>
-      </motion.section>
-
-      {/* ================= FLIGHT MANIFEST ================= */}
-      <motion.section {...reveal(0)} className="space-y-8">
-        <SectionEyebrow label="Flight Manifest" icon={<Sun size={16} />} />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-          {orbits.map((o, oi) => (
-            <motion.div
-              key={o.id}
-              {...reveal(oi * 0.06)}
-              className="relative overflow-hidden p-6 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md space-y-5"
-            >
-              <span className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${o.color}, transparent)` }} />
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: rgba(o.color, 0.14), border: `1px solid ${rgba(o.color, 0.4)}`, color: o.color }}
-                  >
-                    <o.Icon size={18} />
-                  </span>
-                  <div>
-                    <h4 className="sc-ink text-lg font-black tracking-tight leading-tight">{o.title}</h4>
-                    <p className="sc-ink text-xs opacity-60">{o.subtitle}</p>
-                  </div>
-                </div>
-                <span className="sc-cat font-mono text-[10px] font-black uppercase tracking-widest shrink-0" style={{ '--c': o.color }}>
-                  Orbit {pad2(oi + 1)}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {o.planets.map((p) => {
-                  const on = selected?.key === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      onClick={() => pickFromManifest(p)}
-                      className={`inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all hover:-translate-y-0.5 ${
-                        on ? 'border-transparent' : 'border-[color:var(--line)] hover:border-[color:var(--acc-line)]'
-                      }`}
-                      style={on ? { background: rgba(o.color, 0.18), borderColor: o.color } : undefined}
-                    >
-                      <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center p-1" style={{ fontSize: 9 }}>
-                        <ToolLogo tool={p} />
-                      </span>
-                      <span className="sc-ink text-[11px] font-black">{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* ================= MISSION PROTOCOLS ================= */}
-      <motion.section {...reveal(0)} className="space-y-8">
-        <SectionEyebrow label="Mission Protocols" icon={<Workflow size={16} />} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-5">
-          {methodologies.map((m, i) => (
-            <motion.div
-              key={m.name}
-              {...reveal(i * 0.06)}
-              className="group p-5 sm:p-6 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md flex flex-col items-center text-center gap-3 transition-all hover:border-[color:var(--acc-line)] hover:-translate-y-1"
-            >
-              <span className="w-12 h-12 rounded-full flex items-center justify-center bg-[color:var(--acc-soft)] border border-[color:var(--acc-line)] text-[color:var(--acc)] transition-transform duration-500 group-hover:rotate-[360deg]">
-                <m.Icon size={20} />
-              </span>
-              <p className="sc-acc text-[11px] font-black uppercase tracking-widest">{m.name}</p>
-              <p className="sc-ink text-xs opacity-60 leading-relaxed">{m.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+      <section className="space-y-10">
+        <SectionEyebrow label="How I Work" icon={<WorkflowIcon size={16} />} />
+        <Workflow reduced={reduced} />
+      </section>
     </div>
   );
 }
