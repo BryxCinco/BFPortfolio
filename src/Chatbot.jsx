@@ -104,7 +104,7 @@ const FEMALE_VOICES = [
   /google us english/i, /zoe/i, /allison/i, /samantha/i, /nicky/i, /susan/i, /serena/i, /kate/i,
   /karen/i, /moira/i, /tessa/i, /martha/i, /victoria/i, /zira/i, /hazel/i, /google uk english female/i,
 ];
-const MALE_HINTS = /(guy|davis|tony|jason|brian|andrew|christopher|eric|roger|steffan|ryan|thomas|william|david|mark|george|james|daniel|alex|fred|aaron|arthur|gordon|oliver|tom|evan|nathan|male)/i;
+const MALE_HINTS = /(guy|davis|tony|jason|brian|andrew|christopher|eric|roger|steffan|ryan|thomas|william|david|mark|george|james|daniel|alex|fred|aaron|arthur|gordon|oliver|tom|evan|nathan|bmale)/i;
 // Apple's character voices (old, nasal, robotic or sung) — never use these
 const NOVELTY = /(grandma|grandpa|flo|shelley|sandy|reed|rocko|eddy|albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|kathy|ralph|deranged|hysterical|pipe organ)/i;
 
