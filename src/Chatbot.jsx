@@ -90,21 +90,29 @@ const shuffle = (arr) => {
 };
 
 // ============================================================================
-// VOICE — browser text-to-speech. Prefers natural-sounding English voices,
-// speaks sentence by sentence (long single utterances get cut off in
-// Chromium), and strips emoji so they aren't read out by name.
+// VOICE — browser text-to-speech with a smooth female voice. Picks the most
+// natural female English voice the browser has, reads the answer in a few
+// long chunks (not sentence by sentence, which made it sound choppy), and
+// keeps Chrome's online voices from going silent on longer answers.
 // ============================================================================
 
-const PREFERRED_VOICES = [/natural/i, /aria/i, /jenny/i, /google us english/i, /samantha/i, /zira/i, /google uk english female/i];
+// best first: neural "Natural" voices (Edge), then good built-in ones
+const FEMALE_VOICES = [
+  /aria.*natural/i, /jenny.*natural/i, /ava.*natural/i, /emma.*natural/i, /michelle.*natural/i,
+  /libby.*natural/i, /sonia.*natural/i, /natasha.*natural/i, /clara.*natural/i,
+  /google us english/i, /samantha/i, /ava/i, /allison/i, /susan/i, /karen/i, /moira/i, /tessa/i,
+  /victoria/i, /zira/i, /hazel/i, /google uk english female/i, /female/i,
+];
+const MALE_HINTS = /(guy|davis|tony|jason|brian|andrew|christopher|eric|roger|steffan|ryan|thomas|william|david|mark|george|james|daniel|alex|fred|male)/i;
 
 const pickVoice = () => {
   const voices = window.speechSynthesis?.getVoices?.() ?? [];
   const english = voices.filter((v) => /^en/i.test(v.lang));
-  for (const re of PREFERRED_VOICES) {
-    const v = english.find((x) => re.test(x.name));
+  for (const re of FEMALE_VOICES) {
+    const v = english.find((x) => re.test(x.name) && !MALE_HINTS.test(x.name.replace(re, '')));
     if (v) return v;
   }
-  return english.find((v) => /en-US/i.test(v.lang)) ?? english[0] ?? null;
+  return english.find((v) => !MALE_HINTS.test(v.name)) ?? english[0] ?? null;
 };
 
 const speakable = (text) =>
@@ -113,6 +121,24 @@ const speakable = (text) =>
     .replace(/₱\s?([\d,]+)/g, '$1 pesos')
     .replace(/\s+/g, ' ')
     .trim();
+
+// sentences merged into chunks of up to ~230 characters, so most answers are
+// read in one or two continuous breaths
+const chunksOf = (text, max = 230) => {
+  const sentences = text.match(/[^.!?]+[.!?]*\s*/g) ?? [text];
+  const out = [];
+  let cur = '';
+  for (const s of sentences) {
+    if (cur && (cur + s).length > max) {
+      out.push(cur.trim());
+      cur = s;
+    } else {
+      cur += s;
+    }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+};
 
 function useVoice() {
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -127,6 +153,7 @@ function useVoice() {
   const [speakingId, setSpeakingId] = useState(null);
   const voiceRef = useRef(null);
   const runRef = useRef(0);
+  const keepAliveRef = useRef(0);
 
   useEffect(() => {
     if (!supported) return undefined;
@@ -141,6 +168,7 @@ function useVoice() {
   const stop = useCallback(() => {
     if (!supported) return;
     runRef.current += 1;
+    clearInterval(keepAliveRef.current);
     window.speechSynthesis.cancel();
     setSpeakingId(null);
   }, [supported]);
@@ -150,19 +178,37 @@ function useVoice() {
       if (!supported) return;
       stop();
       const run = runRef.current;
-      const parts = speakable(text).match(/[^.!?]+[.!?]*/g) ?? [];
+      const parts = chunksOf(speakable(text));
       if (!parts.length) return;
+      // voices can load late; pick again so the first answer isn't a fallback voice
+      if (!voiceRef.current) voiceRef.current = pickVoice();
+      const voice = voiceRef.current;
       setSpeakingId(id);
+
+      // Chrome's online voices stop after ~15s unless nudged
+      clearInterval(keepAliveRef.current);
+      if (voice && !voice.localService && /google/i.test(voice.name)) {
+        keepAliveRef.current = setInterval(() => {
+          if (!window.speechSynthesis.speaking) return clearInterval(keepAliveRef.current);
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }, 9000);
+      }
+
+      const done = () => {
+        if (runRef.current !== run) return;
+        clearInterval(keepAliveRef.current);
+        setSpeakingId(null);
+      };
       parts.forEach((part, i) => {
-        const u = new SpeechSynthesisUtterance(part.trim());
-        if (voiceRef.current) u.voice = voiceRef.current;
-        u.lang = voiceRef.current?.lang ?? 'en-US';
-        u.rate = 1.04;
-        u.pitch = 1;
-        if (i === parts.length - 1) {
-          u.onend = () => runRef.current === run && setSpeakingId(null);
-        }
-        u.onerror = () => runRef.current === run && setSpeakingId(null);
+        const u = new SpeechSynthesisUtterance(part);
+        if (voice) u.voice = voice;
+        u.lang = voice?.lang ?? 'en-US';
+        u.rate = 1;
+        u.pitch = 1.08;
+        u.volume = 1;
+        if (i === parts.length - 1) u.onend = done;
+        u.onerror = done;
         window.speechSynthesis.speak(u);
       });
     },
