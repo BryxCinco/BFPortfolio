@@ -561,7 +561,7 @@ const VaultStyles = () => (
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6">
-    <h3 className="cv-acc text-[10px] sm:text-[11px] md:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
+    <h3 className="cv-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
       {label}
     </h3>
     <div className="h-px flex-1 bg-[color:var(--acc-line)]" />
@@ -580,7 +580,7 @@ const IssuerLogo = ({ cert, size = 'md' }) => {
 
 const CategoryPill = ({ category }) => (
   <span
-    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-widest"
+    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[0.5625rem] font-black uppercase tracking-widest"
     style={{ '--c': category.color, borderColor: rgba(category.color, 0.35), background: rgba(category.color, 0.1) }}
   >
     <span className="w-1.5 h-1.5 rounded-full" style={{ background: category.color }} />
@@ -697,16 +697,16 @@ const HoloCard = ({ cert, index = 0, reduced, onOpen }) => {
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <span className="cv-ink font-mono text-[10px] opacity-50">
+            <span className="cv-ink font-mono text-[0.625rem] opacity-50">
               #{pad2(cert.n)}/{TOTAL}
             </span>
             {cert.verified ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#00C48C] text-[9px] font-black uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#00C48C] text-[0.5625rem] font-black uppercase tracking-widest">
                 <BadgeCheck size={11} className="text-white" />
                 <span className="cv-white">Verifiable</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[color:var(--line)] text-[9px] font-black uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[color:var(--line)] text-[0.5625rem] font-black uppercase tracking-widest">
                 <Award size={11} className="opacity-60" />
                 <span className="cv-ink opacity-70">Issued</span>
               </span>
@@ -716,12 +716,12 @@ const HoloCard = ({ cert, index = 0, reduced, onOpen }) => {
 
         <div className="relative space-y-2 flex-1">
           <h4 className="cv-ink text-base sm:text-lg font-black leading-tight line-clamp-3">{cert.title}</h4>
-          <p className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-widest">{cert.issuer}</p>
+          <p className="cv-acc text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-widest">{cert.issuer}</p>
         </div>
 
         <div className="relative flex items-center justify-between gap-2 pt-4 border-t border-[color:var(--line)]">
           <CategoryPill category={category} />
-          <span className="cv-ink flex items-center gap-1.5 font-mono text-[10px] opacity-60">
+          <span className="cv-ink flex items-center gap-1.5 font-mono text-[0.625rem] opacity-60">
             <Calendar size={11} /> {cert.date}
           </span>
         </div>
@@ -798,7 +798,7 @@ const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
         }}
       >
         {/* sizing spacer — the cards are absolutely stacked on top of it */}
-        <div className="invisible mx-auto w-[74vw] max-w-[540px] aspect-[1.414/1]" />
+        <div className="invisible mx-auto w-[74vw] max-w-[33.75rem] aspect-[1.414/1]" />
         <div
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 -bottom-6 w-[60%] h-12 rounded-full blur-2xl"
           style={{ background: 'var(--acc-glow)', opacity: 0.6 }}
@@ -822,7 +822,7 @@ const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
               }}
               tabIndex={hidden ? -1 : 0}
               aria-label={isActive ? `Inspect ${cert.title}` : `Show ${cert.title}`}
-              className="absolute left-1/2 top-0 w-[74vw] max-w-[540px] aspect-[1.414/1] rounded-xl overflow-hidden bg-white border-2 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+              className="absolute left-1/2 top-0 w-[74vw] max-w-[33.75rem] aspect-[1.414/1] rounded-xl overflow-hidden bg-white border-2 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
               style={{
                 '--holo-o': 0,
                 borderColor: isActive ? 'var(--acc)' : 'var(--line)',
@@ -848,7 +848,7 @@ const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
                 <IssuerLogo cert={cert} size="sm" />
               </div>
               {isActive && (
-                <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 text-[9px] font-black uppercase tracking-widest">
+                <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 text-[0.5625rem] font-black uppercase tracking-widest">
                   <ZoomIn size={11} className="text-white" />
                   <span className="cv-white">Inspect</span>
                 </span>
@@ -869,7 +869,7 @@ const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
             transition={{ duration: 0.35 }}
             className="space-y-2 max-w-2xl px-4"
           >
-            <p className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em]">
+            <p className="cv-acc text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em]">
               {current.issuer}
             </p>
             <h4 className="cv-ink text-xl sm:text-3xl font-black tracking-tight leading-tight">{current.title}</h4>
@@ -903,7 +903,7 @@ const Spotlight = ({ items, reduced, darkMode, onOpen }) => {
             <ChevronRight size={18} />
           </button>
         </div>
-        <p className="cv-ink flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] opacity-50">
+        <p className="cv-ink flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-[0.25em] opacity-50">
           <Hand size={12} /> Drag, swipe, or use ← → · click the front card to inspect
         </p>
       </div>
@@ -985,7 +985,7 @@ const DomainRing = ({ filter, onPick, reduced }) => {
                 {pad2(focus ? categoryCounts[focus.id] : TOTAL)}
               </p>
               <p
-                className={`${focus ? 'cv-cat' : 'cv-acc'} mt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] leading-tight`}
+                className={`${focus ? 'cv-cat' : 'cv-acc'} mt-1 text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] leading-tight`}
                 style={focus ? { '--c': focus.color } : undefined}
               >
                 {focus ? focus.label : 'Credentials'}
@@ -1072,8 +1072,8 @@ const Timeline = ({ certs, reduced, onOpen }) => {
         {groups.map(([month, list]) => (
           <section key={month} className="space-y-4">
             <div className="relative">
-              <span className="absolute -left-[26px] sm:-left-[34px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-[color:var(--acc)] bg-[color:var(--surface-strong)]" />
-              <h4 className="cv-acc font-mono text-[11px] sm:text-xs font-black uppercase tracking-[0.3em]">{month}</h4>
+              <span className="absolute -left-[1.625rem] sm:-left-[2.125rem] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-[color:var(--acc)] bg-[color:var(--surface-strong)]" />
+              <h4 className="cv-acc font-mono text-[0.6875rem] sm:text-xs font-black uppercase tracking-[0.3em]">{month}</h4>
             </div>
             {list.map((cert, i) => (
               <motion.button
@@ -1085,7 +1085,7 @@ const Timeline = ({ certs, reduced, onOpen }) => {
                 onClick={(e) => onOpen(cert, e.currentTarget)}
                 className="group relative w-full grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-center gap-4 p-4 sm:p-5 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md text-left hover:border-[color:var(--acc-line)] hover:translate-x-1 transition-[transform,border-color] duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
               >
-                <span className="absolute -left-[22px] sm:-left-[30px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style={{ background: cert.category.color }}>
+                <span className="absolute -left-[1.375rem] sm:-left-[1.875rem] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style={{ background: cert.category.color }}>
                   <span
                     className="cv-anim absolute inset-0 rounded-full"
                     style={{ background: cert.category.color, animation: 'cv-pulse 1.8s ease-out infinite' }}
@@ -1094,11 +1094,11 @@ const Timeline = ({ certs, reduced, onOpen }) => {
                 <IssuerLogo cert={cert} size="sm" />
                 <span className="min-w-0 space-y-1">
                   <span className="cv-ink block text-sm sm:text-base font-black leading-snug">{cert.title}</span>
-                  <span className="cv-acc block text-[10px] font-black uppercase tracking-widest truncate">{cert.issuer}</span>
+                  <span className="cv-acc block text-[0.625rem] font-black uppercase tracking-widest truncate">{cert.issuer}</span>
                 </span>
                 <span className="col-span-2 sm:col-span-1 flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
                   <CategoryPill category={cert.category} />
-                  <span className="cv-ink font-mono text-[10px] opacity-60">{cert.date}</span>
+                  <span className="cv-ink font-mono text-[0.625rem] opacity-60">{cert.date}</span>
                 </span>
               </motion.button>
             ))}
@@ -1286,7 +1286,7 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                   className="w-full lg:flex"
                 >
                   <div
-                    className="relative flex items-center justify-center p-5 sm:p-8 lg:p-10 lg:w-3/5 lg:shrink-0 min-h-[220px]"
+                    className="relative flex items-center justify-center p-5 sm:p-8 lg:p-10 lg:w-3/5 lg:shrink-0 min-h-[13.75rem]"
                     style={{
                       background: darkMode
                         ? `radial-gradient(circle at 50% 40%, ${rgba(cert.category.color, 0.18)}, rgba(0,0,0,0.25) 70%)`
@@ -1294,7 +1294,7 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                     }}
                   >
                     <Magnifier src={cert.img} alt={cert.title} />
-                    <span className="hidden lg:inline-flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 text-[9px] font-black uppercase tracking-widest">
+                    <span className="hidden lg:inline-flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 text-[0.5625rem] font-black uppercase tracking-widest">
                       <ZoomIn size={11} className="text-white" />
                       <span className="cv-white">Hover to magnify</span>
                     </span>
@@ -1303,7 +1303,7 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                   <div className="p-6 sm:p-8 lg:p-10 space-y-5 lg:w-2/5 lg:flex lg:flex-col lg:justify-center">
                     <div className="flex flex-wrap items-center gap-2 pr-10">
                       <CategoryPill category={cert.category} />
-                      <span className="cv-ink font-mono text-[10px] opacity-50">
+                      <span className="cv-ink font-mono text-[0.625rem] opacity-50">
                         Credential #{pad2(cert.n)} / {TOTAL}
                       </span>
                     </div>
@@ -1315,7 +1315,7 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                       </h3>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2 text-[11px] font-black uppercase tracking-widest">
+                    <div className="grid grid-cols-1 gap-2 text-[0.6875rem] font-black uppercase tracking-widest">
                       <span className="flex items-center gap-2">
                         <Building2 size={14} style={{ color: cert.category.color }} />
                         <span className="cv-ink opacity-75">{cert.issuer}</span>
@@ -1335,14 +1335,14 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                         href={cert.verifyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group/v inline-flex w-fit items-center gap-2 px-5 py-3 rounded-md font-black text-[11px] uppercase tracking-[0.18em] transition-transform hover:-translate-y-0.5 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+                        className="group/v inline-flex w-fit items-center gap-2 px-5 py-3 rounded-md font-black text-[0.6875rem] uppercase tracking-[0.18em] transition-transform hover:-translate-y-0.5 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
                         style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
                       >
                         <BadgeCheck size={15} /> Verify credential
                         <ExternalLink size={13} className="transition-transform group-hover/v:translate-x-0.5" />
                       </a>
                     ) : (
-                      <p className="cv-ink flex items-center gap-2 text-[11px] font-black uppercase tracking-widest opacity-60">
+                      <p className="cv-ink flex items-center gap-2 text-[0.6875rem] font-black uppercase tracking-widest opacity-60">
                         <Award size={14} /> Issued certificate · no public verify link
                       </p>
                     )}
@@ -1356,7 +1356,7 @@ const CertModal = ({ open, darkMode, onClose, onNav }) => {
                         >
                           <ChevronLeft size={18} />
                         </button>
-                        <span className="cv-ink font-mono text-[10px] uppercase tracking-[0.2em] opacity-60 text-center">
+                        <span className="cv-ink font-mono text-[0.625rem] uppercase tracking-[0.2em] opacity-60 text-center">
                           {pad2(index + 1)} / {pad2(list.length)}
                           <span className="hidden sm:inline"> · ← → or swipe</span>
                         </span>
@@ -1412,7 +1412,7 @@ const ToggleGroup = ({ id, value, options, onChange }) => (
           key={v}
           onClick={() => onChange(v)}
           aria-pressed={on}
-          className="relative flex items-center gap-2 px-3.5 py-2 rounded text-[10px] font-black uppercase tracking-[0.18em]"
+          className="relative flex items-center gap-2 px-3.5 py-2 rounded text-[0.625rem] font-black uppercase tracking-[0.18em]"
         >
           {on && (
             <motion.span
@@ -1482,7 +1482,7 @@ export default function Certifications({ darkMode = true }) {
             I collect certificates like trading cards. Gotta catch &apos;em all.
           </StickyNote>
         </div>
-        <motion.p {...reveal(0)} className="cv-acc font-mono text-[11px] uppercase tracking-[0.4em]">
+        <motion.p {...reveal(0)} className="cv-acc font-mono text-[0.6875rem] uppercase tracking-[0.4em]">
           ~/credentials
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="cv-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
@@ -1537,7 +1537,7 @@ export default function Certifications({ darkMode = true }) {
                 <span className="text-4xl sm:text-6xl font-black tracking-tighter leading-none">
                   <CountUp to={s.value} reduced={reduced} />
                 </span>
-                <span className="cv-acc text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em]">{s.label}</span>
+                <span className="cv-acc text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em]">{s.label}</span>
               </div>
             ))}
           </div>
@@ -1560,7 +1560,7 @@ export default function Certifications({ darkMode = true }) {
                   key={chip.id}
                   onClick={() => setFilter(chip.id)}
                   aria-pressed={on}
-                  className={`relative shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-md border text-[10px] font-black uppercase tracking-[0.18em] transition-colors ${
+                  className={`relative shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-md border text-[0.625rem] font-black uppercase tracking-[0.18em] transition-colors ${
                     on ? 'border-transparent' : 'border-[color:var(--line)] hover:border-[color:var(--acc-line)]'
                   }`}
                 >
@@ -1582,7 +1582,7 @@ export default function Certifications({ darkMode = true }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <label className="relative flex-1 min-w-[200px] xl:w-64 xl:flex-none">
+            <label className="relative flex-1 min-w-[12.5rem] xl:w-64 xl:flex-none">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 text-[color:var(--ink)]" />
               <input
                 type="search"
@@ -1605,7 +1605,7 @@ export default function Certifications({ darkMode = true }) {
           </div>
         </div>
 
-        <p className="cv-ink font-mono text-[11px] uppercase tracking-[0.2em] opacity-55">
+        <p className="cv-ink font-mono text-[0.6875rem] uppercase tracking-[0.2em] opacity-55">
           Showing {pad2(filtered.length)} of {TOTAL}
           {filter !== 'all' && ` · ${certCategories.find((c) => c.id === filter)?.label}`}
           {query && ` · “${query}”`}
@@ -1619,7 +1619,7 @@ export default function Certifications({ darkMode = true }) {
                 setFilter('all');
                 setQuery('');
               }}
-              className="px-4 py-2 rounded-md border border-[color:var(--acc-line)] text-[11px] font-black uppercase tracking-widest text-[color:var(--acc)] hover:bg-[color:var(--acc-soft)]"
+              className="px-4 py-2 rounded-md border border-[color:var(--acc-line)] text-[0.6875rem] font-black uppercase tracking-widest text-[color:var(--acc)] hover:bg-[color:var(--acc-soft)]"
             >
               Reset filters
             </button>

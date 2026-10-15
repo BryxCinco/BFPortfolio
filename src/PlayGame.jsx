@@ -125,7 +125,7 @@ export const PlayGameTrigger = ({ darkMode, onClick, className = '' }) => {
       style={{ color: accent }}
     >
       <Layers size={18} />
-      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Play Game</span>
+      <span className="text-[0.625rem] font-black uppercase tracking-widest whitespace-nowrap">Play Game</span>
     </button>
   );
 };
@@ -430,7 +430,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
             className="relative flex items-center justify-center px-4 sm:px-6 shrink-0"
             style={{ height: 60, paddingTop: 'env(safe-area-inset-top)' }}
           >
-            <span className={`text-[11px] sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] ${theme.title}`}>
+            <span className={`text-[0.6875rem] sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] ${theme.title}`}>
               Stack Game
             </span>
             <button
@@ -467,18 +467,18 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
 
                   {/* Live counters */}
                   <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:gap-x-10 md:gap-x-14">
-                    <div className="text-center min-w-[76px] sm:min-w-[110px]">
-                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Score</p>
+                    <div className="text-center min-w-[4.75rem] sm:min-w-[6.875rem]">
+                      <p className={`text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Score</p>
                       <p className="text-3xl sm:text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {score}
                       </p>
                     </div>
-                    <div className="text-center min-w-[76px] sm:min-w-[110px]">
-                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
+                    <div className="text-center min-w-[4.75rem] sm:min-w-[6.875rem]">
+                      <p className={`text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
                       <p className="text-3xl sm:text-4xl md:text-5xl font-black tabular-nums">{best}</p>
                     </div>
-                    <div className="text-center min-w-[100px] sm:min-w-[150px]">
-                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Level</p>
+                    <div className="text-center min-w-[6.25rem] sm:min-w-[9.375rem]">
+                      <p className={`text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Level</p>
                       <p className="text-base sm:text-lg md:text-xl font-black uppercase tracking-wide" style={{ color: theme.accent }}>
                         {title || '—'}
                       </p>
@@ -486,7 +486,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                   </div>
 
                   {next && (
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.title} opacity-70`}>
+                    <p className={`text-[0.625rem] font-black uppercase tracking-[0.2em] ${theme.title} opacity-70`}>
                       {next.score - score} to {next.title}
                     </p>
                   )}
@@ -551,7 +551,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                         return (
                           <div
                             key={i}
-                            className="absolute rounded-[4px] flex items-center justify-center overflow-hidden"
+                            className="absolute rounded-[0.25rem] flex items-center justify-center overflow-hidden"
                             style={{
                               left: b.x,
                               width: b.width,
@@ -563,7 +563,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                           >
                             {tech && (
                               <span
-                                className="px-1 text-[11px] font-black uppercase tracking-tight truncate"
+                                className="px-1 text-[0.6875rem] font-black uppercase tracking-tight truncate"
                                 style={{ color: tech.fg }}
                               >
                                 {b.width > 60 ? tech.short : tech.short.slice(0, 2)}
@@ -584,7 +584,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                         const movingTech = TECH_STACK[currentRef.current.techIdx];
                         return (
                           <div
-                            className="absolute rounded-[4px] flex items-center justify-center overflow-hidden"
+                            className="absolute rounded-[0.25rem] flex items-center justify-center overflow-hidden"
                             style={{
                               left: currentBlock.x,
                               width: currentBlock.width,
@@ -595,7 +595,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                             }}
                           >
                             <span
-                              className="px-1 text-[11px] font-black uppercase tracking-tight truncate"
+                              className="px-1 text-[0.6875rem] font-black uppercase tracking-tight truncate"
                               style={{ color: movingTech.fg }}
                             >
                               {currentBlock.width > 60 ? movingTech.short : movingTech.short.slice(0, 2)}
@@ -610,20 +610,20 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
               ) : (
                 <div className="flex flex-col items-center gap-6 sm:gap-10 animate-fade-in px-2">
                   <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 sm:gap-x-16">
-                    <div className="text-center min-w-[110px] sm:min-w-[160px]">
-                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Final Score</p>
+                    <div className="text-center min-w-[6.875rem] sm:min-w-[10rem]">
+                      <p className={`text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Final Score</p>
                       <p className="text-5xl sm:text-6xl md:text-7xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {score}
                       </p>
                     </div>
-                    <div className="text-center min-w-[110px] sm:min-w-[160px]">
-                      <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
+                    <div className="text-center min-w-[6.875rem] sm:min-w-[10rem]">
+                      <p className={`text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${theme.title}`}>Best</p>
                       <p className="text-5xl sm:text-6xl md:text-7xl font-black tabular-nums">{best}</p>
                     </div>
                   </div>
 
                   <div className="text-center">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${theme.title}`}>Level Reached</p>
+                    <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Level Reached</p>
                     <p className="text-xl font-black uppercase tracking-wide" style={{ color: theme.accent }}>
                       {title || 'Unranked'}
                     </p>

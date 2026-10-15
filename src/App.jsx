@@ -26,6 +26,8 @@ import Certifications from './Certifications';
 import Project from './Project';
 import Stacks from './Stacks';
 import HomePage from './Home';
+import { useFitScale } from './useFitScale';
+import NavDrawer from './NavDrawer';
 
 // ============================================================================
 // THEME TRANSITION & ANIMATION ENGINE
@@ -263,7 +265,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
       } ${darkMode ? 'bg-[#1B1B2A]/30 border-[#00FFB3]/10' : 'bg-white/60 border-[#FF007A]/20'}`}
     >
       {/* Left: Logo + Typing Speed Test trigger */}
-      <div className="flex items-center gap-4 sm:gap-6 justify-self-start">
+      <div className="flex items-center gap-3 sm:gap-4 justify-self-start">
         <button
           onClick={() => goToSection('home')}
           aria-label="Go to home"
@@ -306,7 +308,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
             key={item.name}
             data-nav={item.id}
             onClick={() => goToSection(item.id)}
-            className={`cursor-target relative flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
+            className={`cursor-target relative flex items-center gap-2 px-3.5 py-2 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-all duration-300 ${
               activeSection === item.id ? '' : 'opacity-60 hover:opacity-100'
             } ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'}`}
             style={{
@@ -340,7 +342,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
         <button
           onClick={() => chatbotRef.current?.open()}
           aria-label="Open chat assistant"
-          className={`cursor-target relative flex items-center gap-2 ml-1 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 ${
+          className={`cursor-target relative flex items-center gap-2 ml-1 px-4 py-2 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 ${
             loaded ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
           }`}
           style={{
@@ -406,7 +408,7 @@ const SoundSwitch = ({ soundEnabled, toggleSound, darkMode, className = '' }) =>
     />
     <span
       className={`absolute top-0.5 left-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
-        soundEnabled ? 'translate-x-[28px] sm:translate-x-[32px] bg-white' : 'translate-x-0 bg-[#1B1B2A]'
+        soundEnabled ? 'translate-x-[1.75rem] sm:translate-x-[2rem] bg-white' : 'translate-x-0 bg-[#1B1B2A]'
       }`}
     >
       {soundEnabled ? (
@@ -437,7 +439,7 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
     />
     <span
       className={`absolute top-0.5 left-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
-        darkMode ? 'translate-x-0 bg-[#1B1B2A]' : 'translate-x-[28px] sm:translate-x-[32px] bg-white'
+        darkMode ? 'translate-x-0 bg-[#1B1B2A]' : 'translate-x-[1.75rem] sm:translate-x-[2rem] bg-white'
       }`}
     >
       {darkMode ? (
@@ -449,36 +451,11 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
   </button>
 );
 
-// The full pill-style desktop nav (logo + typing test trigger + centered nav pill +
-// "Ask Me" + theme switch, all in one row) needs real estate to breathe. On a common
-// 1366px-wide laptop screen, browser zoom between ~80%-100% still reports an effective
-// CSS width comfortably above the old 1024px breakpoint, so the nav kept trying to
-// render its full desktop layout in a row that's actually too tight for it, causing
-// overlap. Raising the breakpoint (and driving it purely from JS instead of Tailwind's
-// fixed `lg:` class) means those widths now cleanly fall back to the same hamburger
-// toggle + slide-in drawer used on mobile. Bump this number up/down if you test on a
-// different screen and want to adjust exactly where the switch happens.
+// The full pill nav (logo + typing test + centered pill + Ask Me + theme switch)
+// needs about 1750px of layout width. On desktop the page is zoomed to a fixed
+// design width (see useFitScale), so this compares against that layout width,
+// not the raw window width; touch tablets and narrow windows get the drawer.
 const DESKTOP_NAV_MIN_WIDTH = 1750;
-
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_NAV_MIN_WIDTH : false
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(min-width: ${DESKTOP_NAV_MIN_WIDTH}px)`);
-    const handleChange = (e) => setIsDesktop(e.matches);
-    setIsDesktop(mq.matches);
-    if (mq.addEventListener) {
-      mq.addEventListener('change', handleChange);
-      return () => mq.removeEventListener('change', handleChange);
-    }
-    mq.addListener(handleChange);
-    return () => mq.removeListener(handleChange);
-  }, []);
-
-  return isDesktop;
-}
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -487,6 +464,7 @@ function App() {
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const chatbotRef = useRef(null);
   const typingTestRef = useRef(null);
   const playGameRef = useRef(null);
@@ -543,15 +521,16 @@ function App() {
   }, [darkMode]);
 
   const { toggleTheme } = useThemeTransition(setDarkMode);
-  const isDesktop = useIsDesktop();
+  const { width: layoutWidth } = useFitScale();
+  const isDesktop = layoutWidth >= DESKTOP_NAV_MIN_WIDTH;
 
   const navItems = [
-    { name: 'Home', icon: <Home size={18}/>, id: 'home' },
-    { name: 'About', icon: <User size={18}/>, id: 'about' },
-    { name: 'Certificates', icon: <Award size={18}/>, id: 'certificates' },
-    { name: 'Projects', icon: <Box size={18}/>, id: 'projects' },
-    { name: 'Stacks', icon: <Layers size={18}/>, id: 'stacks' },
-    { name: 'Contact Me', icon: <Mail size={18}/>, id: 'contact' }
+    { name: 'Home', icon: <Home size={18} className="size-[1.125rem]" />, id: 'home' },
+    { name: 'About', icon: <User size={18} className="size-[1.125rem]" />, id: 'about' },
+    { name: 'Certificates', icon: <Award size={18} className="size-[1.125rem]" />, id: 'certificates' },
+    { name: 'Projects', icon: <Box size={18} className="size-[1.125rem]" />, id: 'projects' },
+    { name: 'Stacks', icon: <Layers size={18} className="size-[1.125rem]" />, id: 'stacks' },
+    { name: 'Contact Me', icon: <Mail size={18} className="size-[1.125rem]" />, id: 'contact' }
   ];
 
   const goToSection = (id) => {
@@ -588,8 +567,8 @@ function App() {
       <ThemeTransitionStyles />
       <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#00FFB3] selection:text-white pb-20 overflow-x-hidden bg-inherit">
 
-        <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#FF007A]/20 blur-[80px] sm:blur-[120px] pointer-events-none animate-pulse" />
-        <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#A700FF]/20 blur-[80px] sm:blur-[120px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#FF007A]/20 blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" />
+        <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#A700FF]/20 blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
         {selectedImage && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setSelectedImage(null)}>
@@ -607,79 +586,28 @@ function App() {
           </div>
         )}
 
-        {/* Mobile / tablet / compact-desktop slide-in drawer — full desktop nav only replaces this once isDesktop is true */}
-        <div className={`fixed inset-0 z-[1000] transition-all duration-500 ${isDesktop ? 'hidden' : ''} ${isSidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className={`absolute left-4 sm:left-6 top-20 sm:top-24 bottom-4 sm:bottom-6 w-[78vw] max-w-[280px] sm:w-72 backdrop-blur-2xl border rounded-md sm:rounded-md p-7 sm:p-10 flex flex-col transition-all duration-500 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-[130%]'} ${darkMode ? 'bg-[#1B1B2A]/40 border-[#00FFB3]/20 text-[#FFEA00]' : 'bg-white/90 border-[#FFEA00] text-[#1B1B2A]'}`}>
-            <div className="flex justify-between items-center mb-10 sm:mb-12">
-              <span className="font-black text-lg sm:text-xl tracking-tighter">Brian <span className="text-[#00FFB3]">Francisco</span></span>
-              <button onClick={() => setIsSidebarOpen(false)} aria-label="Close navigation" className={`cursor-target p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-white/10' : 'hover:bg-[#FFEA00]'}`}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6 overflow-y-auto">
-              {navItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => goToSection(item.id)}
-                  className={`cursor-target flex items-center gap-4 text-xs sm:text-sm font-black uppercase tracking-widest transition-all group ${activeSection === item.id ? 'opacity-100 text-[#00FFB3]' : 'opacity-60 hover:opacity-100'}`}
-                >
-                  <span className={`p-3 border rounded-md group-hover:bg-[#00FFB3]/20 transition-all ${activeSection === item.id ? 'bg-[#00FFB3]/20 border-[#00FFB3]' : 'bg-black/5 border-[#00FFB3]/10'}`}>{item.icon}</span>
-                  {item.name}
-                </button>
-              ))}
-            </div>
-            {/* Divider line right after Contact Me, then Ask Me + the theme switch sit up here instead of at the bottom */}
-            <div className={`pt-6 sm:pt-8 mt-6 sm:mt-8 border-t space-y-4 sm:space-y-5 ${darkMode ? 'border-[#00FFB3]/10' : 'border-[#FFEA00]'}`}>
-              <button
-                onClick={() => {
-                  setIsSidebarOpen(false);
-                  chatbotRef.current?.open();
-                }}
-                aria-label="Open chat assistant"
-                className="cursor-target w-full flex items-center gap-4 text-xs sm:text-sm font-black uppercase tracking-widest transition-all group opacity-90 hover:opacity-100"
-              >
-                <span className="p-3 border rounded-md bg-[#00FFB3]/20 border-[#00FFB3] group-hover:bg-[#00FFB3]/30 transition-all">
-                  <MessageSquare size={18} className="text-[#00FFB3]" />
-                </span>
-                Ask Me
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsSidebarOpen(false);
-                  playGameRef.current?.open();
-                }}
-                aria-label="Open Stack Game"
-                className="cursor-target w-full flex items-center gap-4 text-xs sm:text-sm font-black uppercase tracking-widest transition-all group opacity-90 hover:opacity-100"
-              >
-                <span className="p-3 border rounded-md bg-[#00FFB3]/20 border-[#00FFB3] group-hover:bg-[#00FFB3]/30 transition-all">
-                  <Layers size={18} className="text-[#00FFB3]" />
-                </span>
-                Play Game
-              </button>
-
-              <div className="w-full flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-black uppercase tracking-widest opacity-90">
-                  {darkMode ? 'Dark Mode' : 'Light Mode'}
-                </span>
-                <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
-              </div>
-
-              <div className="w-full flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-black uppercase tracking-widest opacity-90">
-                  Sound {soundEnabled ? 'On' : 'Off'}
-                </span>
-                <SoundSwitch soundEnabled={soundEnabled} toggleSound={toggleSound} darkMode={darkMode} />
-              </div>
-            </div>
-
-            <div className="mt-auto pt-6">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Ready for</p>
-              <p className="text-xs font-black text-[#00FFB3] uppercase">Deployment 2026</p>
-            </div>
-          </div>
-        </div>
+        {/* Phones, tablets and narrow windows: slide-in sheet menu */}
+        {!isDesktop && (
+          <NavDrawer
+            open={isSidebarOpen}
+            onClose={closeSidebar}
+            darkMode={darkMode}
+            navItems={navItems}
+            activeSection={activeSection}
+            onNavigate={goToSection}
+            onAskMe={() => {
+              setIsSidebarOpen(false);
+              chatbotRef.current?.open();
+            }}
+            onPlayGame={() => {
+              setIsSidebarOpen(false);
+              playGameRef.current?.open();
+            }}
+            soundEnabled={soundEnabled}
+            themeSwitch={<ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />}
+            soundSwitch={<SoundSwitch soundEnabled={soundEnabled} toggleSound={toggleSound} darkMode={darkMode} />}
+          />
+        )}
 
         {/* NEW ANIMATED NAV */}
         <AnimatedNavBar
@@ -697,7 +625,7 @@ function App() {
           isDesktop={isDesktop}
         />
 
-        <div key={activeSection} className="w-full max-w-[1800px] mx-auto pt-24 sm:pt-32 px-4 sm:px-6 lg:px-12 space-y-6">
+        <div key={activeSection} className="w-full max-w-[112.5rem] mx-auto pt-24 sm:pt-32 px-4 sm:px-6 lg:px-12 space-y-6">
 
           {activeSection === 'home' ? (
             <HomePage darkMode={darkMode} onNavigate={goToSection} onPreview={setSelectedImage} />
@@ -725,12 +653,12 @@ function App() {
 
           <RevealOnScroll>
             <footer className="pt-14 sm:pt-20 border-t border-[#00FFB3]/10 text-center space-y-6 sm:space-y-8 pb-10 px-4">
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] opacity-60">
+              <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] opacity-60">
                  <a href="https://github.com/BryxCinco" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Github</a>
                  <a href="https://www.linkedin.com/in/brianfrancisco10/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">LinkedIn</a>
                  <a href="https://www.facebook.com/Bryx.Francisco111/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Facebook</a>
               </div>
-              <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#00FFB3]">
+              <p className="text-[0.5625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#00FFB3]">
                  © {new Date().getFullYear()} Brian Paul Francisco
               </p>
             </footer>

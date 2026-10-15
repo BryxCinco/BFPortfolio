@@ -307,13 +307,13 @@ function Furniture({ type }) {
           boxShadow: '0 3px 6px rgba(0,0,0,0.35)',
         }}
       >
-        <div className="absolute rounded-[3px]" style={{ left: '6%', right: '6%', top: '20%', bottom: '6%', background: '#f4ead9' }}>
+        <div className="absolute rounded-[0.1875rem]" style={{ left: '6%', right: '6%', top: '20%', bottom: '6%', background: '#f4ead9' }}>
           <div
-            className="absolute rounded-[3px]"
+            className="absolute rounded-[0.1875rem]"
             style={{ left: '8%', right: '8%', top: '6%', height: '22%', background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
           />
           <div
-            className="absolute rounded-[3px]"
+            className="absolute rounded-[0.1875rem]"
             style={{
               left: '6%', right: '6%', top: '34%', bottom: '6%',
               backgroundImage: 'repeating-linear-gradient(45deg, #ef4444 0px, #ef4444 6px, #fca5a5 6px, #fca5a5 12px)',
@@ -370,12 +370,12 @@ function Furniture({ type }) {
   if (type === 'lamp') {
     return (
       <div className="absolute inset-0">
-        <div className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-[3px]" style={{ width: '20%', height: '66%', background: '#3f3f46' }} />
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-[0.1875rem]" style={{ width: '20%', height: '66%', background: '#3f3f46' }} />
         <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-[6px]"
+          className="absolute left-1/2 -translate-x-1/2 rounded-[0.375rem]"
           style={{ bottom: '58%', width: '100%', height: '28%', background: 'linear-gradient(180deg,#fde68a,#f59e0b)', boxShadow: '0 0 14px 4px rgba(250,204,21,0.55)' }}
         />
-        <div className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-[3px]" style={{ width: '58%', height: '9%', background: '#27272a' }} />
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-[0.1875rem]" style={{ width: '58%', height: '9%', background: '#27272a' }} />
       </div>
     );
   }
@@ -824,14 +824,14 @@ export default function Communities({ darkMode, googleUser = null }) {
   return (
     // Chat box lives on the left; on desktop the Community World panel
     // (NPC + walking members) sits beside it on the right.
-    <div className="animate-fade-in max-w-[1700px] ml-0 mr-auto py-6 sm:py-10">
+    <div className="animate-fade-in max-w-[106.25rem] ml-0 mr-auto py-6 sm:py-10">
     <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-    <div className="w-full lg:w-[420px] xl:w-[460px] lg:shrink-0 space-y-6">
+    <div className="w-full lg:w-[26.25rem] xl:w-[28.75rem] lg:shrink-0 space-y-6">
       <div className={`${cardBase} p-6 sm:p-8 flex flex-wrap items-center justify-between gap-4`}>
         <div className="flex items-center gap-3">
           <Users className="text-purple-500" size={20} />
           <div>
-            <h3 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-500">
+            <h3 className="text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-500">
               Community Chat
             </h3>
             <div className="flex items-center gap-2.5 mt-1.5">
@@ -857,7 +857,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                 {extraActiveCount > 0 && (
                   <div
                     title={`${extraActiveCount} more online`}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[8px] font-black bg-purple-600 text-white ${
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[0.5rem] font-black bg-purple-600 text-white ${
                       darkMode ? 'border-purple-950' : 'border-white'
                     }`}
                   >
@@ -865,7 +865,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                   </div>
                 )}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-1.5">
+              <span className="text-[0.625rem] font-black uppercase tracking-widest opacity-50 flex items-center gap-1.5">
                 <Circle size={7} className="text-emerald-400 fill-emerald-400 animate-pulse" />
                 {onlineCount} online
               </span>
@@ -883,7 +883,7 @@ export default function Communities({ darkMode, googleUser = null }) {
             <div className="flex flex-col">
               <span className={`text-sm font-black leading-tight ${user.color}`}>{user.name}</span>
               {user.location && (
-                <span className="text-[9px] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1">
+                <span className="text-[0.5625rem] font-bold uppercase tracking-widest opacity-40 flex items-center gap-1">
                   <MapPin size={9} /> {user.location}
                 </span>
               )}
@@ -931,9 +931,9 @@ export default function Communities({ darkMode, googleUser = null }) {
                   <div className={`max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     <div className={`flex flex-wrap items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
                       <span className={`text-xs font-black ${m.color}`}>{m.name}</span>
-                      <span className="text-[9px] font-bold opacity-30 uppercase">{formatTime(m.timestamp)}</span>
+                      <span className="text-[0.5625rem] font-bold opacity-30 uppercase">{formatTime(m.timestamp)}</span>
                       {m.location && (
-                        <span className="text-[9px] font-bold opacity-30 uppercase flex items-center gap-0.5">
+                        <span className="text-[0.5625rem] font-bold opacity-30 uppercase flex items-center gap-0.5">
                           <MapPin size={9} /> {m.location}
                         </span>
                       )}
@@ -1001,10 +1001,10 @@ export default function Communities({ darkMode, googleUser = null }) {
         <div className={`${cardBase} p-4 flex flex-col gap-3 h-full`}>
           <div className="flex items-center gap-2 px-1">
             <Gamepad2 className="text-cyan-400" size={16} />
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">
+            <h4 className="text-[0.625rem] font-black uppercase tracking-[0.3em] text-cyan-400">
               Community World
             </h4>
-            <span className="ml-auto text-[8px] font-black uppercase tracking-widest opacity-30">8-bit</span>
+            <span className="ml-auto text-[0.5rem] font-black uppercase tracking-widest opacity-30">8-bit</span>
           </div>
 
           <div
@@ -1065,7 +1065,7 @@ export default function Communities({ darkMode, googleUser = null }) {
             >
               {npcMessage && (
                 <div
-                  className={`mb-1 max-w-[130px] px-2.5 py-1.5 rounded-xl text-[9px] font-bold leading-snug text-center shadow-lg ${
+                  className={`mb-1 max-w-[8.125rem] px-2.5 py-1.5 rounded-xl text-[0.5625rem] font-bold leading-snug text-center shadow-lg ${
                     darkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
                   }`}
                 >
@@ -1073,7 +1073,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                 </div>
               )}
               <PixelCrewmate color={NPC.charColor} size={30} facing={1} walking={false} frame={frameTick} />
-              <span className="text-[8px] font-black uppercase tracking-widest text-cyan-300 bg-black/50 px-1.5 py-0.5 rounded-full">
+              <span className="text-[0.5rem] font-black uppercase tracking-widest text-cyan-300 bg-black/50 px-1.5 py-0.5 rounded-full">
                 {NPC.name} · NPC
               </span>
             </div>
@@ -1098,7 +1098,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                     walking={meta.walking}
                     frame={frameTick}
                   />
-                  <span className={`text-[8px] font-black bg-black/50 px-1.5 py-0.5 rounded-full ${p.color}`}>
+                  <span className={`text-[0.5rem] font-black bg-black/50 px-1.5 py-0.5 rounded-full ${p.color}`}>
                     {p.name}
                   </span>
                 </div>
@@ -1122,7 +1122,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                   walking={gameActive && movementKeysRef.current.size > 0}
                   frame={frameTick}
                 />
-                <span className={`text-[8px] font-black bg-black/50 px-1.5 py-0.5 rounded-full ${user.color}`}>
+                <span className={`text-[0.5rem] font-black bg-black/50 px-1.5 py-0.5 rounded-full ${user.color}`}>
                   {user.name} · you
                 </span>
               </div>
@@ -1134,17 +1134,17 @@ export default function Communities({ darkMode, googleUser = null }) {
                 <Gamepad2 size={22} />
                 {user ? (
                   <>
-                    <p className="text-[11px] font-black uppercase tracking-widest">Click to play</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-70">WASD to walk around</p>
+                    <p className="text-[0.6875rem] font-black uppercase tracking-widest">Click to play</p>
+                    <p className="text-[0.5625rem] font-bold uppercase tracking-widest opacity-70">WASD to walk around</p>
                   </>
                 ) : (
-                  <p className="text-[10px] font-black uppercase tracking-widest">Join the chat to enter the world</p>
+                  <p className="text-[0.625rem] font-black uppercase tracking-widest">Join the chat to enter the world</p>
                 )}
               </div>
             )}
           </div>
 
-          <p className="px-1 text-[9px] font-bold uppercase tracking-widest opacity-40 leading-relaxed">
+          <p className="px-1 text-[0.5625rem] font-bold uppercase tracking-widest opacity-40 leading-relaxed">
             Click the world, then use WASD to walk your pixel crewmate around — dodge the wooden furniture. Everyone online is moving live too.
           </p>
         </div>
@@ -1182,7 +1182,7 @@ export default function Communities({ darkMode, googleUser = null }) {
                 <h4 className={`text-lg font-black ${viewingProfile.color || ''}`}>
                   {viewingProfile.name}
                   {viewingProfile.__isSelf && (
-                    <span className="ml-2 text-[9px] font-bold uppercase tracking-widest opacity-40 align-middle">
+                    <span className="ml-2 text-[0.5625rem] font-bold uppercase tracking-widest opacity-40 align-middle">
                       (you)
                     </span>
                   )}
@@ -1194,13 +1194,13 @@ export default function Communities({ darkMode, googleUser = null }) {
                 )}
               </div>
               {viewingProfile.__isNpc ? (
-                <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-cyan-400">
+                <span className="text-[0.625rem] font-black uppercase tracking-widest flex items-center gap-1.5 text-cyan-400">
                   <Sparkles size={11} />
                   AI companion · always here
                 </span>
               ) : (
                 <span
-                  className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+                  className={`text-[0.625rem] font-black uppercase tracking-widest flex items-center gap-1.5 ${
                     isOnline(viewingProfile.id) || viewingProfile.__isSelf ? 'text-emerald-400' : 'opacity-40'
                   }`}
                 >

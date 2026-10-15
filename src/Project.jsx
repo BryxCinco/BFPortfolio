@@ -220,7 +220,7 @@ const useInViewOnce = (threshold = 0.2) => {
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-    <h3 className="pj-acc text-[10px] sm:text-[11px] md:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
+    <h3 className="pj-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
       {label}
     </h3>
     <div className="h-px flex-1 bg-[color:var(--acc-line)] min-w-5" />
@@ -255,7 +255,7 @@ const RevealImage = ({ src, alt, active = true, imgClassName = '' }) => {
               backgroundSize: '22px 22px',
             }}
           />
-          <span className="pj-acc relative font-mono text-[10px] uppercase tracking-[0.3em]">
+          <span className="pj-acc relative font-mono text-[0.625rem] uppercase tracking-[0.3em]">
             Loading
             <span className="pj-anim pj-inherit" style={{ animation: 'pj-blink 1s steps(1) infinite' }}>_</span>
           </span>
@@ -289,7 +289,7 @@ const LaunchButton = ({ site, live, onLaunch }) => (
     onClick={(e) => live && onLaunch(site, e)}
     disabled={!live}
     title={live ? `Launch ${site.name}` : 'Live link coming soon'}
-    className={`group/btn relative inline-flex items-center overflow-hidden px-5 py-2.5 sm:px-6 sm:py-3 rounded-md border text-[11px] sm:text-[12px] font-black uppercase tracking-[0.18em] transition-[color,border-color,transform] duration-300 active:scale-[0.96] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)] ${
+    className={`group/btn relative inline-flex items-center overflow-hidden px-5 py-2.5 sm:px-6 sm:py-3 rounded-md border text-[0.6875rem] sm:text-[0.75rem] font-black uppercase tracking-[0.18em] transition-[color,border-color,transform] duration-300 active:scale-[0.96] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)] ${
       live
         ? 'border-[color:var(--acc-line)] text-[color:var(--acc)] hover:text-[color:var(--acc-ink)] hover:border-[color:var(--acc)]'
         : 'border-[color:var(--line)] text-[color:var(--ink)] opacity-40 cursor-not-allowed'
@@ -380,7 +380,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
           onClick={() => onPreview(site)}
           aria-label={`Preview ${site.name}`}
           className={`relative w-full overflow-hidden block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--acc)] ${
-            site.featured ? 'aspect-video lg:aspect-auto lg:h-full lg:min-h-[400px]' : 'aspect-video'
+            site.featured ? 'aspect-video lg:aspect-auto lg:h-full lg:min-h-[25rem]' : 'aspect-video'
           }`}
           style={{
             clipPath: shown ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)',
@@ -399,12 +399,12 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
               animation: 'pj-scan 2.4s linear infinite',
             }}
           />
-          <span className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.25em] pj-white">
+          <span className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[0.625rem] font-black uppercase tracking-[0.25em] pj-white">
             {String(index + 1).padStart(2, '0')}
             {site.featured && <span className="pj-hi"> · Featured</span>}
           </span>
           {live && (
-            <span className="absolute top-4 right-4 sm:top-5 sm:right-5 flex items-center gap-2 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] pj-white">
+            <span className="absolute top-4 right-4 sm:top-5 sm:right-5 flex items-center gap-2 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[0.625rem] font-black uppercase tracking-[0.2em] pj-white">
               <span className="relative flex h-2 w-2">
                 <span className="pj-anim animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFB3] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFB3]" />
@@ -413,7 +413,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
             </span>
           )}
           <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 text-left">
-            <p className="pj-hi text-[10px] font-black uppercase tracking-[0.25em] mb-1 drop-shadow">
+            <p className="pj-hi text-[0.625rem] font-black uppercase tracking-[0.25em] mb-1 drop-shadow">
               {site.tag}
             </p>
             <h4 className="pj-white text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
@@ -428,7 +428,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
               {site.subtitle}
             </p>
           )}
-          <p style={step(1)} className="text-sm sm:text-[15px] opacity-80 font-medium leading-relaxed">
+          <p style={step(1)} className="text-sm sm:text-[0.9375rem] opacity-80 font-medium leading-relaxed">
             {site.desc}
           </p>
 
@@ -448,7 +448,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
               {site.stack.map((s) => (
                 <span
                   key={s}
-                  className="px-2.5 py-1 border rounded-md text-[10px] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc"
+                  className="px-2.5 py-1 border rounded-md text-[0.625rem] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc"
                 >
                   {s}
                 </span>
@@ -458,7 +458,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
 
           <div style={step(6)} className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-3">
             <LaunchButton site={site} live={live} onLaunch={onLaunch} />
-            {host && <span className="text-[11px] font-mono opacity-55 truncate">{host}</span>}
+            {host && <span className="text-[0.6875rem] font-mono opacity-55 truncate">{host}</span>}
           </div>
         </div>
       </article>
@@ -737,7 +737,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
   const blocked = stage === 'blocked';
   const ink = palette.ink;
   const pillBase =
-    'inline-flex items-center gap-2 px-5 py-2.5 rounded-md border font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-200 active:scale-95 outline-none focus-visible:ring-2';
+    'inline-flex items-center gap-2 px-5 py-2.5 rounded-md border font-black text-[0.6875rem] uppercase tracking-[0.2em] transition-all duration-200 active:scale-95 outline-none focus-visible:ring-2';
 
   return (
     <div
@@ -779,7 +779,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
       />
 
       {/* top bar */}
-      <div className="absolute top-5 sm:top-8 inset-x-0 px-5 sm:px-10 flex items-center justify-between font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.3em]">
+      <div className="absolute top-5 sm:top-8 inset-x-0 px-5 sm:px-10 flex items-center justify-between font-mono text-[0.625rem] sm:text-[0.6875rem] uppercase tracking-[0.3em]">
         <span className="pj-acc">warp://{host}</span>
         <span className={`flex items-center gap-2 ${boosting ? 'pj-acc' : 'pj-ink'}`} style={{ opacity: boosting ? 1 : 0.5 }}>
           <Zap size={12} />
@@ -806,7 +806,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
               boxShadow: `0 0 60px ${rgba(palette.acc, 0.35)}`,
             }}
           />
-          <div className="absolute inset-[3px] rounded-full overflow-hidden" style={{ background: palette.warpBg }}>
+          <div className="absolute inset-[0.1875rem] rounded-full overflow-hidden" style={{ background: palette.warpBg }}>
             <img src={site.image} alt="" className="w-full h-full object-cover object-top opacity-70" />
             <div
               className="absolute inset-0"
@@ -820,7 +820,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
         </div>
 
         <div className="space-y-2">
-          <p className="pj-acc font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.5em]">
+          <p className="pj-acc font-mono text-[0.625rem] sm:text-[0.6875rem] uppercase tracking-[0.5em]">
             {blocked ? 'Arrived — pop-up blocked' : 'Launching'}
           </p>
           <h2 className="pj-ink relative text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter leading-none">
@@ -854,7 +854,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
           />
         </div>
 
-        <ul className="w-64 sm:w-80 space-y-1 text-left font-mono text-[10px] sm:text-[11px] leading-relaxed">
+        <ul className="w-64 sm:w-80 space-y-1 text-left font-mono text-[0.625rem] sm:text-[0.6875rem] leading-relaxed">
           {lines.slice(0, logCount).map((line, i) => {
             const done = i < logCount - 1 || stage !== 'boot';
             return (
@@ -899,7 +899,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
             <button onClick={abort} className={pillBase} style={{ borderColor: rgba(palette.acc, 0.35), color: ink }}>
               Close
             </button>
-            <p className="pj-ink font-mono text-[10px] uppercase tracking-[0.25em] opacity-60">
+            <p className="pj-ink font-mono text-[0.625rem] uppercase tracking-[0.25em] opacity-60">
               Your browser blocked the new tab — tap to open it
             </p>
           </>
@@ -918,7 +918,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
                 <X size={14} /> Abort <kbd className="hidden sm:inline opacity-60">Esc</kbd>
               </button>
             </div>
-            <p className="pj-ink font-mono text-[10px] uppercase tracking-[0.25em] opacity-60 text-center">
+            <p className="pj-ink font-mono text-[0.625rem] uppercase tracking-[0.25em] opacity-60 text-center">
               <span className="pj-inherit hidden sm:inline">Move to steer · hold click or Space to boost</span>
               <span className="pj-inherit sm:hidden">Drag to steer · hold to boost</span>
             </p>
@@ -948,7 +948,7 @@ const PosterStack = ({ items, reduced, onPreview }) => {
 
   return (
     <div ref={ref} className="flex flex-col items-center gap-6 sm:gap-8 select-none">
-      <div className="relative w-[280px] h-[400px] sm:w-[340px] sm:h-[480px] md:w-[400px] md:h-[560px]">
+      <div className="relative w-[17.5rem] h-[25rem] sm:w-[21.25rem] sm:h-[30rem] md:w-[25rem] md:h-[35rem]">
         {items.map((poster, idx) => {
           const offset = idx - mid;
           const isHovered = hoveredIdx === idx;
@@ -982,7 +982,7 @@ const PosterStack = ({ items, reduced, onPreview }) => {
                 transitionTimingFunction: settled ? 'ease-out' : 'cubic-bezier(0.34,1.56,0.64,1)',
                 transitionDelay: shown && !settled && !reduced ? `${idx * 90}ms` : '0ms',
               }}
-              className={`group/poster absolute top-0 left-1/2 -ml-[140px] sm:-ml-[170px] md:-ml-[200px] w-[280px] h-[400px] sm:w-[340px] sm:h-[480px] md:w-[400px] md:h-[560px] overflow-hidden rounded-md border-2 cursor-pointer outline-none ${
+              className={`group/poster absolute top-0 left-1/2 -ml-[8.75rem] sm:-ml-[10.625rem] md:-ml-[12.5rem] w-[17.5rem] h-[25rem] sm:w-[21.25rem] sm:h-[30rem] md:w-[25rem] md:h-[35rem] overflow-hidden rounded-md border-2 cursor-pointer outline-none ${
                 isHovered
                   ? 'shadow-[0_35px_60px_rgba(0,0,0,0.55)] border-[color:var(--acc)]'
                   : 'shadow-[0_15px_30px_rgba(0,0,0,0.35)] border-[color:var(--acc-line)]'
@@ -993,7 +993,7 @@ const PosterStack = ({ items, reduced, onPreview }) => {
                 className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 to-transparent transition-all duration-300"
                 style={{ opacity: isHovered ? 1 : 0, transform: isHovered ? 'none' : 'translateY(12px)' }}
               >
-                <p className="pj-hi text-[9px] font-black uppercase tracking-[0.25em]">{poster.tag}</p>
+                <p className="pj-hi text-[0.5625rem] font-black uppercase tracking-[0.25em]">{poster.tag}</p>
                 <p className="pj-white text-base font-black leading-tight">{poster.name}</p>
               </div>
             </div>
@@ -1001,7 +1001,7 @@ const PosterStack = ({ items, reduced, onPreview }) => {
         })}
       </div>
 
-      <div className="mt-10 sm:mt-14 flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] opacity-50 text-[color:var(--ink)]">
+      <div className="mt-10 sm:mt-14 flex items-center gap-2 text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] opacity-50 text-[color:var(--ink)]">
         <MousePointerClick size={12} /> Hover a poster to lift it out · Click for the full view
       </div>
     </div>
@@ -1021,7 +1021,7 @@ const PosterCarouselCard = ({ poster, onPreview }) => (
     <RevealImage src={poster.image} alt={poster.name} />
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
     <div className="absolute bottom-4 left-4 right-4">
-      <p className="pj-hi text-[9px] font-black uppercase tracking-[0.25em] mb-1">{poster.tag}</p>
+      <p className="pj-hi text-[0.5625rem] font-black uppercase tracking-[0.25em] mb-1">{poster.tag}</p>
       <h4 className="pj-white text-lg font-black tracking-tight leading-tight">{poster.name}</h4>
     </div>
   </button>
@@ -1081,7 +1081,7 @@ const Lightbox = ({ active, onClose, onNav, onLaunch }) => {
       )}
 
       <div className="relative flex flex-col items-center gap-5 sm:gap-6 max-w-[92vw]" onClick={(e) => e.stopPropagation()}>
-        <div className="relative flex items-center justify-center min-w-[200px] min-h-[200px]">
+        <div className="relative flex items-center justify-center min-w-[12.5rem] min-h-[12.5rem]">
           {!loaded && (
             <div
               className="pj-anim absolute w-12 h-12 rounded-full border-2 border-white/10 border-t-[color:var(--acc)]"
@@ -1104,7 +1104,7 @@ const Lightbox = ({ active, onClose, onNav, onLaunch }) => {
         </div>
         <div className="text-center space-y-2 max-w-xl px-2">
           {hasNav && (
-            <p className="pj-white font-mono text-[10px] tracking-[0.3em] opacity-50">
+            <p className="pj-white font-mono text-[0.625rem] tracking-[0.3em] opacity-50">
               {String(index + 1).padStart(2, '0')} / {String(list.length).padStart(2, '0')}
             </p>
           )}
@@ -1194,7 +1194,7 @@ const Project = ({ darkMode = true }) => {
               <span className="text-lg opacity-70">(repeat forever)</span>
             </StickyNote>
           </div>
-          <p style={headerStep(0)} className="pj-acc font-mono text-[11px] uppercase tracking-[0.4em]">
+          <p style={headerStep(0)} className="pj-acc font-mono text-[0.6875rem] uppercase tracking-[0.4em]">
             ~/projects
           </p>
           <h2 style={headerStep(1)} className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
@@ -1219,7 +1219,7 @@ const Project = ({ darkMode = true }) => {
             ].map((label) => (
               <span
                 key={label}
-                className="px-3 py-1.5 rounded-md border border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] pj-acc"
+                className="px-3 py-1.5 rounded-md border border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em] pj-acc"
               >
                 {label}
               </span>

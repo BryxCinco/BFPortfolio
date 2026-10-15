@@ -142,7 +142,7 @@ const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF007A]" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFEA00]" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00FFB3]" />
-                <span className="ml-auto text-[10px] text-white/40">message.log</span>
+                <span className="ml-auto text-[0.625rem] text-white/40">message.log</span>
                 <button onClick={() => setShowModal(false)} aria-label="Close" className="text-white/40 hover:text-white">
                   <X size={14} />
                 </button>
@@ -168,7 +168,7 @@ const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
 
       {/* HEADER — terminal title */}
       <ScrollReveal>
-        <div className={`flex items-center gap-2 font-mono text-[11px] ${t('text-[#1B1B2A]/50', 'text-white/40')}`}>
+        <div className={`flex items-center gap-2 font-mono text-[0.6875rem] ${t('text-[#1B1B2A]/50', 'text-white/40')}`}>
           <TerminalIcon size={13} />
           <span>~/portfolio/contact.sh</span>
         </div>
@@ -188,8 +188,8 @@ const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
             <span className="w-2.5 h-2.5 rounded-full bg-[#FF007A]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#FFEA00]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#00FFB3]" />
-            <span className={`ml-3 text-[10px] font-mono ${t('text-[#1B1B2A]/40', 'text-white/40')}`}>new_message — form</span>
-            <span className="ml-auto flex items-center gap-2 text-[10px] font-mono text-[#00FFB3]">
+            <span className={`ml-3 text-[0.625rem] font-mono ${t('text-[#1B1B2A]/40', 'text-white/40')}`}>new_message — form</span>
+            <span className="ml-auto flex items-center gap-2 text-[0.625rem] font-mono text-[#00FFB3]">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFB3] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFB3]" />

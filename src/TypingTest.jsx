@@ -119,7 +119,7 @@ export const TypingTestTrigger = ({ darkMode, onClick, className = '' }) => {
       style={{ color: accent }}
     >
       <Keyboard size={18} />
-      <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Typing Test</span>
+      <span className="text-[0.625rem] font-black uppercase tracking-widest whitespace-nowrap">Typing Test</span>
     </button>
   );
 };
@@ -448,17 +448,17 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                   {/* Live counters */}
                   <div className="flex items-center justify-center gap-16">
                     <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Time</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Time</p>
                       <p className="text-5xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {timeLeft}
                       </p>
                     </div>
                     <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
                       <p className="text-5xl font-black tabular-nums">{liveStats.wpm}</p>
                     </div>
                     <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Accuracy</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Accuracy</p>
                       <p className="text-5xl font-black tabular-nums">{liveStats.accuracy}%</p>
                     </div>
                   </div>
@@ -490,7 +490,7 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                           return (
                             <span
                               key={ci}
-                              className={`${colorCls} rounded-[3px] ${isCaret ? 'animate-pulse' : ''}`}
+                              className={`${colorCls} rounded-[0.1875rem] ${isCaret ? 'animate-pulse' : ''}`}
                               style={{ backgroundColor: isCaret ? theme.accent : undefined }}
                             >
                               {ch}
@@ -507,7 +507,7 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                           >
                             {chars}
                             <span
-                              className={`rounded-[3px] ${isCaretSpace ? 'animate-pulse' : ''}`}
+                              className={`rounded-[0.1875rem] ${isCaretSpace ? 'animate-pulse' : ''}`}
                               style={{ backgroundColor: isCaretSpace ? theme.accent : undefined }}
                             >
                               {'\u00A0'}
@@ -535,35 +535,35 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                 <div className="flex flex-col items-center gap-10 animate-fade-in">
                   <div className="flex items-center justify-center gap-16">
                     <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
                       <p className="text-7xl font-black tabular-nums" style={{ color: theme.accent }}>
                         {finalStats.wpm}
                       </p>
                     </div>
                     <AccuracyRing accuracy={finalStats.accuracy} accent={theme.accent} darkMode={darkMode} />
                     <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${theme.title}`}>Duration</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Duration</p>
                       <p className="text-7xl font-black tabular-nums">{duration}s</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-10 text-center">
                     <div style={{ width: 130 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${theme.title}`}>Correct</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Correct</p>
                       <p className="text-xl font-black" style={{ color: theme.accent }}>{finalStats.correct}</p>
                     </div>
                     <div style={{ width: 130 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${theme.title}`}>Incorrect</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Incorrect</p>
                       <p className="text-xl font-black text-red-500">{finalStats.incorrect}</p>
                     </div>
                     <div style={{ width: 130 }}>
-                      <p className={`text-[10px] font-black uppercase tracking-widest ${theme.title}`}>Characters Typed</p>
+                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Characters Typed</p>
                       <p className="text-xl font-black">{finalStats.typedLength}</p>
                     </div>
                   </div>
 
                   <div style={{ width: 640 }}>
-                    <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-center ${theme.title}`}>
+                    <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] mb-2 text-center ${theme.title}`}>
                       WPM Over Time
                     </p>
                     <WpmLineChart data={wpmHistory} accent={theme.accent} darkMode={darkMode} />

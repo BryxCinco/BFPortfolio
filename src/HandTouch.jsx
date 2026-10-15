@@ -110,7 +110,7 @@ export const Sticker = ({ children, bg = '#FFE873', rot = -6, className = '', st
       } ${className}`}
       style={{ background: bg, ...style }}
     >
-      <span className="ht-dark text-[11px] sm:text-xs font-black">{children}</span>
+      <span className="ht-dark text-[0.6875rem] sm:text-xs font-black">{children}</span>
     </motion.span>
   );
 };

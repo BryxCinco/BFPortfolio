@@ -243,7 +243,7 @@ const StatusBar = () => (
       </svg>
       {/* battery */}
       <span className="relative flex items-center" style={{ width: px(0.07), height: px(0.034) }}>
-        <span className="absolute inset-0 rounded-[3px] border" style={{ borderColor: 'rgba(17,17,17,0.45)' }} />
+        <span className="absolute inset-0 rounded-[0.1875rem] border" style={{ borderColor: 'rgba(17,17,17,0.45)' }} />
         <span className="absolute rounded-[2px]" style={{ inset: px(0.005), right: '22%', background: '#111' }} />
         <span className="absolute rounded-r-sm" style={{ right: px(-0.008), width: px(0.006), height: '40%', background: 'rgba(17,17,17,0.45)' }} />
       </span>
@@ -516,8 +516,8 @@ const IPhone17 = ({ social, reduced }) => {
           <img src={social.logo} alt="" className="w-5 h-5 object-contain" />
           <h4 className="ab-ink text-lg sm:text-xl font-black uppercase tracking-tighter">{social.name}</h4>
         </div>
-        <p className="ab-acc text-[10px] sm:text-xs font-black uppercase tracking-widest">{social.handle}</p>
-        <p className="ab-ink flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.25em] opacity-50">
+        <p className="ab-acc text-[0.625rem] sm:text-xs font-black uppercase tracking-widest">{social.handle}</p>
+        <p className="ab-ink flex items-center justify-center gap-1.5 font-mono text-[0.5625rem] uppercase tracking-[0.25em] opacity-50">
           <Camera size={11} /> Tap to flip & snap
         </p>
         {blocked && (
@@ -525,7 +525,7 @@ const IPhone17 = ({ social, reduced }) => {
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-full text-[0.625rem] font-black uppercase tracking-widest"
             style={{ background: social.finish.brand, color: '#FFFFFF' }}
           >
             Open {social.name} <ArrowUpRight size={12} />
@@ -561,7 +561,7 @@ const About = ({ darkMode = true }) => {
       <AboutStyles />
       <HandStyles />
 
-      <div className="max-w-[1400px] mx-auto space-y-24 sm:space-y-32">
+      <div className="max-w-[87.5rem] mx-auto space-y-24 sm:space-y-32">
         {/* ================= HERO ================= */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-center">
           <div className="lg:col-span-7 space-y-7 sm:space-y-8 text-center lg:text-left">
@@ -573,7 +573,7 @@ const About = ({ darkMode = true }) => {
                 <span className="ab-anim absolute inline-flex h-full w-full rounded-full bg-[color:var(--acc)]" style={{ animation: 'ab-pulse 1.6s ease-out infinite' }} />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--acc)]" />
               </span>
-              <span className="ab-acc text-[10px] sm:text-xs font-black uppercase tracking-[0.25em]">More things about me</span>
+              <span className="ab-acc text-[0.625rem] sm:text-xs font-black uppercase tracking-[0.25em]">More things about me</span>
             </motion.div>
 
             <motion.h1 {...reveal(0.08)} className="ab-ink text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.9]">
@@ -598,7 +598,7 @@ const About = ({ darkMode = true }) => {
               {quickFacts.map((f) => (
                 <div key={f.label} className="px-4 py-3 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] text-left">
                   <p className="ab-acc text-xl sm:text-2xl font-black tracking-tighter leading-none">{f.value}</p>
-                  <p className="ab-ink mt-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 leading-tight">{f.label}</p>
+                  <p className="ab-ink mt-1.5 text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-widest opacity-60 leading-tight">{f.label}</p>
                 </div>
               ))}
             </motion.div>
@@ -614,7 +614,7 @@ const About = ({ darkMode = true }) => {
           </div>
 
           <motion.div {...reveal(0.1)} className="lg:col-span-5 flex justify-center">
-            <div className="relative w-full max-w-[400px]" onPointerMove={onPhotoMove} onPointerLeave={() => {
+            <div className="relative w-full max-w-[25rem]" onPointerMove={onPhotoMove} onPointerLeave={() => {
                 if (photoRef.current) photoRef.current.style.transform = '';
               }}>
               <span
@@ -641,14 +641,14 @@ const About = ({ darkMode = true }) => {
                 style={{ animation: 'ab-float 4s ease-in-out infinite' }}
               >
                 <Sparkles size={14} className="text-[color:var(--acc)]" />
-                <span className="ab-ink text-[10px] font-black uppercase tracking-widest">UI/UX · Full-Stack</span>
+                <span className="ab-ink text-[0.625rem] font-black uppercase tracking-widest">UI/UX · Full-Stack</span>
               </div>
               <div
                 className="ab-anim absolute z-10 -right-3 sm:-right-6 bottom-10 flex items-center gap-2 px-3 py-2 rounded-xl shadow-xl"
                 style={{ background: 'var(--acc)', animation: 'ab-float 4.5s ease-in-out 1s infinite' }}
               >
                 <GraduationCap size={14} style={{ color: 'var(--acc-ink)' }} />
-                <span className="ab-tc text-[10px] font-black uppercase tracking-widest" style={{ '--tc': 'var(--acc-ink)' }}>
+                <span className="ab-tc text-[0.625rem] font-black uppercase tracking-widest" style={{ '--tc': 'var(--acc-ink)' }}>
                   1.25 GWA
                 </span>
               </div>
@@ -674,15 +674,15 @@ const About = ({ darkMode = true }) => {
                     <item.Icon size={20} />
                   </span>
                   <div className="group mt-5 w-full h-full p-6 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[color:var(--acc-line)]">
-                    <p className="ab-acc font-mono text-[10px] font-black uppercase tracking-widest">{item.period}</p>
+                    <p className="ab-acc font-mono text-[0.625rem] font-black uppercase tracking-widest">{item.period}</p>
                     <h4 className="ab-ink mt-2 text-lg font-black leading-tight">
                       {item.year}: {item.title}
                     </h4>
-                    <p className="ab-ink mt-1 text-[10px] font-black uppercase tracking-wider opacity-50">{item.project}</p>
+                    <p className="ab-ink mt-1 text-[0.625rem] font-black uppercase tracking-wider opacity-50">{item.project}</p>
                     <p className="ab-ink mt-4 text-sm leading-relaxed opacity-75">{item.desc}</p>
                     <div className="mt-5 pt-4 border-t border-[color:var(--line)] flex items-start gap-2">
                       <Star size={14} className="text-[color:var(--acc)] shrink-0 mt-0.5" />
-                      <p className="ab-ink text-[11px] font-bold italic opacity-80">{item.achievement}</p>
+                      <p className="ab-ink text-[0.6875rem] font-bold italic opacity-80">{item.achievement}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -706,14 +706,14 @@ const About = ({ darkMode = true }) => {
             <div className="space-y-10">
               {experiences.map((exp) => (
                 <div key={exp.role} className="group relative pl-8 border-l-2 border-[color:var(--acc-line)]">
-                  <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[color:var(--acc)] shadow-[0_0_14px_var(--acc-glow)] transition-transform group-hover:scale-125" />
-                  <p className="ab-acc font-mono text-[10px] font-black uppercase tracking-widest">{exp.period}</p>
+                  <span className="absolute -left-[0.5625rem] top-0 w-4 h-4 rounded-full bg-[color:var(--acc)] shadow-[0_0_14px_var(--acc-glow)] transition-transform group-hover:scale-125" />
+                  <p className="ab-acc font-mono text-[0.625rem] font-black uppercase tracking-widest">{exp.period}</p>
                   <h4 className="ab-ink mt-2 text-lg sm:text-xl font-black">{exp.role}</h4>
                   <p className="ab-ink text-xs sm:text-sm font-bold opacity-60">{exp.company}</p>
                   <p className="ab-ink mt-3 text-sm leading-relaxed opacity-80">{exp.desc}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {exp.skills.map((s) => (
-                      <span key={s} className="ab-acc px-2.5 py-1 rounded-md border border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] text-[9px] font-black uppercase tracking-widest">
+                      <span key={s} className="ab-acc px-2.5 py-1 rounded-md border border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] text-[0.5625rem] font-black uppercase tracking-widest">
                         {s}
                       </span>
                     ))}
@@ -750,7 +750,7 @@ const About = ({ darkMode = true }) => {
               ].map(({ Icon, label, value }) => (
                 <div key={label} className="p-6 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] space-y-3">
                   <Icon className="text-[color:var(--acc)]" />
-                  <p className="ab-ink text-[10px] font-black uppercase tracking-widest opacity-50">{label}</p>
+                  <p className="ab-ink text-[0.625rem] font-black uppercase tracking-widest opacity-50">{label}</p>
                   <p className="ab-ink text-sm sm:text-base font-black">{value}</p>
                 </div>
               ))}

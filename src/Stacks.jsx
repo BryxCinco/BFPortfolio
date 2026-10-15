@@ -396,7 +396,7 @@ const StackStyles = () => (
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6">
-    <h3 className="sc-acc text-[10px] sm:text-[11px] md:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
+    <h3 className="sc-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
       {label}
     </h3>
     <div className="h-px flex-1 bg-[color:var(--acc-line)]" />
@@ -409,7 +409,7 @@ const Pill = ({ on, onClick, children, label, color }) => (
     onClick={onClick}
     aria-pressed={on}
     title={label}
-    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full border text-[10px] sm:text-[11px] font-black uppercase tracking-[0.16em] transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full border text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.16em] transition-colors active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
     style={{
       borderColor: on ? color ?? 'var(--acc)' : 'var(--line)',
       background: on ? color ?? 'var(--acc)' : 'transparent',
@@ -538,7 +538,7 @@ const Fruit = ({ fruit, grown, delay, active, lit, dim, pinned, showName, onEnte
           style={{ background: color, boxShadow: `0 10px 24px ${rgba(color, 0.45)}`, zIndex: 10 }}
         >
           <span className="sc-white block text-xs sm:text-sm font-black leading-tight">{fruit.name}</span>
-          <span className="sc-white block text-[9px] font-black uppercase tracking-[0.18em] opacity-85">
+          <span className="sc-white block text-[0.5625rem] font-black uppercase tracking-[0.18em] opacity-85">
             {fruit.usedIn?.length ? `Used in ${fruit.usedIn.join(' · ')}` : fruit.category.title}
           </span>
         </span>
@@ -546,7 +546,7 @@ const Fruit = ({ fruit, grown, delay, active, lit, dim, pinned, showName, onEnte
       {showName && !big && grown && (
         <span
           className="sc-ink absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap font-black pointer-events-none"
-          style={{ fontSize: 'clamp(8px, 0.85vw, 10px)', opacity: dim ? 0.3 : 0.9 }}
+          style={{ fontSize: 'clamp(0.5rem, 0.85vw, 0.625rem)', opacity: dim ? 0.3 : 0.9 }}
         >
           {fruit.name}
         </span>
@@ -681,7 +681,7 @@ const TechTree = ({ darkMode, reduced }) => {
         ref={boxRef}
         className="relative mx-auto w-full select-none"
         style={{
-          maxWidth: layoutKey === 'wide' ? 1180 : 520,
+          maxWidth: layoutKey === 'wide' ? '73.75rem' : '32.5rem',
           aspectRatio: `${L.w} / ${L.h}`,
           '--fruit': `${(FRUIT / L.w) * 100}cqw`,
           containerType: 'inline-size',
@@ -887,7 +887,7 @@ const TechTree = ({ darkMode, reduced }) => {
 
       {/* ---- controls: plain rows, no boxes ---- */}
       <div className="flex flex-col items-center gap-5 text-center">
-        <p className="sc-ink font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.25em] opacity-60">
+        <p className="sc-ink font-mono text-[0.625rem] sm:text-[0.6875rem] uppercase tracking-[0.25em] opacity-60">
           {trace
             ? `${trace} grew from ${pad2(tracedCount)} ${tracedCount === 1 ? 'fruit' : 'fruits'}`
             : 'Hover a fruit · move your cursor to blow wind · tap the trunk to shake it'}
@@ -906,7 +906,7 @@ const TechTree = ({ darkMode, reduced }) => {
         </div>
 
         <div className="flex flex-wrap justify-center items-center gap-2">
-          <span className="sc-acc flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.25em] mr-1">
+          <span className="sc-acc flex items-center gap-1.5 font-mono text-[0.625rem] uppercase tracking-[0.25em] mr-1">
             <Route size={12} /> Trace
           </span>
           {PROJECTS.map((proj) => (
@@ -960,7 +960,7 @@ const Workflow = ({ reduced }) => (
     <div className="hidden md:block absolute left-[10%] right-[10%] top-8 h-px bg-[color:var(--acc-line)]" />
     {!reduced && (
       <motion.span
-        className="hidden md:block absolute top-8 -mt-[3px] w-1.5 h-1.5 rounded-full bg-[color:var(--acc)] shadow-[0_0_12px_var(--acc)]"
+        className="hidden md:block absolute top-8 -mt-[0.1875rem] w-1.5 h-1.5 rounded-full bg-[color:var(--acc)] shadow-[0_0_12px_var(--acc)]"
         initial={{ left: '10%' }}
         animate={{ left: ['10%', '90%'] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', repeatType: 'reverse' }}
@@ -979,9 +979,9 @@ const Workflow = ({ reduced }) => (
           <span className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center bg-[color:var(--surface-strong)] border-2 border-[color:var(--acc-line)] text-[color:var(--acc)] backdrop-blur-md transition-all duration-500 group-hover:border-[color:var(--acc)] group-hover:shadow-[0_0_30px_var(--acc-glow)] group-hover:rotate-[360deg]">
             <m.Icon size={22} />
           </span>
-          <span className="sc-ink font-mono text-[10px] opacity-50">{pad2(i + 1)}</span>
+          <span className="sc-ink font-mono text-[0.625rem] opacity-50">{pad2(i + 1)}</span>
           <p className="sc-acc text-xs font-black uppercase tracking-[0.2em]">{m.name}</p>
-          <p className="sc-ink text-xs opacity-60 leading-relaxed max-w-[200px]">{m.desc}</p>
+          <p className="sc-ink text-xs opacity-60 leading-relaxed max-w-[12.5rem]">{m.desc}</p>
         </motion.div>
       ))}
     </div>
@@ -1020,7 +1020,7 @@ function Stacks({ darkMode = true }) {
             prune bugs weekly ✂️
           </StickyNote>
         </div>
-        <motion.p {...reveal(0)} className="sc-acc font-mono text-[11px] uppercase tracking-[0.4em]">
+        <motion.p {...reveal(0)} className="sc-acc font-mono text-[0.6875rem] uppercase tracking-[0.4em]">
           ~/stack
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="sc-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">

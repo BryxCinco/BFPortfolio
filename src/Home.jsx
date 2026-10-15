@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useReducedMotion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useReducedMotion, useMotionValue, useSpring, animate } from 'framer-motion';
 import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, MousePointer2 } from 'lucide-react';
 
 import { getPalette, cssVars } from './theme';
@@ -22,6 +22,47 @@ import sweepImg from './assets/SweepXpress.png';
 // that draw themselves, a taped polaroid with draggable stickers, and a
 // scattered photo wall. Every animation is transform/opacity only.
 // ============================================================================
+
+// a draggable sticker pinned to the polaroid. Its spot is a percentage of the
+// polaroid, so it scales with it; after a resize or browser zoom it springs
+// back home instead of staying at an old pixel offset away from the photo.
+const HeroSticker = ({ sticker: s, index, reduced, constraints }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  useEffect(() => {
+    let t = 0;
+    const home = () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        animate(x, 0, { type: 'spring', stiffness: 300, damping: 26 });
+        animate(y, 0, { type: 'spring', stiffness: 300, damping: 26 });
+      }, 120);
+    };
+    window.addEventListener('resize', home);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', home);
+    };
+  }, [x, y]);
+
+  return (
+    <motion.div
+      drag={!reduced}
+      dragConstraints={constraints}
+      dragElastic={0.18}
+      dragMomentum={false}
+      whileDrag={{ scale: 1.12, rotate: 0, zIndex: 30, boxShadow: '0 18px 30px rgba(0,0,0,0.3)' }}
+      initial={reduced ? false : { opacity: 0, scale: 0.4, rotate: s.rot * 3 }}
+      animate={{ opacity: 1, scale: 1, rotate: s.rot }}
+      transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.9 + index * 0.12 }}
+      className="cursor-target absolute z-20 cursor-grab active:cursor-grabbing touch-none select-none px-3.5 py-2 rounded-lg shadow-lg"
+      style={{ ...s.pos, x, y, background: s.bg }}
+    >
+      <span className="hm-dark text-[0.6875rem] sm:text-xs font-black whitespace-nowrap">{s.label}</span>
+    </motion.div>
+  );
+};
 
 const ROLES = ['Full-stack developer', 'UI/UX designer', 'Mobile app builder', 'Coffee-powered problem solver'];
 
@@ -249,7 +290,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
               <span className="hm-anim absolute inline-flex h-full w-full rounded-full bg-[#00C48C]" style={{ animation: 'hm-pulse 1.8s ease-out infinite' }} />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00C48C]" />
             </span>
-            <span className="hm-ink text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em]">
+            <span className="hm-ink text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em]">
               Available for work · Manila · {time}
             </span>
           </motion.div>
@@ -345,7 +386,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
         </div>
 
         {/* polaroid + draggable stickers */}
-        <div className="relative mx-auto w-[72%] sm:w-[60%] lg:w-[80%] max-w-[400px]">
+        <div className="relative mx-auto w-[72%] sm:w-[60%] lg:w-[80%] max-w-[25rem]">
           <motion.div
             initial={reduced ? false : { opacity: 0, rotate: -14, y: 40, scale: 0.9 }}
             animate={{ opacity: 1, rotate: 3, y: 0, scale: 1 }}
@@ -363,21 +404,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </motion.div>
 
           {STICKERS.map((s, i) => (
-            <motion.div
-              key={s.label}
-              drag={!reduced}
-              dragConstraints={heroRef}
-              dragElastic={0.18}
-              dragMomentum={false}
-              whileDrag={{ scale: 1.12, rotate: 0, zIndex: 30, boxShadow: '0 18px 30px rgba(0,0,0,0.3)' }}
-              initial={reduced ? false : { opacity: 0, scale: 0.4, rotate: s.rot * 3 }}
-              animate={{ opacity: 1, scale: 1, rotate: s.rot }}
-              transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.9 + i * 0.12 }}
-              className="cursor-target absolute z-20 cursor-grab active:cursor-grabbing touch-none select-none px-3.5 py-2 rounded-lg shadow-lg"
-              style={{ ...s.pos, background: s.bg }}
-            >
-              <span className="hm-dark text-[11px] sm:text-xs font-black whitespace-nowrap">{s.label}</span>
-            </motion.div>
+            <HeroSticker key={s.label} sticker={s} index={i} reduced={reduced} constraints={heroRef} />
           ))}
 
           <span className="hm-hand hm-ink hidden sm:flex absolute -bottom-14 left-1/2 -translate-x-1/2 items-center gap-1.5 whitespace-nowrap text-xl opacity-60">
@@ -423,7 +450,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
               </span>
               <button
                 onClick={() => go('about')}
-                className="cursor-target inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[color:var(--acc-line)] text-[11px] font-black uppercase tracking-widest hover:bg-[color:var(--acc-soft)] transition-colors"
+                className="cursor-target inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[color:var(--acc-line)] text-[0.6875rem] font-black uppercase tracking-widest hover:bg-[color:var(--acc-soft)] transition-colors"
                 style={{ color: 'var(--acc)' }}
               >
                 Full story <ArrowUpRight size={14} />
@@ -432,10 +459,10 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </motion.div>
 
           <motion.div {...reveal(0.12)} className="p-7 sm:p-8 rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] space-y-5">
-            <p className="hm-acc font-mono text-[10px] uppercase tracking-[0.3em]">Quick facts</p>
+            <p className="hm-acc font-mono text-[0.625rem] uppercase tracking-[0.3em]">Quick facts</p>
             {FACTS.map((f) => (
               <div key={f.k} className="flex items-baseline justify-between gap-4 border-b border-dashed border-[color:var(--line)] pb-3 last:border-0 last:pb-0">
-                <span className="hm-ink text-[11px] font-black uppercase tracking-widest opacity-50">{f.k}</span>
+                <span className="hm-ink text-[0.6875rem] font-black uppercase tracking-widest opacity-50">{f.k}</span>
                 <span className="hm-ink text-sm sm:text-base font-black text-right">{f.v}</span>
               </div>
             ))}
@@ -464,7 +491,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
             style={{ background: 'linear-gradient(135deg, #FF007A, #A700FF)' }}
           >
             <Heart className="absolute -right-6 -bottom-8 w-44 h-44 text-white opacity-10 -rotate-12" />
-            <p className="hm-white font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">How I think about it</p>
+            <p className="hm-white font-mono text-[0.625rem] uppercase tracking-[0.3em] opacity-80">How I think about it</p>
             <p className="hm-white mt-4 text-2xl sm:text-4xl font-black tracking-tight leading-tight">
               &ldquo;Turning complex logic into seamless experiences.&rdquo;
             </p>
@@ -481,7 +508,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           <SectionHead title="Things I've made." note="(click one!)" noteRot={-5}>
             <button
               onClick={() => go('projects')}
-              className="cursor-target group inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest"
+              className="cursor-target group inline-flex items-center gap-2 text-[0.6875rem] font-black uppercase tracking-widest"
               style={{ color: 'var(--acc)' }}
             >
               View all projects <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
@@ -513,11 +540,11 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
               </div>
               <div className="px-3 pt-5 pb-4 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="hm-acc text-[10px] font-black uppercase tracking-[0.2em]">{w.tag}</p>
+                  <p className="hm-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{w.tag}</p>
                   {w.url && (
                     <span className="flex items-center gap-1.5 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#00C48C]" />
-                      <span className="hm-ink text-[9px] font-black uppercase tracking-widest opacity-70">Live</span>
+                      <span className="hm-ink text-[0.5625rem] font-black uppercase tracking-widest opacity-70">Live</span>
                     </span>
                   )}
                 </div>
@@ -554,7 +581,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
               {...reveal(i * 0.07, 30)}
               onClick={() => onPreview?.(g.img)}
               whileHover={reduced ? undefined : { rotate: 0, y: -10, scale: 1.04, zIndex: 10 }}
-              className="cursor-target relative shrink-0 snap-center w-[62vw] sm:w-[220px] lg:w-[240px] bg-white p-2.5 pb-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.45)]"
+              className="cursor-target relative shrink-0 snap-center w-[62vw] sm:w-[13.75rem] lg:w-[15rem] bg-white p-2.5 pb-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.45)]"
               style={{ rotate: reduced ? 0 : g.rot }}
               aria-label={`Open ${g.cap}`}
             >
@@ -570,7 +597,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
 
       {/* ================= CLOSING CTA ================= */}
       <motion.section {...reveal(0)} className="relative text-center py-10 sm:py-16">
-        <p className="hm-acc font-mono text-[11px] uppercase tracking-[0.35em]">What&apos;s next?</p>
+        <p className="hm-acc font-mono text-[0.6875rem] uppercase tracking-[0.35em]">What&apos;s next?</p>
         <h2 className="hm-ink mt-5 text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
           Got an idea?
           <br />

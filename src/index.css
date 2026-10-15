@@ -11,6 +11,14 @@
 }
 
 @layer base {
+  /* Fit-to-screen on desktop: the root font-size tracks the window width
+     (16px at an 1800px-wide window, clamped to 10.9px–24px), so every
+     rem-based size scales together on any monitor or browser zoom.
+     See src/useFitScale.js. */
+  @media (min-width: 1024px) and (pointer: fine) {
+    html { font-size: clamp(10.88px, calc(100vw / 112.5), 24px); }
+  }
+
   body {
     @apply transition-colors duration-700 antialiased overflow-x-hidden m-0 p-0;
     font-family: var(--font-montserrat);
