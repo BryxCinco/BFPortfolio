@@ -48,9 +48,9 @@ const TOOLS = [
 ];
 
 const WORK = [
-  { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, note: 'my fave ♥', rot: -1.6 },
-  { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, rot: 1.2 },
-  { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, rot: -1 },
+  { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
+  { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
+  { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
   { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, rot: 1.6 },
 ];
 
@@ -494,7 +494,8 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
             <motion.button
               key={w.name}
               {...reveal(i * 0.08, 40)}
-              onClick={() => go('projects')}
+              onClick={() => (w.url ? window.open(w.url, '_blank', 'noopener,noreferrer') : go('projects'))}
+              aria-label={w.url ? `Open ${w.name} live site` : `See ${w.name} in projects`}
               whileHover={reduced ? undefined : { rotate: 0, y: -8 }}
               className="cursor-target group relative text-left rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-3 shadow-[0_20px_40px_-25px_rgba(0,0,0,0.5)]"
               style={{ rotate: reduced ? 0 : w.rot }}
@@ -511,7 +512,15 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
                 </span>
               </div>
               <div className="px-3 pt-5 pb-4 space-y-1.5">
-                <p className="hm-acc text-[10px] font-black uppercase tracking-[0.2em]">{w.tag}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="hm-acc text-[10px] font-black uppercase tracking-[0.2em]">{w.tag}</p>
+                  {w.url && (
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00C48C]" />
+                      <span className="hm-ink text-[9px] font-black uppercase tracking-widest opacity-70">Live</span>
+                    </span>
+                  )}
+                </div>
                 <h3 className="hm-ink text-xl font-black tracking-tight">{w.name}</h3>
                 <p className="hm-ink text-sm opacity-65 leading-snug">{w.line}</p>
               </div>
