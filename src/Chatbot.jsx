@@ -96,23 +96,46 @@ const shuffle = (arr) => {
 // keeps Chrome's online voices from going silent on longer answers.
 // ============================================================================
 
-// best first: neural "Natural" voices (Edge), then good built-in ones
+// Female voices in order of preference: Edge's neural "Natural" voices, then
+// Chrome's Google voice, then Apple's (Ava/Zoe/Allison/Samantha…), then
+// Windows' Zira. Each voice is scored and the best one wins.
 const FEMALE_VOICES = [
-  /aria.*natural/i, /jenny.*natural/i, /ava.*natural/i, /emma.*natural/i, /michelle.*natural/i,
-  /libby.*natural/i, /sonia.*natural/i, /natasha.*natural/i, /clara.*natural/i,
-  /google us english/i, /samantha/i, /ava/i, /allison/i, /susan/i, /karen/i, /moira/i, /tessa/i,
-  /victoria/i, /zira/i, /hazel/i, /google uk english female/i, /female/i,
+  /aria/i, /jenny/i, /ava/i, /emma/i, /michelle/i, /libby/i, /sonia/i, /natasha/i, /clara/i,
+  /google us english/i, /zoe/i, /allison/i, /samantha/i, /nicky/i, /susan/i, /serena/i, /kate/i,
+  /karen/i, /moira/i, /tessa/i, /martha/i, /victoria/i, /zira/i, /hazel/i, /google uk english female/i,
 ];
-const MALE_HINTS = /(guy|davis|tony|jason|brian|andrew|christopher|eric|roger|steffan|ryan|thomas|william|david|mark|george|james|daniel|alex|fred|male)/i;
+const MALE_HINTS = /(guy|davis|tony|jason|brian|andrew|christopher|eric|roger|steffan|ryan|thomas|william|david|mark|george|james|daniel|alex|fred|aaron|arthur|gordon|oliver|tom|evan|nathan|male)/i;
+// Apple's character voices (old, nasal, robotic or sung) — never use these
+const NOVELTY = /(grandma|grandpa|flo|shelley|sandy|reed|rocko|eddy|albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|kathy|ralph|deranged|hysterical|pipe organ)/i;
+
+const scoreVoice = (v) => {
+  const id = `${v.name} ${v.voiceURI ?? ''}`;
+  if (NOVELTY.test(id) || MALE_HINTS.test(v.name)) return -1;
+  let score = 1;
+  const rank = FEMALE_VOICES.findIndex((re) => re.test(v.name));
+  if (rank >= 0) score += (FEMALE_VOICES.length - rank) * 3;
+  if (/natural|neural/i.test(id)) score += 120;
+  if (/premium/i.test(id)) score += 80;
+  if (/enhanced/i.test(id)) score += 50;
+  if (/compact/i.test(id)) score -= 10;
+  if (/en[-_]US/i.test(v.lang)) score += 6;
+  else if (/en[-_](GB|AU|IE|CA)/i.test(v.lang)) score += 3;
+  return score;
+};
 
 const pickVoice = () => {
-  const voices = window.speechSynthesis?.getVoices?.() ?? [];
-  const english = voices.filter((v) => /^en/i.test(v.lang));
-  for (const re of FEMALE_VOICES) {
-    const v = english.find((x) => re.test(x.name) && !MALE_HINTS.test(x.name.replace(re, '')));
-    if (v) return v;
+  const voices = (window.speechSynthesis?.getVoices?.() ?? []).filter((v) => /^en/i.test(v.lang));
+  let best = null;
+  let bestScore = 0;
+  for (const v of voices) {
+    const sc = scoreVoice(v);
+    if (sc > bestScore) {
+      best = v;
+      bestScore = sc;
+    }
   }
-  return english.find((v) => !MALE_HINTS.test(v.name)) ?? english[0] ?? null;
+  // nothing female and clean? let the browser use its own default voice
+  return best;
 };
 
 const speakable = (text) =>
@@ -205,7 +228,8 @@ function useVoice() {
         if (voice) u.voice = voice;
         u.lang = voice?.lang ?? 'en-US';
         u.rate = 1;
-        u.pitch = 1.08;
+        // only the neural voices like a slight lift; others sound strained
+        u.pitch = voice && /natural|neural/i.test(voice.name) ? 1.05 : 1;
         u.volume = 1;
         if (i === parts.length - 1) u.onend = done;
         u.onerror = done;
