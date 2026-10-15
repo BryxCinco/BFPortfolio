@@ -1062,3 +1062,6 @@ function Stacks({ darkMode = true }) {
 }
 
 export default Stacks;
+
+// shared with the chat assistant
+export { stackCategories };

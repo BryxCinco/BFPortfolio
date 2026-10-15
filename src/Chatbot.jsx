@@ -1,35 +1,86 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { X, ArrowUp, Mic, MicOff } from 'lucide-react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
+import {
+  X,
+  ArrowUp,
+  Mic,
+  Square,
+  Volume2,
+  VolumeX,
+  RotateCcw,
+  ArrowUpRight,
+  ArrowRight,
+  Mail,
+  Phone,
+  Rocket,
+  Layers,
+  Award,
+  User,
+  Sparkles,
+  BookOpen,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const THINKING_LABELS = ['thinking...', 'analyzing...'];
+import { getPalette, cssVars } from './theme';
+import { getReply, CONTACT } from './ChatBrain';
+import { websites } from './Project';
+import { stackCategories } from './Stacks';
+import { featuredCerts, CERT_TOTAL } from './Certifications';
+import brian1 from './assets/Brian1.png';
+import brian2 from './assets/Brian2.png';
+import brian3 from './assets/Brian3.png';
+import brian4 from './assets/Brian4.png';
+import brian5 from './assets/Brian5.png';
 
-// Pool of "prepared" starter questions — a random subset of these is shown
-// each time the chat is opened, so returning visitors see a fresh set.
+// ============================================================================
+// CHATBOT.JSX — the "Ask Me" assistant. Answers stream in and are read out
+// loud (browser speech, toggle in the header), the mic sends what you say,
+// and answers can carry rich cards: project screenshots with live links, the
+// stack as logos, certificate images, a profile card, contact buttons, a
+// photo strip, or a Wikipedia summary for general questions. All the
+// question-matching lives in ChatBrain.js.
+// ============================================================================
+
 const QUESTION_BANK = [
   'Who is Brian?',
+  'What projects have you built?',
+  'What is your tech stack?',
+  'What certificates do you have?',
   'Why should we hire you?',
-  'What work locations do you prefer?',
+  'How can I contact Brian?',
+  'Tell me about TIDE',
+  'Tell me about Poopipoo',
+  'Tell me about Neo Chess XD',
+  'Which AI tools do you use?',
+  'What design tools do you use?',
+  'What backend tools do you use?',
+  'Do you build mobile apps?',
+  'What are your hobbies?',
   'What is your expected salary?',
-  'What can you build?',
+  'What work modality do you prefer?',
+  'What work locations do you prefer?',
+  'What days do you work?',
   'How do you handle complex technical problems?',
   'Where do you see yourself in 2-3 years?',
-  'What companies are you interested in working for?',
-  'What work modality do you prefer?',
-  'Tell me about a time you had a disagreement.',
-  'What days do you work?',
-  'What is your tech stack?',
-  'What projects have you built?',
-  'What tools do you use for design?',
-  'What dev tools do you use?',
-  'Which AI tools do you use?',
-  'What are your hobbies?',
   'What is your dream job?',
+  'Who is José Rizal?',
+  'What is machine learning?',
+  "What's 25 * 48?",
+  "What's the weather?",
+  'Tell me a joke',
 ];
 
-// Fisher-Yates shuffle so the same handful of questions doesn't always
-// surface first.
-const shuffleArray = (arr) => {
+const STARTERS = [
+  { label: 'Projects', q: 'What projects have you built?', Icon: Rocket },
+  { label: 'Tech stack', q: 'What is your tech stack?', Icon: Layers },
+  { label: 'Certificates', q: 'What certificates do you have?', Icon: Award },
+  { label: 'About Brian', q: 'Who is Brian?', Icon: User },
+  { label: 'Contact', q: 'How can I contact Brian?', Icon: Mail },
+  { label: 'Ask anything', q: 'What is machine learning?', Icon: BookOpen },
+];
+
+const VOICE_KEY = 'bp_chat_voice';
+
+const shuffle = (arr) => {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -38,125 +89,562 @@ const shuffleArray = (arr) => {
   return copy;
 };
 
-const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick }, ref) => {
+// ============================================================================
+// VOICE — browser text-to-speech. Prefers natural-sounding English voices,
+// speaks sentence by sentence (long single utterances get cut off in
+// Chromium), and strips emoji so they aren't read out by name.
+// ============================================================================
+
+const PREFERRED_VOICES = [/natural/i, /aria/i, /jenny/i, /google us english/i, /samantha/i, /zira/i, /google uk english female/i];
+
+const pickVoice = () => {
+  const voices = window.speechSynthesis?.getVoices?.() ?? [];
+  const english = voices.filter((v) => /^en/i.test(v.lang));
+  for (const re of PREFERRED_VOICES) {
+    const v = english.find((x) => re.test(x.name));
+    if (v) return v;
+  }
+  return english.find((v) => /en-US/i.test(v.lang)) ?? english[0] ?? null;
+};
+
+const speakable = (text) =>
+  text
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/₱\s?([\d,]+)/g, '$1 pesos')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+function useVoice() {
+  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const [enabled, setEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem(VOICE_KEY);
+      return saved === null ? true : saved === 'true';
+    } catch {
+      return true;
+    }
+  });
+  const [speakingId, setSpeakingId] = useState(null);
+  const voiceRef = useRef(null);
+  const runRef = useRef(0);
+
+  useEffect(() => {
+    if (!supported) return undefined;
+    const load = () => {
+      voiceRef.current = pickVoice();
+    };
+    load();
+    window.speechSynthesis.addEventListener?.('voiceschanged', load);
+    return () => window.speechSynthesis.removeEventListener?.('voiceschanged', load);
+  }, [supported]);
+
+  const stop = useCallback(() => {
+    if (!supported) return;
+    runRef.current += 1;
+    window.speechSynthesis.cancel();
+    setSpeakingId(null);
+  }, [supported]);
+
+  const speak = useCallback(
+    (id, text) => {
+      if (!supported) return;
+      stop();
+      const run = runRef.current;
+      const parts = speakable(text).match(/[^.!?]+[.!?]*/g) ?? [];
+      if (!parts.length) return;
+      setSpeakingId(id);
+      parts.forEach((part, i) => {
+        const u = new SpeechSynthesisUtterance(part.trim());
+        if (voiceRef.current) u.voice = voiceRef.current;
+        u.lang = voiceRef.current?.lang ?? 'en-US';
+        u.rate = 1.04;
+        u.pitch = 1;
+        if (i === parts.length - 1) {
+          u.onend = () => runRef.current === run && setSpeakingId(null);
+        }
+        u.onerror = () => runRef.current === run && setSpeakingId(null);
+        window.speechSynthesis.speak(u);
+      });
+    },
+    [supported, stop]
+  );
+
+  const toggle = useCallback(() => {
+    setEnabled((on) => {
+      const next = !on;
+      try {
+        localStorage.setItem(VOICE_KEY, String(next));
+      } catch {
+        /* storage may be unavailable */
+      }
+      if (!next) stop();
+      return next;
+    });
+  }, [stop]);
+
+  useEffect(() => () => supported && window.speechSynthesis.cancel(), [supported]);
+
+  return { supported, enabled, toggle, speak, stop, speakingId };
+}
+
+// ============================================================================
+// STYLES — the overlay sits inside the site's `.dark/.light` wrapper, whose
+// `p, span { color; font-weight: !important }` rules would flatten
+// everything, so text resets to inherit and color comes from cb- classes.
+// ============================================================================
+
+const ChatStyles = () => (
+  <style>{`
+    #claude-chat-overlay :is(h1,h2,h3,h4,p,span) { color: inherit !important; font-weight: inherit !important; }
+    #claude-chat-overlay .cb-acc { color: var(--acc) !important; }
+    #claude-chat-overlay .cb-on { color: var(--acc-ink) !important; }
+    #claude-chat-overlay .cb-dark { color: #1B1B2A !important; }
+    #claude-chat-overlay .cb-white { color: #fff !important; }
+    #claude-chat-overlay .font-medium { font-weight: 500 !important; }
+    #claude-chat-overlay .font-semibold { font-weight: 600 !important; }
+    #claude-chat-overlay .font-bold { font-weight: 700 !important; }
+    #claude-chat-overlay .font-black { font-weight: 900 !important; }
+
+    @keyframes cb-spin { to { transform: rotate(360deg); } }
+    @keyframes cb-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes cb-bar { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+    @keyframes cb-ring { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.9); opacity: 0; } }
+    .cb-orb-spin { animation: cb-spin 6s linear infinite; }
+    .cb-orb-fast { animation: cb-spin 1.4s linear infinite; }
+    .cb-breathe { animation: cb-breathe 1.1s ease-in-out infinite; }
+    .cb-bar { animation: cb-bar 0.8s ease-in-out infinite; transform-origin: 50% 50%; }
+    .cb-ring { animation: cb-ring 1.4s ease-out infinite; }
+    .cb-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+    .cb-scroll::-webkit-scrollbar-thumb { background: var(--acc-line); border-radius: 99px; }
+    @media (prefers-reduced-motion: reduce) {
+      .cb-orb-spin, .cb-orb-fast, .cb-breathe, .cb-bar, .cb-ring { animation: none !important; }
+    }
+  `}</style>
+);
+
+// the assistant's face: a spinning gradient orb that reacts to its state
+const Orb = ({ state = 'idle', size = 40 }) => (
+  <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
+    {(state === 'speaking' || state === 'listening') && (
+      <span className="cb-ring absolute inset-0 rounded-full" style={{ background: state === 'listening' ? '#F43F5E' : 'var(--acc)' }} />
+    )}
+    <span
+      className={`absolute inset-0 rounded-full ${state === 'thinking' ? 'cb-orb-fast' : 'cb-orb-spin'}`}
+      style={{ background: 'conic-gradient(from 0deg, var(--acc), var(--acc2), #FF007A, var(--acc))' }}
+    />
+    <span
+      className={`absolute inset-[3px] rounded-full flex items-center justify-center ${state === 'thinking' ? 'cb-breathe' : ''}`}
+      style={{ background: 'var(--orb-core)' }}
+    >
+      {state === 'speaking' ? (
+        <span className="flex items-center gap-[2px] h-1/2">
+          {[0, 0.15, 0.3, 0.1].map((d, i) => (
+            <span key={i} className="cb-bar w-[3px] h-full rounded-full" style={{ background: 'var(--acc)', animationDelay: `${d}s` }} />
+          ))}
+        </span>
+      ) : (
+        <Sparkles size={size * 0.42} className="text-[color:var(--acc)]" />
+      )}
+    </span>
+  </span>
+);
+
+// ============================================================================
+// RICH CARDS
+// ============================================================================
+
+const cardBase = 'rounded-2xl border border-[color:var(--line)] overflow-hidden';
+const cardStyle = { background: 'var(--card)' };
+
+const LinkPill = ({ href, children, solid = false }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    onClick={(e) => e.stopPropagation()}
+    className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-transform hover:-translate-y-0.5"
+    style={solid ? { background: 'var(--acc)', color: 'var(--acc-ink)' } : { border: '1px solid var(--line)', color: 'var(--ink)' }}
+  >
+    {children}
+  </a>
+);
+
+const ProjectCard = ({ p, onAsk }) => {
+  const live = p.url && p.url !== '#';
+  return (
+    <div className={`${cardBase} flex flex-col`} style={cardStyle}>
+      <a
+        href={live ? p.url : undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`relative block aspect-[16/10] overflow-hidden bg-black/10 ${live ? 'cursor-target group' : 'pointer-events-none'}`}
+      >
+        <img src={p.image} alt={`${p.name} screenshot`} loading="lazy" className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" />
+        {live && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-[0.5625rem] font-black uppercase tracking-widest">
+            <span className="cb-white">● Live</span>
+          </span>
+        )}
+      </a>
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <p className="cb-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{p.tag}</p>
+        <p className="text-lg font-black leading-tight">{p.name}</p>
+        <p className="text-sm font-medium opacity-70 line-clamp-2">{p.desc}</p>
+        <div className="mt-auto pt-2 flex flex-wrap gap-2">
+          {live && <LinkPill href={p.url} solid>Open <ArrowUpRight size={12} /></LinkPill>}
+          <button
+            onClick={() => onAsk(`Tell me about ${p.name}`)}
+            className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest border border-[color:var(--line)] transition-transform hover:-translate-y-0.5"
+          >
+            Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProjectsAttach = ({ onAsk }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {websites.map((p) => (
+      <ProjectCard key={p.name} p={p} onAsk={onAsk} />
+    ))}
+  </div>
+);
+
+const ProjectAttach = ({ name, onNavigate }) => {
+  const p = websites.find((w) => w.name === name);
+  if (!p) return null;
+  const live = p.url && p.url !== '#';
+  return (
+    <div className={cardBase} style={cardStyle}>
+      <a href={live ? p.url : undefined} target="_blank" rel="noopener noreferrer" className={`block aspect-[16/9] overflow-hidden bg-black/10 ${live ? 'cursor-target' : 'pointer-events-none'}`}>
+        <img src={p.image} alt={`${p.name} screenshot`} className="w-full h-full object-cover object-top" />
+      </a>
+      <div className="p-5">
+        <p className="cb-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{p.subtitle}</p>
+        <p className="text-2xl font-black mt-1">{p.name}</p>
+        <ul className="mt-3 space-y-1.5">
+          {p.highlights.map((h) => (
+            <li key={h} className="flex gap-2 text-sm font-medium opacity-80">
+              <span className="cb-acc">✦</span>
+              <span>{h}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {p.stack.map((s) => (
+            <span key={s} className="px-2.5 py-1 rounded-full text-[0.625rem] font-black uppercase tracking-widest" style={{ background: 'var(--acc-soft)' }}>
+              <span className="cb-acc">{s}</span>
+            </span>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {live && <LinkPill href={p.url} solid>Open live site <ArrowUpRight size={12} /></LinkPill>}
+          <button
+            onClick={() => onNavigate('projects')}
+            className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest border border-[color:var(--line)]"
+          >
+            See in Projects <ArrowRight size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ToolChip = ({ item }) => {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border border-[color:var(--line)]" style={{ background: 'var(--card)' }}>
+      <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+        {item.logo && !failed ? (
+          <img src={item.logo} alt="" loading="lazy" onError={() => setFailed(true)} className="w-4 h-4 object-contain" />
+        ) : (
+          <span className="cb-dark text-[0.5rem] font-black">{item.glyph ?? item.name.slice(0, 2)}</span>
+        )}
+      </span>
+      <span className="text-xs font-bold">{item.name}</span>
+    </span>
+  );
+};
+
+const StackAttach = ({ category }) => {
+  const groups = category ? stackCategories.filter((c) => c.id === category) : stackCategories;
+  return (
+    <div className="space-y-4">
+      {groups.map((g) => (
+        <div key={g.id}>
+          <p className="flex items-center gap-2 text-[0.625rem] font-black uppercase tracking-[0.25em] opacity-70 mb-2">
+            <span className="w-2 h-2 rounded-full" style={{ background: g.color }} />
+            <span>{g.title}</span>
+            <span className="opacity-50">· {g.items.length}</span>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {g.items.map((it) => (
+              <ToolChip key={it.name} item={it} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const CertsAttach = ({ onPreview, onNavigate }) => (
+  <div>
+    <div className="cb-scroll flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+      {featuredCerts.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => onPreview(c.img)}
+          className={`cursor-target ${cardBase} snap-start shrink-0 w-56 text-left transition-transform hover:-translate-y-1`}
+          style={cardStyle}
+        >
+          <div className="aspect-[4/3] bg-white p-2">
+            <img src={c.img} alt={c.title} loading="lazy" className="w-full h-full object-contain" />
+          </div>
+          <div className="p-3">
+            <p className="text-sm font-black leading-snug line-clamp-2">{c.title}</p>
+            <p className="text-[0.6875rem] font-medium opacity-60 mt-1 line-clamp-1">{c.issuer}</p>
+          </div>
+        </button>
+      ))}
+    </div>
+    <button onClick={() => onNavigate('certificates')} className="cursor-target mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
+      <span className="cb-acc">See all {CERT_TOTAL} certificates</span> <ArrowRight size={13} className="text-[color:var(--acc)]" />
+    </button>
+  </div>
+);
+
+const ProfileAttach = () => (
+  <div className={`${cardBase} flex flex-col sm:flex-row`} style={cardStyle}>
+    <div className="sm:w-44 shrink-0 bg-neutral-200">
+      <img src={brian1} alt="Brian Paul Francisco" className="w-full h-56 sm:h-full object-cover object-top" />
+    </div>
+    <div className="p-5 flex-1">
+      <p className="text-xl font-black">Brian Paul Francisco</p>
+      <p className="cb-acc text-xs font-black uppercase tracking-[0.2em] mt-1">Full-stack developer · UI/UX</p>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        {[
+          ['1.25', 'GWA'],
+          ['BSIT', 'National Teachers College'],
+          ['Intern', 'Grandline Maritime'],
+          ['Manila', 'Philippines'],
+        ].map(([v, l]) => (
+          <div key={l} className="rounded-xl border border-[color:var(--line)] px-3 py-2">
+            <p className="cb-acc text-base font-black leading-none">{v}</p>
+            <p className="text-[0.625rem] font-bold opacity-60 mt-1 leading-tight">{l}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const ContactAttach = ({ onNavigate }) => (
+  <div className={`${cardBase} p-4`} style={cardStyle}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <a href={`mailto:${CONTACT.email}`} className="cursor-target flex items-center gap-3 p-3 rounded-xl border border-[color:var(--line)] transition-colors hover:border-[color:var(--acc)]">
+        <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--acc-soft)' }}>
+          <Mail size={16} className="text-[color:var(--acc)]" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[0.625rem] font-black uppercase tracking-widest opacity-60">Email</span>
+          <span className="block text-sm font-bold truncate">{CONTACT.email}</span>
+        </span>
+      </a>
+      <a href={`tel:${CONTACT.phone}`} className="cursor-target flex items-center gap-3 p-3 rounded-xl border border-[color:var(--line)] transition-colors hover:border-[color:var(--acc)]">
+        <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--acc-soft)' }}>
+          <Phone size={16} className="text-[color:var(--acc)]" />
+        </span>
+        <span>
+          <span className="block text-[0.625rem] font-black uppercase tracking-widest opacity-60">Phone</span>
+          <span className="block text-sm font-bold">{CONTACT.phone}</span>
+        </span>
+      </a>
+    </div>
+    <div className="mt-3 flex flex-wrap gap-2">
+      <LinkPill href="https://github.com/BryxCinco">GitHub <ArrowUpRight size={12} /></LinkPill>
+      <LinkPill href="https://www.linkedin.com/in/brianfrancisco10/">LinkedIn <ArrowUpRight size={12} /></LinkPill>
+      <LinkPill href="https://www.facebook.com/Bryx.Francisco111/">Facebook <ArrowUpRight size={12} /></LinkPill>
+      <button
+        onClick={() => onNavigate('contact')}
+        className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest"
+        style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+      >
+        <span className="cb-on">Send a message</span> <ArrowRight size={12} />
+      </button>
+    </div>
+  </div>
+);
+
+const GalleryAttach = ({ onPreview }) => (
+  <div className="cb-scroll flex gap-2 overflow-x-auto pb-2">
+    {[brian2, brian3, brian4, brian5].map((src, i) => (
+      <button
+        key={src}
+        onClick={() => onPreview(src)}
+        className="cursor-target shrink-0 w-32 sm:w-36 aspect-[3/4] rounded-xl overflow-hidden bg-white p-1.5 pb-5 shadow-md transition-transform hover:-translate-y-1"
+        style={{ transform: `rotate(${[-2, 1.5, -1, 2][i]}deg)` }}
+      >
+        <img src={src} alt="Brian outside of code" loading="lazy" className="w-full h-full object-cover rounded-md" />
+      </button>
+    ))}
+  </div>
+);
+
+const WikiAttach = ({ title, description, thumb, url }) => (
+  <a href={url} target="_blank" rel="noopener noreferrer" className={`cursor-target ${cardBase} flex items-stretch transition-transform hover:-translate-y-0.5`} style={cardStyle}>
+    {thumb && (
+      <span className="w-24 sm:w-28 shrink-0 bg-white">
+        <img src={thumb} alt={title} className="w-full h-full object-cover" />
+      </span>
+    )}
+    <span className="p-4 flex flex-col justify-center min-w-0">
+      <span className="block text-base font-black truncate">{title}</span>
+      {description && <span className="block text-xs font-medium opacity-60 mt-0.5 line-clamp-2">{description}</span>}
+      <span className="cb-acc mt-2 inline-flex items-center gap-1 text-[0.625rem] font-black uppercase tracking-widest">
+        <BookOpen size={12} /> Read on Wikipedia <ArrowUpRight size={11} />
+      </span>
+    </span>
+  </a>
+);
+
+const Attachment = ({ attach, onAsk, onNavigate, onPreview }) => {
+  switch (attach.type) {
+    case 'projects':
+      return <ProjectsAttach onAsk={onAsk} />;
+    case 'project':
+      return <ProjectAttach name={attach.name} onNavigate={onNavigate} />;
+    case 'stack':
+      return <StackAttach category={attach.category} />;
+    case 'certs':
+      return <CertsAttach onPreview={onPreview} onNavigate={onNavigate} />;
+    case 'profile':
+      return <ProfileAttach />;
+    case 'contact':
+      return <ContactAttach onNavigate={onNavigate} />;
+    case 'gallery':
+      return <GalleryAttach onPreview={onPreview} />;
+    case 'wiki':
+      return <WikiAttach {...attach} />;
+    default:
+      return null;
+  }
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavigate }, ref) => {
+  const p = getPalette(darkMode);
+  const voice = useVoice();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [isWaiting, setIsWaiting] = useState(false); // between send and first streamed character
-  const [thinkingLabel, setThinkingLabel] = useState(THINKING_LABELS[0]);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [suggested, setSuggested] = useState([]);
   const [inputFocused, setInputFocused] = useState(false);
+  const [preview, setPreview] = useState(null);
 
-  // Speech-to-text dictation state
+  // speech-to-text
   const [isDictating, setIsDictating] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(true);
+  const [micSupported, setMicSupported] = useState(true);
   const [micError, setMicError] = useState('');
 
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
-  const streamIntervalRef = useRef(null);
-  const thinkingIntervalRef = useRef(null);
-  const lastResponseIndexRef = useRef(-1);
-  const lastJokeIndexRef = useRef(-1);
+  const streamRef = useRef(null);
+  const sendRef = useRef(null);
+  const previewRef = useRef(null);
+  previewRef.current = preview;
 
-  // Expose an imperative "open" method so the nav bar (desktop pill + mobile
-  // drawer), which now owns the only entry point into the chat, can open
-  // this widget from the parent component.
   useImperativeHandle(ref, () => ({
     open: () => setIsOpen(true),
   }));
 
-  // Lock page scroll while the overlay is open
+  // lock page scroll; Esc closes (or closes the image preview first)
   useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = prev; };
-    }
-  }, [isOpen]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    if (!isOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (previewRef.current) setPreview(null);
+      else setIsOpen(false);
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const t = setTimeout(() => inputRef.current?.focus(), 300);
+    setSuggested(shuffle(QUESTION_BANK).slice(0, 4));
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+      clearTimeout(t);
+    };
   }, [isOpen]);
 
-  // Focus the input shortly after the overlay finishes animating in
-  useEffect(() => {
-    if (isOpen) {
-      const t = setTimeout(() => inputRef.current?.focus(), 300);
-      return () => clearTimeout(t);
-    }
-  }, [isOpen]);
-
-  // Pick a fresh random set of 4-5 prepared questions every time the chat opens
-  useEffect(() => {
-    if (isOpen) {
-      const count = Math.random() < 0.5 ? 4 : 5;
-      setSuggestedQuestions(shuffleArray(QUESTION_BANK).slice(0, count));
-    }
-  }, [isOpen]);
-
-  // Clean up any in-flight timers on unmount / close
+  // closing stops typing and talking
   useEffect(() => {
     if (!isOpen) {
-      clearInterval(streamIntervalRef.current);
-      clearInterval(thinkingIntervalRef.current);
+      clearInterval(streamRef.current);
+      voice.stop();
+      recognitionRef.current?.abort?.();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Speech recognition setup (dictation only — no speech synthesis)
+  // mic: what you say is sent straight away, like talking to it
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setVoiceSupported(false);
-      return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR || (typeof window.isSecureContext === 'boolean' && !window.isSecureContext)) {
+      setMicSupported(false);
+      return undefined;
     }
-    if (typeof window.isSecureContext === 'boolean' && !window.isSecureContext) {
-      setVoiceSupported(false);
-      return;
-    }
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.lang = 'en-US';
-
-    recognitionRef.current.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput((prev) => (prev ? prev + ' ' + transcript : transcript));
-      setIsDictating(false);
-    };
-
-    recognitionRef.current.onend = () => {
-      setIsDictating(false);
-    };
-
-    recognitionRef.current.onerror = (event) => {
-      setIsDictating(false);
-      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
-        setMicError('Mic access is blocked. Allow microphone permission for this site in your browser settings, then try again.');
-      } else if (event?.error === 'network') {
-        setMicError('Speech recognition needs an internet connection. Check your connection and try again.');
-      } else if (event?.error && event.error !== 'no-speech' && event.error !== 'aborted') {
-        setMicError('Voice input hit a snag (' + event.error + '). Try again.');
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.onresult = (event) => {
+      const res = event.results[event.results.length - 1];
+      const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ');
+      setInput(transcript);
+      if (res.isFinal) {
+        setIsDictating(false);
+        sendRef.current?.(transcript);
       }
     };
-
-    return () => {
-      recognitionRef.current?.stop?.();
+    rec.onend = () => setIsDictating(false);
+    rec.onerror = (event) => {
+      setIsDictating(false);
+      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
+        setMicError('Mic is blocked — allow microphone access for this site, then try again.');
+      } else if (event?.error === 'network') {
+        setMicError('Voice input needs an internet connection.');
+      } else if (event?.error && event.error !== 'no-speech' && event.error !== 'aborted') {
+        setMicError(`Voice input hit a snag (${event.error}). Try again.`);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    recognitionRef.current = rec;
+    return () => rec.abort?.();
   }, []);
 
-  const startDictation = () => {
-    if (!recognitionRef.current) return;
+  const toggleDictation = () => {
+    const rec = recognitionRef.current;
+    if (!rec) return;
+    if (isDictating) {
+      rec.stop();
+      setIsDictating(false);
+      return;
+    }
     setMicError('');
+    voice.stop();
     try {
+      setInput('');
+      rec.start();
       setIsDictating(true);
-      recognitionRef.current.start();
     } catch (err) {
       if (err?.name !== 'InvalidStateError') {
         setIsDictating(false);
@@ -165,541 +653,297 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick }, ref) 
     }
   };
 
-  const stopDictation = () => {
-    recognitionRef.current?.stop?.();
-    setIsDictating(false);
-  };
-
-  const toggleDictation = () => {
-    if (isDictating) {
-      stopDictation();
-    } else {
-      startDictation();
-    }
-  };
-
-  // Keys that shouldn't trigger a click sound (pure modifiers/navigation)
   const SILENT_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape']);
   const handleTypingKeydown = (e) => {
-    if (!soundEnabled || typeof onTypeTick !== 'function') return;
-    if (SILENT_KEYS.has(e.key)) return;
+    if (!soundEnabled || typeof onTypeTick !== 'function' || SILENT_KEYS.has(e.key)) return;
     onTypeTick('key');
   };
 
+  // keep the newest message in view
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, isWaiting]);
 
-  // Cycle the "thinking... / analyzing..." label while we wait for a reply,
-  // just like the reference — a couple of status words swapping in.
-  const startThinkingCycle = () => {
-    let idx = 0;
-    setThinkingLabel(THINKING_LABELS[0]);
-    clearInterval(thinkingIntervalRef.current);
-    thinkingIntervalRef.current = setInterval(() => {
-      idx = (idx + 1) % THINKING_LABELS.length;
-      setThinkingLabel(THINKING_LABELS[idx]);
-    }, 700);
-  };
-
-  // Reveals a bot reply progressively into the message it belongs to,
-  // ChatGPT-style, instead of dumping the whole string in at once.
+  // reveal the answer progressively; cards show once the text is done
   const streamReply = (id, fullText) => {
-    clearInterval(streamIntervalRef.current);
+    clearInterval(streamRef.current);
     let i = 0;
     let tick = 0;
-    const chunk = 2;
-    streamIntervalRef.current = setInterval(() => {
-      i += chunk;
+    streamRef.current = setInterval(() => {
+      i += 3;
       tick += 1;
-      // Throttled so it reads as a soft "typewriter" texture rather than
-      // firing on every single character reveal.
-      if (soundEnabled && typeof onTypeTick === 'function' && tick % 2 === 0) {
-        onTypeTick('type');
-      }
-      setMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, text: fullText.slice(0, i), streaming: i < fullText.length } : m))
-      );
-      if (i >= fullText.length) {
-        clearInterval(streamIntervalRef.current);
-      }
+      if (soundEnabled && typeof onTypeTick === 'function' && tick % 3 === 0) onTypeTick('type');
+      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: fullText.slice(0, i), streaming: i < fullText.length } : m)));
+      if (i >= fullText.length) clearInterval(streamRef.current);
     }, 16);
   };
 
-  // Shared pipeline: takes raw text from the input box,
-  // adds it to the transcript, and streams a bot reply in.
-  const processUserInput = (text) => {
-    if (!text?.trim()) return;
-    const userMsg = { id: Date.now(), text, sender: 'user' };
-    setMessages((prev) => [...prev, userMsg]);
-    setIsWaiting(true);
-    startThinkingCycle();
-
-    const lower = text.toLowerCase();
-
-    const deliverReply = (botReply) => {
-      clearInterval(thinkingIntervalRef.current);
-      setIsWaiting(false);
-      const botId = Date.now() + 1;
-      setMessages((prev) => [...prev, { id: botId, text: '', sender: 'bot', streaming: true }]);
-      streamReply(botId, botReply);
-    };
-
-    // Weather needs a real network round-trip (geolocation + forecast API),
-    // so it's handled separately from the synchronous canned responses.
-    if (lower.includes('weather') || lower.includes('forecast')) {
-      getWeatherReport().then((report) => {
-        setTimeout(() => deliverReply(report), 500 + Math.random() * 400);
-      });
-      return;
-    }
-
-    setTimeout(() => {
-      deliverReply(getBotResponse(lower));
-    }, 900 + Math.random() * 500);
-  };
-
-  const handleSend = (e) => {
-    e?.preventDefault?.();
-    if (!input.trim()) return;
-    processUserInput(input);
+  const send = async (text) => {
+    const clean = text?.trim();
+    if (!clean) return;
+    voice.stop();
+    clearInterval(streamRef.current);
+    setMessages((prev) => prev.map((m) => (m.streaming ? { ...m, text: m.reply.text, streaming: false } : m)).concat({ id: Date.now(), text: clean, sender: 'user' }));
     setInput('');
+    setIsWaiting(true);
+
+    const started = performance.now();
+    const reply = await getReply(clean);
+    // a short beat so it feels like it's thinking, without making you wait
+    const wait = Math.max(0, 550 - (performance.now() - started));
+    setTimeout(() => {
+      setIsWaiting(false);
+      const id = Date.now() + 1;
+      setMessages((prev) => [...prev, { id, sender: 'bot', text: '', reply, streaming: true }]);
+      streamReply(id, reply.text);
+      if (voice.enabled) voice.speak(id, reply.text);
+    }, wait);
+  };
+  sendRef.current = send;
+
+  const handleSubmit = (e) => {
+    e?.preventDefault?.();
+    send(input);
   };
 
-  const getGreetingByTime = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 18) return 'afternoon';
-    return 'evening';
+  const go = (section) => {
+    setIsOpen(false);
+    onNavigate?.(section);
   };
 
-  // Weather codes from Open-Meteo's WMO weather_code field
-  const WEATHER_CODES = {
-    0: 'clear sky', 1: 'mostly clear skies', 2: 'partly cloudy skies', 3: 'overcast skies',
-    45: 'foggy conditions', 48: 'foggy conditions with rime',
-    51: 'a light drizzle', 53: 'drizzle', 55: 'a heavy drizzle',
-    56: 'freezing drizzle', 57: 'heavy freezing drizzle',
-    61: 'light rain', 63: 'rain', 65: 'heavy rain',
-    66: 'freezing rain', 67: 'heavy freezing rain',
-    71: 'light snow', 73: 'snow', 75: 'heavy snow', 77: 'snow grains',
-    80: 'light rain showers', 81: 'rain showers', 82: 'violent rain showers',
-    85: 'light snow showers', 86: 'heavy snow showers',
-    95: 'a thunderstorm', 96: 'a thunderstorm with some hail', 99: 'a thunderstorm with heavy hail',
+  const resetChat = () => {
+    voice.stop();
+    clearInterval(streamRef.current);
+    setMessages([]);
+    setIsWaiting(false);
+    setSuggested(shuffle(QUESTION_BANK).slice(0, 4));
+    inputRef.current?.focus();
   };
 
-  // Uses the browser's geolocation + the free Open-Meteo API (no key needed)
-  // to fetch a live current-conditions report.
-  const getWeatherReport = () =>
-    new Promise((resolve) => {
-      if (!('geolocation' in navigator)) {
-        resolve("I can't check the weather without location access in this browser — sorry about that!");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            const { latitude, longitude } = pos.coords;
-            const res = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
-            );
-            const data = await res.json();
-            const temp = Math.round(data?.current?.temperature_2m);
-            const desc = WEATHER_CODES[data?.current?.weather_code] ?? "some kind of weather I can't quite classify";
-            resolve(`Right now it's about ${Number.isFinite(temp) ? `${temp}°C` : 'a mild temperature'} with ${desc} where you are.`);
-          } catch (err) {
-            resolve("I tried to grab the forecast, but the weather service didn't come back in time. Try again in a bit?");
-          }
-        },
-        () => resolve("I'd need location access to check your local weather — you can allow it in your browser and ask me again!"),
-        { timeout: 8000 }
-      );
-    });
+  const typed = input.trim().toLowerCase();
+  const typeahead = typed && !isDictating ? QUESTION_BANK.filter((q) => q.toLowerCase().includes(typed)).slice(0, 4) : [];
 
-  const jokes = [
-    "Why do programmers prefer dark mode? Because light attracts bugs!",
-    "I told my computer I needed a break, and now it won't stop showing me KitKat ads.",
-    "Why did the developer go broke? Because he used up all his cache!",
-    "There are only 10 types of people: those who understand binary and those who don't.",
-    "Why do Java developers wear glasses? Because they don't C#!",
-    "Why did the AI cross the road? To optimize the chicken's route.",
-    "I'd tell you a UDP joke, but you might not get it.",
-    "Debugging: being the detective in a crime movie where you're also the murderer.",
-  ];
+  const lastBot = [...messages].reverse().find((m) => m.sender === 'bot');
+  const orbState = isDictating ? 'listening' : isWaiting ? 'thinking' : voice.speakingId ? 'speaking' : 'idle';
+  const status = { listening: 'listening…', thinking: 'thinking…', speaking: 'speaking…', idle: 'online' }[orbState];
 
-  const getRandomJoke = () => {
-    let idx = Math.floor(Math.random() * jokes.length);
-    if (idx === lastJokeIndexRef.current) idx = (idx + 1) % jokes.length;
-    lastJokeIndexRef.current = idx;
-    return jokes[idx];
+  const vars = {
+    ...cssVars(p),
+    '--card': darkMode ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+    '--orb-core': darkMode ? '#141424' : '#FFFFFF',
   };
-
-  const dayLines = [
-    () => `It's been a pretty good ${getGreetingByTime()} so far — just here hanging out and answering questions about Brian's work! How's your day going? hehe`,
-    () => `Chill ${getGreetingByTime()}, honestly. Talking about code, projects, and the occasional bad joke. What about you, how's yours been?`,
-    () => `This ${getGreetingByTime()} has been fun, lots of good questions rolling in! How's your day treating you?`,
-    () => `Can't complain — living my best digital ${getGreetingByTime()}. How about you, everything good on your end?`,
-  ];
-
-  // Small chance to tack on a bit of personality (a quick joke) after an
-  // otherwise factual answer, so replies don't feel scripted every time.
-  const maybeAddAside = (reply) => (Math.random() < 0.2 ? `${reply} Also — ${getRandomJoke()}` : reply);
-
-  const getBotResponse = (query) => {
-    // Prepared interview-style Q&A checked first, since some of these
-    // questions contain generic words (e.g. "a time you had a disagreement"
-    // contains "time") that would otherwise be swallowed by the looser
-    // keyword checks further down.
-    if (query.includes('who is brian') || query.includes('about brian') || query.includes('tell me about brian')) {
-      return "I am Brian Paul Francisco, a BSIT graduate from National Teachers College specializing in full-stack integration. I bridge the gap between secure backend architecture and fluid user experiences by combining intuitive UI/UX design with robust database management. My technical toolkit spans both traditional and modern stacks—leveraging the LAMP stack (Linux, Apache, MySQL, PHP) alongside modern JavaScript ecosystems including Node.js and React to build scalable, data-driven applications.";
-    }
-    if (query.includes('hire you') || query.includes('why should we hire') || query.includes('why should i hire')) {
-      return "I build fast, responsive, and reliable web applications designed to solve real-world problems. With end-to-end expertise across the full stack—from intuitive frontend interfaces to secure backend systems—I don't just write clean code. I focus on delivering scalable, user-centric solutions that deliver tangible business results.";
-    }
-    if (
-      (query.includes('location') && (query.includes('work') || query.includes('prefer'))) ||
-      query.includes('onsite location') ||
-      query.includes('where do you want to work')
-    ) {
-      return "For onsite roles, I prefer locations around Manila, Cubao, Pasay, EDSA, San Juan, and Quezon City. For opportunities located in other cities or internationally, I am fully equipped to work remotely.";
-    }
-    if (query.includes('salary') || query.includes('compensation') || query.includes('expected pay')) {
-      return "My expected salary range is between ₱22,000 and ₱40,000 per month, depending on the scope of responsibility, working arrangements, and full compensation package.";
-    }
-    if (
-      query.includes('what can you build') ||
-      query.includes('what can you do') ||
-      query.includes('what can you make')
-    ) {
-      return "I can build full-stack web platforms across various domain models, including single-page landing sites with integrated mailing services, e-commerce stores, inventory and supply chain systems, booking platforms, and multi-department SaaS applications.";
-    }
-    if (
-      query.includes('complex') ||
-      query.includes('technical problem') ||
-      query.includes('handle problem') ||
-      query.includes('difficult problem')
-    ) {
-      return "I take a structured approach: 1. Root-Cause Analysis — I investigate logs and debug step-by-step to isolate the core issue. 2. Research & Collaboration — I consult documentation and reach out to senior engineers or peers for guidance when needed. 3. Pragmatic Delivery — when deadlines are tight, I prioritize delivering a core Minimum Viable Product (MVP) to ensure business continuity without sacrificing quality.";
-    }
-    if (
-      query.includes('see yourself') ||
-      query.includes('2 to 3 years') ||
-      query.includes('2-3 years') ||
-      query.includes('next few years') ||
-      query.includes('5 years')
-    ) {
-      return "In 2 to 3 years, I see myself taking full ownership of end-to-end web products, including building advanced, AI-powered applications. I also plan to expand my technical range into complementary domains like Cybersecurity, Cloud Engineering, Data Science, and AI/LLM integration to continually evolve my overall development skill set.";
-    }
-    if (
-      query.includes('companies') ||
-      query.includes('company are you interested') ||
-      query.includes('faang') ||
-      query.includes('what company')
-    ) {
-      return "My goal is to work with leading tech organizations like FAANG (Meta, Apple, Amazon, Netflix, Google), as well as enterprise tech leaders like Nvidia, IBM, Oracle, and Accenture—or any forward-thinking company building scalable SaaS products.";
-    }
-    if (
-      query.includes('modality') ||
-      query.includes('hybrid') ||
-      query.includes('work setup') ||
-      query.includes('remote or onsite')
-    ) {
-      return "I thrive in Hybrid and Remote setups due to their focus on efficiency and productivity. However, I am equally open to Onsite arrangements to gain hands-on collaboration and professional real-world experience.";
-    }
-    if (
-      query.includes('disagreement') ||
-      query.includes('conflict') ||
-      query.includes('leadership issue') ||
-      query.includes('leadership')
-    ) {
-      return "I once worked in a project environment where team morale was low due to a lack of clear direction and accountability. Rather than waiting passively or letting the project stall, I took the initiative to step up: Proactive Communication — I initiated syncs with my team to clarify individual responsibilities and align our goals. Leading by Example — I worked on core features independently to demonstrate progress and keep momentum going. Establishing Structure — by breaking down tasks into clear deliverables, I helped re-engage the team, boost productivity, and keep our deployment on track.";
-    }
-    if (
-      query.includes('workdays') ||
-      query.includes('work days') ||
-      query.includes('what days') ||
-      query.includes('available days') ||
-      query.includes('schedule') ||
-      query.includes('hours a day') ||
-      query.includes('how many hours')
-    ) {
-      return "I'm available Monday to Friday, anytime, for a total of 8-9 hours of work per day.";
-    }
-    if (query.includes('joke') || query.includes('funny') || query.includes('makakatawa')) return getRandomJoke();
-    if (query.includes('time')) {
-      const now = new Date();
-      return `Right now it's ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
-    }
-    if (query.includes('date') || query.includes('today') || query.includes("what day")) {
-      const now = new Date();
-      return `Today is ${now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
-    }
-    if (
-      query.includes('dream job') ||
-      query.includes('dream career') ||
-      query.includes('what do you want to be') ||
-      query.includes('future job') ||
-      query.includes('career goal')
-    ) {
-      return "If I had to pick a dream job? Software engineering is at the top — building real products end-to-end. AI/LLM engineering is a close second, since that's basically what powers this chat! And graphic design rounds it out for the creative side — good visuals make everything better.";
-    }
-    if (
-      query.includes('how are you') ||
-      query.includes('hows your day') ||
-      query.includes("how's your day") ||
-      query.includes("how's it going") ||
-      query.includes('hows it going') ||
-      query.includes('your day') ||
-      query.includes('kamusta')
-    ) {
-      return dayLines[Math.floor(Math.random() * dayLines.length)]();
-    }
-    if (query.includes('project')) return maybeAddAside("Brian built some cool stuff like TIDE (an AI productivity coach), Poopipoo (a crowdsourced toilet finder), and Neo Chess XD (an 8-bit chess game)! Check them out in the Projects tab.");
-    if (query.includes('intern') || query.includes('work')) return maybeAddAside("He's currently killing it as an IT Intern at Grandline Maritime Training, in Kalaw!");
-    if (query.includes('stack') || query.includes('tech') || query.includes('gamit')) return maybeAddAside("His stack is React, Node.js, HTML, CSS, JavaScript, Tailwind CSS, SQL, and PHP — a solid mix of frontend and backend tools.");
-    if (
-      query.includes('design tool') ||
-      query.includes('canva') ||
-      query.includes('figma') ||
-      (query.includes('design') && (query.includes('app') || query.includes('tool') || query.includes('use')))
-    ) {
-      return maybeAddAside("For design he splits the work: Canva for quick, punchy graphics and social posts, and Figma when he needs real wireframes and clickable prototypes before touching code.");
-    }
-    if (
-      query.includes('dev tool') ||
-      query.includes('development tool') ||
-      query.includes('vscode') ||
-      query.includes('vs code') ||
-      query.includes('editor') ||
-      query.includes('ide') ||
-      query.includes('github') ||
-      query.includes('git ')
-    ) {
-      return maybeAddAside("His dev setup is VS Code as the main editor, Git/GitHub for version control, and Postman for testing APIs — plus a lot of coffee.");
-    }
-    if (
-      query.includes('ai tool') ||
-      query.includes('which ai') ||
-      query.includes('what ai') ||
-      query.includes('gemini') ||
-      query.includes('deepseek') ||
-      query.includes('perplexity') ||
-      query.includes('chatgpt') ||
-      query.includes('claude')
-    ) {
-      return maybeAddAside("He actually mixes a few AI tools depending on the task — Claude for deep reasoning and coding help, Gemini for fast research and brainstorming, DeepSeek when he wants a quick, low-cost second opinion on code, and Perplexity when he needs answers with sources attached.");
-    }
-    if (
-      query.includes('hobby') ||
-      query.includes('hobbies') ||
-      query.includes('free time') ||
-      query.includes('mma') ||
-      query.includes('martial art') ||
-      query.includes('barista') ||
-      query.includes('coffee') ||
-      query.includes('quote') ||
-      query.includes('outside of')
-    ) {
-      return maybeAddAside("Outside of code, Brian trains mixed martial arts, works as a barista pulling shots on the side, and writes quotes/reflections whenever an idea hits him. Code, cardio, caffeine, and a bit of poetry — that's the rotation.");
-    }
-    if (
-      query.includes('your name') ||
-      query.includes('who are you') ||
-      query.includes('what are you')
-    ) {
-      return "I'm here to help you explore Brian's projects, tools, and skills — or just chat if you want a break.";
-    }
-    if (query.includes('hi') || query.includes('hello')) return `Hey there! Good ${getGreetingByTime()}! How can I help you explore Brian's portfolio today?`;
-    if (query.includes('pogi') || query.includes('gwapo')) return "Sobra! Kitang-kita naman sa profile pic diba?";
-    if (query.includes('old') || query.includes('age')) return "Brian is currently 22 years old.";
-    if (query.includes('contacts') || query.includes('email')) return "You can reach him at bp.francisco1003@gmail.com or 09564321020.";
-    if (query.includes('student') || query.includes('study')) return "He is studying at the National Teachers College in Quiapo, Manila.";
-    if (query.includes('bye') || query.includes('thank')) return "Anytime! Come back if you've got more questions about Brian.";
-
-    const randomResponses = [
-      "I'm not quite sure about that, but I can definitely tell you about Brian's tech stack!",
-      "That's an interesting topic! Want to hear about the Maritime Training System he built instead?",
-      "I'm listening! You can ask me about his projects, his design/dev/AI tools, his hobbies, the time, the weather, or just ask for a joke.",
-      "Hmm, I don't have an answer for that one. Try asking about his projects, the date, or how to reach him!",
-      "Good question! I'm best at talking about Brian's work, skills, tools, and hobbies — or the time and weather.",
-      "Not sure about that one, but I do know a good joke if you want one",
-      `Beats me! It's been a quiet ${getGreetingByTime()} otherwise. Ask me about Brian's projects, tools, hobbies, the weather, or tell me to tell a joke!`,
-    ];
-    // Avoid repeating the same filler answer twice in a row
-    let idx = Math.floor(Math.random() * randomResponses.length);
-    if (idx === lastResponseIndexRef.current) {
-      idx = (idx + 1) % randomResponses.length;
-    }
-    lastResponseIndexRef.current = idx;
-    return randomResponses[idx];
-  };
-
-  const closeChat = () => setIsOpen(false);
-
-  // Suggestions in the input bar: while typing, filter the prepared bank to
-  // matches containing the text so far; with an empty box, fall back to the
-  // currently-randomized set so the popup still appears on focus (not just
-  // in the very first empty-conversation screen).
-  const typedQuery = input.trim().toLowerCase();
-  const typeaheadMatches = typedQuery
-    ? QUESTION_BANK.filter((q) => q.toLowerCase().includes(typedQuery)).slice(0, 4)
-    : suggestedQuestions.slice(0, 4);
-
-  // Pink in light mode, blue in dark mode — matches the accent language
-  // used across the rest of the site (pink light / cyan-blue dark).
-  const theme = darkMode
-    ? {
-        backdrop: 'bg-[#03050C]/75',
-        text: 'text-white',
-        title: 'text-white/70',
-        userChip: 'bg-white/10 text-white/90 border-white/10',
-        accent: '#3D9BFF',
-        accentSoft: 'text-[#3D9BFF]',
-        placeholder: 'placeholder:text-white/30',
-        divider: 'border-white/10',
-        iconIdle: 'text-white/40 hover:text-white/70 hover:bg-white/5',
-      }
-    : {
-        backdrop: 'bg-white/70',
-        text: 'text-[#1B1B2A]',
-        title: 'text-[#1B1B2A]/60',
-        userChip: 'bg-black/5 text-[#1B1B2A]/90 border-black/10',
-        accent: '#FF3D8A',
-        accentSoft: 'text-[#FF3D8A]',
-        placeholder: 'placeholder:text-[#1B1B2A]/30',
-        divider: 'border-black/10',
-        iconIdle: 'text-[#1B1B2A]/40 hover:text-[#1B1B2A]/70 hover:bg-black/5',
-      };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          id="claude-chat-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className={`fixed inset-0 z-[1000] flex flex-col backdrop-blur-2xl ${theme.backdrop} ${theme.text} font-sans`}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="fixed inset-0 z-[1000] flex flex-col font-sans"
+          style={{ ...vars, background: darkMode ? '#0E0E1A' : '#FFFDF6', color: p.ink }}
         >
-          {/* Top bar — centered "ASK ME" title + exit */}
-          <div className="relative flex flex-col items-center justify-center gap-2 px-6 py-6 sm:py-8 shrink-0">
-            <span className={`text-xs sm:text-sm font-black uppercase tracking-[0.5em] ${theme.title}`}>
-              Ask Me
-            </span>
-            <span
-              className={`inline-flex items-center gap-2 text-sm sm:text-base font-medium tracking-wide ${theme.title} opacity-90`}
-            >
-              <span className="xl:hidden">press</span>
-              <kbd
-                className={`xl:hidden px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}
+          <ChatStyles />
+          {/* soft backdrop glow */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: `radial-gradient(60% 50% at 50% 0%, ${darkMode ? 'rgba(0,255,179,0.08)' : 'rgba(255,0,122,0.07)'}, transparent 70%)` }}
+          />
+
+          {/* header */}
+          <div className="relative shrink-0 border-b border-[color:var(--line)]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+            <div className="max-w-3xl mx-auto w-full flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4">
+              <Orb state={orbState} size={42} />
+              <div className="min-w-0 flex-1">
+                <p className="text-base sm:text-lg font-black leading-tight truncate">Brian&apos;s AI</p>
+                <p className="flex items-center gap-1.5 text-xs font-bold opacity-60">
+                  <span className={`w-1.5 h-1.5 rounded-full ${orbState === 'listening' ? 'bg-rose-500' : 'bg-emerald-400'}`} />
+                  <span>{status}</span>
+                </p>
+              </div>
+              {voice.supported && (
+                <button
+                  onClick={voice.toggle}
+                  aria-pressed={voice.enabled}
+                  title={voice.enabled ? 'Voice on — click to mute' : 'Voice off — click to let me talk'}
+                  className="cursor-target inline-flex items-center gap-2 h-10 px-3 sm:px-4 rounded-full border text-[0.6875rem] font-black uppercase tracking-widest transition-colors"
+                  style={
+                    voice.enabled
+                      ? { background: 'var(--acc-soft)', borderColor: 'var(--acc-line)', color: 'var(--acc)' }
+                      : { borderColor: 'var(--line)', color: 'var(--ink)' }
+                  }
+                >
+                  {voice.enabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                  <span className={`hidden sm:inline ${voice.enabled ? 'cb-acc' : ''}`}>{voice.enabled ? 'Voice on' : 'Voice off'}</span>
+                </button>
+              )}
+              {messages.length > 0 && (
+                <button
+                  onClick={resetChat}
+                  aria-label="New chat"
+                  title="New chat"
+                  className="cursor-target w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:-rotate-90"
+                >
+                  <RotateCcw size={16} />
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="Close chat"
+                className="cursor-target w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:rotate-90"
               >
-                X
-              </kbd>
-              <span className="hidden xl:inline">press</span>
-              <kbd
-                className={`hidden xl:inline-block px-2.5 py-1 rounded-md border text-sm sm:text-base font-bold ${theme.divider} ${theme.title}`}
-              >
-                esc
-              </kbd>
-              to close
-            </span>
-            <button
-              onClick={closeChat}
-              aria-label="Close chat"
-              className={`cursor-target absolute right-5 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-colors ${theme.iconIdle}`}
-            >
-              <X size={20} />
-            </button>
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
-          {/* Conversation — no card, no bubbles, just the chat floating on the blur */}
-          <div
-            ref={scrollRef}
-            className="relative flex-1 overflow-y-auto px-6 sm:px-12 md:px-24 lg:px-40 custom-scrollbar"
-          >
-            <div className="max-w-3xl mx-auto w-full min-h-full flex flex-col justify-center gap-8 sm:gap-10 py-10">
+          {/* conversation */}
+          <div ref={scrollRef} className="cb-scroll relative flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto w-full min-h-full flex flex-col justify-end gap-6 py-6 sm:py-8">
               {messages.length === 0 && !isWaiting && (
-                <div className="flex flex-col gap-6">
-                  <p className={`text-2xl sm:text-3xl md:text-4xl font-light leading-snug ${theme.title}`}>
-                    what do you want to ask?
-                  </p>
-                  {suggestedQuestions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      {suggestedQuestions.map((q, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => processUserInput(q)}
-                          className={`cursor-target text-left px-4 py-2 rounded-full border text-sm sm:text-base transition-colors hover:opacity-80 ${theme.userChip}`}
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 my-auto">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <Orb state="idle" size={72} />
+                    <p className="text-3xl sm:text-4xl font-black tracking-tight">Hey! I&apos;m Brian&apos;s AI.</p>
+                    <p className="text-sm sm:text-base font-medium opacity-60 max-w-md">
+                      Ask me about his projects, stack and certificates — I&apos;ll show you, not just tell you. I can also answer general questions, and I talk back{voice.supported ? '' : ' (in browsers that support it)'}.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {STARTERS.map(({ label, q, Icon }, i) => (
+                      <motion.button
+                        key={label}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + i * 0.05 }}
+                        onClick={() => send(q)}
+                        className="cursor-target group text-left p-4 rounded-2xl border border-[color:var(--line)] transition-all hover:-translate-y-0.5 hover:border-[color:var(--acc-line)]"
+                        style={{ background: 'var(--card)' }}
+                      >
+                        <Icon size={18} className="text-[color:var(--acc)] transition-transform group-hover:-rotate-12" />
+                        <p className="mt-3 text-sm font-black">{label}</p>
+                        <p className="text-xs font-medium opacity-55 mt-0.5 line-clamp-1">{q}</p>
+                      </motion.button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {suggested.map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => send(q)}
+                        className="cursor-target px-3.5 py-1.5 rounded-full border border-[color:var(--line)] text-xs sm:text-sm font-semibold transition-colors hover:border-[color:var(--acc-line)]"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
               )}
 
-              {messages.map((msg) =>
-                msg.sender === 'user' ? (
-                  <div key={msg.id} className="flex justify-start">
-                    <span className={`inline-block max-w-[85%] px-4 py-2 rounded-full border text-sm sm:text-base ${theme.userChip}`}>
-                      {msg.text}
+              {messages.map((m) =>
+                m.sender === 'user' ? (
+                  <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+                    <span
+                      className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md text-sm sm:text-base font-semibold"
+                      style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+                    >
+                      <span className="cb-on">{m.text}</span>
                     </span>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <p key={msg.id} className="text-xl sm:text-2xl md:text-3xl font-light leading-snug">
-                    {msg.text}
-                    {msg.streaming && (
-                      <span
-                        className="inline-block w-[2px] h-[0.9em] ml-1 align-middle animate-pulse"
-                        style={{ backgroundColor: theme.accent }}
-                      />
-                    )}
-                  </p>
+                  <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
+                    <div className="pt-1">
+                      <Orb state={voice.speakingId === m.id ? 'speaking' : 'idle'} size={30} />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <p className="text-base sm:text-lg font-medium leading-relaxed">
+                        {m.text}
+                        {m.streaming && <span className="inline-block w-[2px] h-[1em] ml-1 align-middle animate-pulse" style={{ background: 'var(--acc)' }} />}
+                      </p>
+
+                      {!m.streaming && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-3">
+                          {m.reply?.attach && <Attachment attach={m.reply.attach} onAsk={send} onNavigate={go} onPreview={setPreview} />}
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            {voice.supported && (
+                              <button
+                                onClick={() => (voice.speakingId === m.id ? voice.stop() : voice.speak(m.id, m.reply.text))}
+                                aria-label={voice.speakingId === m.id ? 'Stop reading' : 'Read aloud'}
+                                title={voice.speakingId === m.id ? 'Stop' : 'Read aloud'}
+                                className="cursor-target w-8 h-8 rounded-full border border-[color:var(--line)] flex items-center justify-center opacity-70 hover:opacity-100"
+                              >
+                                {voice.speakingId === m.id ? <Square size={12} /> : <Volume2 size={14} />}
+                              </button>
+                            )}
+                            {m.reply?.actions?.map((a) => (
+                              <button
+                                key={a.label}
+                                onClick={() => (a.nav ? go(a.nav) : window.open(a.href, '_blank', 'noopener,noreferrer'))}
+                                className="cursor-target inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest"
+                                style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+                              >
+                                <span className="cb-on">{a.label}</span> <ArrowRight size={12} />
+                              </button>
+                            ))}
+                          </div>
+
+                          {m === lastBot && m.reply?.chips?.length > 0 && !isWaiting && (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {m.reply.chips.map((c) => (
+                                <button
+                                  key={c}
+                                  onClick={() => send(c === 'Another joke' ? 'Tell me a joke' : c)}
+                                  className="cursor-target px-3.5 py-1.5 rounded-full border border-[color:var(--line)] text-xs sm:text-sm font-semibold transition-colors hover:border-[color:var(--acc-line)]"
+                                >
+                                  {c}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
                 )
               )}
 
               {isWaiting && (
                 <div className="flex items-center gap-3">
+                  <Orb state="thinking" size={30} />
                   <span className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.accent }} />
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.accent }} />
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.accent }} />
+                    {[-0.3, -0.15, 0].map((d) => (
+                      <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--acc)', animationDelay: `${d}s` }} />
+                    ))}
                   </span>
-                  <span className={`text-lg sm:text-xl font-light ${theme.title}`}>{thinkingLabel}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Input — sits directly on the blur, no boxed container */}
-          <form
-            onSubmit={handleSend}
-            className={`relative shrink-0 px-6 sm:px-12 md:px-24 lg:px-40 pb-8 sm:pb-10 pt-4`}
-          >
+          {/* input */}
+          <form onSubmit={handleSubmit} className="relative shrink-0 px-4 sm:px-6 pt-2" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}>
             <div className="max-w-3xl mx-auto w-full relative">
               <AnimatePresence>
-                {inputFocused && typeaheadMatches.length > 0 && (
+                {inputFocused && typeahead.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className={`absolute bottom-full left-0 right-0 mb-2 flex flex-col gap-0.5 rounded-2xl border p-1.5 backdrop-blur-xl shadow-lg ${theme.divider} ${darkMode ? 'bg-[#03050C]/95' : 'bg-white/95'}`}
+                    transition={{ duration: 0.15 }}
+                    className="absolute bottom-full left-0 right-0 mb-2 flex flex-col gap-0.5 rounded-2xl border border-[color:var(--line)] p-1.5 shadow-xl"
+                    style={{ background: darkMode ? '#17172A' : '#FFFFFF' }}
                   >
-                    {typeaheadMatches.map((q, i) => (
+                    {typeahead.map((q) => (
                       <button
-                        key={i}
+                        key={q}
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setInput('');
-                          setInputFocused(false);
-                          processUserInput(q);
-                        }}
-                        className={`cursor-target text-left px-3.5 py-2 rounded-xl text-sm sm:text-base transition-colors ${theme.text} ${darkMode ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
+                        onClick={() => send(q)}
+                        className="cursor-target text-left px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors hover:bg-[color:var(--acc-soft)]"
                       >
                         {q}
                       </button>
@@ -707,49 +951,91 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick }, ref) 
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className={`flex items-center gap-3 border-b ${theme.divider} pb-3`}>
+
+              <div
+                className="flex items-center gap-2 pl-5 pr-2 py-2 rounded-full border transition-colors"
+                style={{
+                  background: 'var(--card)',
+                  borderColor: isDictating ? '#F43F5E' : inputFocused ? 'var(--acc-line)' : 'var(--line)',
+                  boxShadow: inputFocused ? '0 10px 30px -12px var(--acc-glow)' : 'none',
+                }}
+              >
+                {isDictating && (
+                  <span className="flex items-center gap-[3px] h-5 shrink-0" aria-hidden="true">
+                    {[0, 0.2, 0.1, 0.3, 0.15].map((d, i) => (
+                      <span key={i} className="cb-bar w-[3px] h-full rounded-full bg-rose-500" style={{ animationDelay: `${d}s` }} />
+                    ))}
+                  </span>
+                )}
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleTypingKeydown}
-                  onFocus={() => {
-                    setInputFocused(true);
-                    if (!input.trim()) {
-                      const count = Math.random() < 0.5 ? 4 : 5;
-                      setSuggestedQuestions(shuffleArray(QUESTION_BANK).slice(0, count));
-                    }
-                  }}
+                  onFocus={() => setInputFocused(true)}
                   onBlur={() => setInputFocused(false)}
-                  placeholder={micError || 'what do you want to ask?'}
-                  className={`flex-1 bg-transparent outline-none text-lg sm:text-xl font-light ${theme.text} ${theme.placeholder}`}
+                  placeholder={micError || (isDictating ? 'Listening… just talk' : 'Ask about projects, stack, anything…')}
+                  aria-label="Message"
+                  className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg font-medium placeholder:opacity-40"
+                  style={{ color: 'var(--ink)' }}
                 />
-                <button
-                  type="button"
-                  onClick={toggleDictation}
-                  disabled={!voiceSupported}
-                  title={voiceSupported ? 'Dictate your message' : 'Voice input not supported in this browser'}
-                  className={`cursor-target p-3.5 rounded-full transition-all disabled:opacity-30 ${isDictating ? 'bg-red-500/20 text-red-500' : theme.iconIdle}`}
-                >
-                  {isDictating ? <Mic size={24} className="animate-pulse" /> : <MicOff size={24} />}
-                </button>
+                {micSupported && (
+                  <button
+                    type="button"
+                    onClick={toggleDictation}
+                    aria-label={isDictating ? 'Stop listening' : 'Speak your question'}
+                    title={isDictating ? 'Stop listening' : 'Speak your question'}
+                    className={`cursor-target shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isDictating ? 'bg-rose-500 text-white' : 'hover:bg-[color:var(--acc-soft)]'}`}
+                  >
+                    {isDictating ? <Square size={16} /> : <Mic size={19} />}
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={!input.trim()}
                   aria-label="Send message"
-                  className="cursor-target p-3.5 rounded-full disabled:opacity-30 hover:scale-105 active:scale-95 transition-transform"
-                  style={{ color: theme.accent }}
+                  className="cursor-target shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 disabled:opacity-30 disabled:hover:scale-100"
+                  style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
                 >
-                  <ArrowUp size={26} strokeWidth={2.5} />
+                  <ArrowUp size={20} strokeWidth={2.6} />
                 </button>
               </div>
+              <p className="hidden sm:block mt-2 text-center text-[0.625rem] font-bold uppercase tracking-[0.2em] opacity-40">
+                Esc to close · answers about Brian are from his portfolio, general ones from Wikipedia
+              </p>
             </div>
           </form>
+
+          {/* image preview */}
+          <AnimatePresence>
+            {preview && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 flex items-center justify-center p-6 bg-black/80"
+                onClick={() => setPreview(null)}
+              >
+                <motion.img
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  src={preview}
+                  alt="Preview"
+                  className="max-w-full max-h-[85vh] rounded-xl shadow-2xl bg-white"
+                />
+                <button aria-label="Close preview" className="cursor-target absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white">
+                  <X size={20} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
   );
 });
+
+Chatbot.displayName = 'Chatbot';
 
 export default Chatbot;

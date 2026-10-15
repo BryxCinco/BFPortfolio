@@ -1280,3 +1280,6 @@ const Project = ({ darkMode = true }) => {
 };
 
 export default Project;
+
+// shared with the chat assistant
+export { websites };

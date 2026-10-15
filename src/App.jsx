@@ -616,7 +616,7 @@ function App() {
             </footer>
           </RevealOnScroll>
 
-          <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} />
+          <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} onNavigate={goToSection} />
           <TypingTest ref={typingTestRef} darkMode={darkMode} soundEnabled={soundEnabled} onKeyPress={playClick} />
           <PlayGame ref={playGameRef} darkMode={darkMode} soundEnabled={soundEnabled} onAction={playClick} />
         </div>

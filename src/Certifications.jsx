@@ -1681,3 +1681,6 @@ export function CertificationsPreview({ darkMode = true, count = 4, onViewAll })
     </section>
   );
 }
+
+// shared with the chat assistant
+export { allCerts, featuredCerts, TOTAL as CERT_TOTAL };
