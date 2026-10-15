@@ -13,6 +13,7 @@ import {
 
 import Carousel from './Carousel';
 import { rgba, getPalette, cssVars } from './theme';
+import { HandStyles, HandNote, Doodle, Tape, StickyNote } from './HandTouch';
 import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
 import neoChessSite from './assets/NeoChessXD.png';
@@ -43,6 +44,7 @@ const websites = [
     image: tideSite,
     url: 'https://tide-rust.vercel.app/',
     featured: true,
+    note: 'my fave ♥',
   },
   {
     name: 'Poopipoo',
@@ -57,6 +59,7 @@ const websites = [
     stack: ['Next.js', 'React', 'OpenStreetMap', 'Vercel'],
     image: poopipooSite,
     url: 'https://poopipoo.vercel.app/',
+    note: "yes, it's real 😂",
   },
   {
     name: 'Neo Chess XD',
@@ -71,6 +74,7 @@ const websites = [
     stack: ['React', 'Vite', 'JavaScript', 'Vercel'],
     image: neoChessSite,
     url: 'https://neo-chess-xd.vercel.app/',
+    note: 'try beating the CPU',
   },
   {
     name: 'SweepXpress',
@@ -84,6 +88,7 @@ const websites = [
     stack: ['PHP', 'MySQL', 'Tailwind'],
     image: sweepXpressSite,
     url: '#',
+    note: 'demo coming soon…',
   },
 ];
 
@@ -340,7 +345,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
   return (
     <div
       ref={revealRef}
-      className={site.featured ? 'md:col-span-2 xl:col-span-3' : ''}
+      className={`relative ${site.featured ? 'md:col-span-2 xl:col-span-3' : ''}`}
       style={{
         opacity: shown ? 1 : 0,
         transform: shown ? 'none' : 'translateY(40px)',
@@ -348,6 +353,15 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
         transitionDelay: reduced ? '0ms' : `${baseDelay}ms`,
       }}
     >
+      {site.note && (
+        <span
+          className="absolute -top-4 left-4 z-30 px-3 py-0.5 shadow-md pointer-events-none"
+          style={{ background: site.featured ? '#FFB8D9' : '#FFE873', transform: `rotate(${index % 2 ? 4 : -5}deg)` }}
+        >
+          <span className="ht-hand ht-dark text-xl">{site.note}</span>
+        </span>
+      )}
+      {site.featured && <Tape className="-top-3 right-10" rot={6} />}
       <article
         ref={cardRef}
         onPointerMove={handleMove}
@@ -1169,13 +1183,30 @@ const Project = ({ darkMode = true }) => {
         className="space-y-16 sm:space-y-24 text-[color:var(--ink)]"
       >
         {/* ================= HEADER ================= */}
-        <header ref={headerRef} className="space-y-5 sm:space-y-6 pt-4">
+        <header ref={headerRef} className="relative space-y-5 sm:space-y-6 pt-4">
+          <HandStyles />
+          <div className="hidden lg:block absolute right-0 top-0 w-64">
+            <StickyNote title="dev log:" rot={3}>
+              built ✓ broke it ✓
+              <br />
+              fixed it ✓ shipped ✓
+              <br />
+              <span className="text-lg opacity-70">(repeat forever)</span>
+            </StickyNote>
+          </div>
           <p style={headerStep(0)} className="pj-acc font-mono text-[11px] uppercase tracking-[0.4em]">
             ~/projects
           </p>
           <h2 style={headerStep(1)} className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-            Things I&apos;ve <span className="pj-acc">shipped.</span>
+            Things I&apos;ve{' '}
+            <span className="relative inline-block">
+              <span className="pj-acc">shipped.</span>
+              <Doodle type="underline" className="absolute left-0 -bottom-2 w-full h-3 sm:h-4" strokeWidth={4} delay={0.6} />
+            </span>
           </h2>
+          <HandNote className="text-2xl sm:text-3xl" rot={-2} delay={0.8}>
+            (all live — go click &apos;em!)
+          </HandNote>
           <p style={headerStep(2)} className="text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
             Live, deployed apps — from an AI productivity coach to a community map and a retro chess game — plus
             the print design work behind my eye for UI.
@@ -1220,6 +1251,12 @@ const Project = ({ darkMode = true }) => {
         {/* ================= POSTER DESIGN ================= */}
         <section>
           <SectionEyebrow label="Poster Design" icon={<Layers size={16} />} />
+          <div className="flex items-center gap-2 -mt-3 mb-4">
+            <HandNote className="text-2xl" rot={-3}>
+              my other hobby — print design
+            </HandNote>
+            <Doodle type="arrowDown" className="w-6 h-9" delay={0.4} />
+          </div>
           <p className="text-sm sm:text-base opacity-65 max-w-2xl mb-8 sm:mb-10">
             A fanned cascade of print work — hover any poster to lift it clear of the rest, and click it for the full
             view.

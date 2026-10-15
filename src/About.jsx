@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
+import { HandStyles, HandNote, Doodle, Tape, Sticker } from './HandTouch';
 
 // Assets - Profiles
 import brian1 from './assets/Brian1.png';
@@ -558,6 +559,7 @@ const About = ({ darkMode = true }) => {
   return (
     <div className="ab-scope relative overflow-hidden pt-16 sm:pt-20 lg:pt-24 pb-20 px-1 sm:px-4" style={vars}>
       <AboutStyles />
+      <HandStyles />
 
       <div className="max-w-[1400px] mx-auto space-y-24 sm:space-y-32">
         {/* ================= HERO ================= */}
@@ -575,8 +577,15 @@ const About = ({ darkMode = true }) => {
             </motion.div>
 
             <motion.h1 {...reveal(0.08)} className="ab-ink text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.9]">
-              Behind the <span className="ab-acc">Pixels.</span>
+              Behind the{' '}
+              <span className="relative inline-block">
+                <span className="ab-acc">Pixels.</span>
+                <Doodle type="underline" className="absolute left-0 -bottom-2 w-full h-3 sm:h-4" strokeWidth={4} delay={0.6} />
+              </span>
             </motion.h1>
+            <HandNote className="text-2xl sm:text-3xl" rot={-2} delay={0.8}>
+              the human behind the code, hi! 👋
+            </HandNote>
 
             <motion.p {...reveal(0.16)} className="ab-ink text-base sm:text-xl leading-relaxed opacity-80 max-w-3xl mx-auto lg:mx-0">
               I&apos;m <span className="ab-acc font-black">Brian Paul Francisco</span>, a BSIT graduate of National
@@ -619,6 +628,14 @@ const About = ({ darkMode = true }) => {
               >
                 <img src={brian1} alt="Brian Paul Francisco" className="w-full h-full object-cover" />
               </div>
+              <Tape className="-top-3 -left-4" rot={-35} />
+              <Tape className="-bottom-2 -right-5" rot={-35} />
+              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-1 whitespace-nowrap">
+                <Doodle type="arrowLeft" className="w-8 h-6 -mt-3" delay={0.6} />
+                <HandNote className="text-2xl" rot={-3} delay={0.7}>
+                  me in &ldquo;formal mode&rdquo;
+                </HandNote>
+              </div>
               <div
                 className="ab-anim absolute z-10 -left-4 sm:-left-8 top-8 flex items-center gap-2 px-3 py-2 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] shadow-xl"
                 style={{ animation: 'ab-float 4s ease-in-out infinite' }}
@@ -643,6 +660,9 @@ const About = ({ darkMode = true }) => {
         <section className="space-y-10 sm:space-y-14">
           <motion.div {...reveal(0)}>
             <SectionTitle title="Academic Roadmap" Icon={History} />
+            <HandNote className="text-2xl mt-2" rot={-2}>
+              (4 years, a LOT of coffee ☕)
+            </HandNote>
           </motion.div>
 
           <div className="relative">
@@ -675,7 +695,12 @@ const About = ({ darkMode = true }) => {
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           <motion.div {...reveal(0)} className="p-7 sm:p-10 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] space-y-9">
             <div className="flex justify-between items-center">
-              <h3 className="ab-ink text-xl sm:text-2xl font-black uppercase tracking-tighter italic">Work Experience</h3>
+              <div>
+                <h3 className="ab-ink text-xl sm:text-2xl font-black uppercase tracking-tighter italic">Work Experience</h3>
+                <HandNote className="text-xl" rot={-2}>
+                  where the real learning happens
+                </HandNote>
+              </div>
               <Briefcase className="text-[color:var(--acc)]" />
             </div>
             <div className="space-y-10">
@@ -736,7 +761,12 @@ const About = ({ darkMode = true }) => {
         {/* ================= MISSION ================= */}
         <motion.section {...reveal(0)} className="text-center py-6 sm:py-10 px-2">
           <h2 className="ab-ink text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter italic leading-tight">
-            &ldquo;Coding with <span className="ab-acc">purpose</span>, <br className="hidden sm:block" />
+            &ldquo;Coding with{' '}
+            <span className="relative inline-block">
+              <span className="ab-acc">purpose</span>
+              <Doodle type="circle" className="absolute -inset-x-4 -inset-y-2 w-[calc(100%+2rem)] h-[calc(100%+1rem)]" strokeWidth={3} delay={0.4} />
+            </span>
+            , <br className="hidden sm:block" />
             designing for <span className="ab-acc">people</span>.&rdquo;
           </h2>
           <p className="ab-ink mt-6 sm:mt-8 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed opacity-70">
@@ -749,6 +779,15 @@ const About = ({ darkMode = true }) => {
         <section className="space-y-12 sm:space-y-16 pb-6">
           <motion.div {...reveal(0)} className="space-y-4">
             <SectionTitle title="My Socials" Icon={Smartphone} />
+            <div className="flex flex-wrap items-center gap-3">
+              <HandNote className="text-2xl sm:text-3xl" rot={-2}>
+                go ahead, tap one 📸
+              </HandNote>
+              <Doodle type="arrowDown" className="w-7 h-10" delay={0.4} />
+              <Sticker bg="#FFB8D9" rot={5} delay={0.6}>
+                📱 real iPhone 17, kinda
+              </Sticker>
+            </div>
             <p className="ab-ink text-sm sm:text-base opacity-65 max-w-2xl">
               Tap a phone — it flips over, snaps a photo, and takes you straight to the profile.
             </p>

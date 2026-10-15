@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
+import { HandStyles, HandNote, Doodle, StickyNote } from './HandTouch';
 
 // ============================================================================
 // STACKS.JSX — "The Tech Tree"
@@ -1010,13 +1011,28 @@ function Stacks({ darkMode = true }) {
     <div className="sc-scope space-y-16 sm:space-y-20 pt-6 sm:pt-10" style={vars}>
       <StackStyles />
 
-      <header className="space-y-5 sm:space-y-6">
+      <header className="relative space-y-5 sm:space-y-6">
+        <HandStyles />
+        <div className="hidden lg:block absolute right-2 top-0 w-60">
+          <StickyNote title="care guide:" rot={3} bg="#D4FFC2">
+            water daily with commits 🌱
+            <br />
+            prune bugs weekly ✂️
+          </StickyNote>
+        </div>
         <motion.p {...reveal(0)} className="sc-acc font-mono text-[11px] uppercase tracking-[0.4em]">
           ~/stack
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="sc-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-          The Tech <span className="sc-acc">Tree.</span>
+          The Tech{' '}
+          <span className="relative inline-block">
+            <span className="sc-acc">Tree.</span>
+            <Doodle type="underline" className="absolute left-0 -bottom-2 w-full h-3 sm:h-4" strokeWidth={4} delay={0.6} />
+          </span>
         </motion.h2>
+        <HandNote className="text-2xl sm:text-3xl" rot={-2} delay={0.8}>
+          (yes, every fruit is a real tool I use)
+        </HandNote>
         <motion.p {...reveal(0.16)} className="sc-ink text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
           {TOOL_COUNT} tools grown from one root — six branches of frontend, backend, mobile, design, AI and
           shipping. Every fruit is something I actually build with.
@@ -1025,11 +1041,20 @@ function Stacks({ darkMode = true }) {
 
       <section className="space-y-6">
         <SectionEyebrow label="Grown, not installed" icon={<TreeDeciduous size={16} />} />
+        <div className="flex items-start justify-center sm:justify-end gap-1 -mb-2 sm:pr-[12%]">
+          <HandNote className="text-2xl sm:text-3xl" rot={4}>
+            go on, give it a shake!
+          </HandNote>
+          <Doodle type="arrowDown" className="w-7 h-10 mt-4" delay={0.4} />
+        </div>
         <TechTree darkMode={darkMode} reduced={reduced} />
       </section>
 
       <section className="space-y-10">
         <SectionEyebrow label="How I Work" icon={<WorkflowIcon size={16} />} />
+        <HandNote className="text-2xl -mt-6" rot={-2}>
+          (the boring-but-important part)
+        </HandNote>
         <Workflow reduced={reduced} />
       </section>
     </div>

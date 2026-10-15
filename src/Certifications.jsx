@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
+import { HandStyles, HandNote, Doodle, StickyNote, Sticker } from './HandTouch';
 
 // ============================================================================
 // CERTIFICATE IMAGES
@@ -1474,13 +1475,31 @@ export default function Certifications({ darkMode = true }) {
       <CertModal open={modal.open} darkMode={darkMode} onClose={modal.close} onNav={modal.nav} />
 
       {/* ================= HEADER ================= */}
-      <header className="space-y-5 sm:space-y-6">
+      <header className="relative space-y-5 sm:space-y-6">
+        <HandStyles />
+        <div className="hidden lg:block absolute right-2 top-0 w-60">
+          <StickyNote title="confession:" rot={-3} bg="#B8FFE4">
+            I collect certificates like trading cards. Gotta catch &apos;em all.
+          </StickyNote>
+        </div>
         <motion.p {...reveal(0)} className="cv-acc font-mono text-[11px] uppercase tracking-[0.4em]">
           ~/credentials
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="cv-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-          The Credential <span className="cv-acc">Vault.</span>
+          The Credential{' '}
+          <span className="relative inline-block px-2 ml-2 sm:ml-4">
+            <span className="cv-acc">Vault.</span>
+            <Doodle type="circle" className="absolute -inset-x-3 -inset-y-2 sm:-inset-x-5 sm:-inset-y-3 w-[calc(100%+1.5rem)] sm:w-[calc(100%+2.5rem)] h-[calc(100%+1rem)] sm:h-[calc(100%+1.5rem)]" strokeWidth={3} delay={0.7} />
+          </span>
         </motion.h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <HandNote className="text-2xl sm:text-3xl" rot={-2} delay={0.9}>
+            ({TOTAL} and counting!)
+          </HandNote>
+          <Sticker bg="#FFE873" rot={4} delay={1}>
+            🏅 Accenture Tech Academy grad
+          </Sticker>
+        </div>
         <motion.p {...reveal(0.16)} className="cv-ink text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
           {TOTAL} certificates across {certCategories.length} domains — from university courses on Coursera to the
           Accenture Technology Academy. Hover a card to catch the foil, click it to inspect the certificate up close.
@@ -1490,12 +1509,21 @@ export default function Certifications({ darkMode = true }) {
       {/* ================= SPOTLIGHT ================= */}
       <motion.div {...reveal(0)} className="space-y-10 sm:space-y-12">
         <SectionEyebrow label="Spotlight" icon={<Sparkles size={16} />} />
+        <div className="flex items-center justify-center gap-2 -mt-4">
+          <HandNote className="text-2xl" rot={-3}>
+            the ones I&apos;m proudest of
+          </HandNote>
+          <Doodle type="arrowDown" className="w-6 h-9" delay={0.3} />
+        </div>
         <Spotlight items={featuredCerts} reduced={reduced} darkMode={darkMode} onOpen={modal.openCert} />
       </motion.div>
 
       {/* ================= STATS + DOMAIN RING ================= */}
       <motion.div {...reveal(0)} className="space-y-8 sm:space-y-10">
         <SectionEyebrow label="By the numbers" icon={<ShieldCheck size={16} />} />
+        <HandNote className="text-2xl -mt-3" rot={-2}>
+          psst — click a slice of the ring to filter ↓
+        </HandNote>
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 sm:gap-8">
           <div className="p-6 sm:p-10 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md">
             <DomainRing filter={filter} onPick={pickFromRing} reduced={reduced} />
@@ -1519,6 +1547,9 @@ export default function Certifications({ darkMode = true }) {
       {/* ================= COLLECTION ================= */}
       <div ref={collectionRef} className="space-y-8 sm:space-y-10 scroll-mt-28">
         <SectionEyebrow label="The Collection" icon={<Award size={16} />} />
+        <HandNote className="text-2xl -mt-3" rot={-2}>
+          hover for the shiny foil ✨ · click to read the fine print
+        </HandNote>
 
         <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:justify-between">
           <div className="cv-no-scrollbar -mx-4 px-4 flex gap-2 overflow-x-auto xl:flex-wrap xl:overflow-visible xl:mx-0 xl:px-0" style={{ scrollbarWidth: 'none' }}>
