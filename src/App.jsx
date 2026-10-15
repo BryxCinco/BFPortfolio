@@ -28,6 +28,7 @@ import Stacks from './Stacks';
 import HomePage from './Home';
 import { useFitScale } from './useFitScale';
 import NavDrawer from './NavDrawer';
+import IntroSplash from './IntroSplash';
 
 // ============================================================================
 // THEME TRANSITION & ANIMATION ENGINE
@@ -479,38 +480,10 @@ function App() {
     !sessionStorage.getItem('hasAnimated') && activeSection === 'home'
   );
 
-  const [currentGreeting, setCurrentGreeting] = useState("Hello");
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-
-  const greetings = [
-    "Hello", "¡Hola!", "Bonjour", "Hallo", "Ciao", "こんにちは", "नमस्ते",
-    "مرحبا", "你好", "안녕하세요", "Привет", "שלום", "Merhaba",
-    "Szia", "Hej", "Zdravo", "Hei", "Ahoj", "Goddag", "Γεια"
-  ];
-
-  useEffect(() => {
-    if (!showIntro) return;
-
-    const runSequence = async () => {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      for (let i = 0; i < greetings.length; i++) {
-        setCurrentGreeting(greetings[i]);
-        await new Promise(resolve => setTimeout(resolve, 150));
-      }
-
-      setCurrentGreeting("Kamusta");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setIsAnimatingOut(true);
-      setTimeout(() => {
-        setShowIntro(false);
-        sessionStorage.setItem('hasAnimated', 'true');
-      }, 1000);
-    };
-
-    runSequence();
-  }, [showIntro]);
+  const finishIntro = useCallback(() => {
+    setShowIntro(false);
+    sessionStorage.setItem('hasAnimated', 'true');
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('activeSection', activeSection);
@@ -541,28 +514,7 @@ function App() {
 
   return (
     <>
-      {showIntro && (
-        <div className={`fixed inset-0 z-[9999] ${isAnimatingOut ? 'pointer-events-none' : ''}`}>
-          {/* top slice panel */}
-          <div
-            className={`absolute top-0 left-0 w-full h-1/2 bg-[#1B1B2A] transition-transform duration-[900ms] ease-[cubic-bezier(0.83,0,0.17,1)] ${isAnimatingOut ? '-translate-y-full' : 'translate-y-0'}`}
-          />
-          {/* bottom slice panel */}
-          <div
-            className={`absolute bottom-0 left-0 w-full h-1/2 bg-[#1B1B2A] transition-transform duration-[900ms] ease-[cubic-bezier(0.83,0,0.17,1)] ${isAnimatingOut ? 'translate-y-full' : 'translate-y-0'}`}
-          />
-          {/* greeting text */}
-          <div className={`absolute inset-0 flex items-center justify-center px-4 transition-opacity duration-300 ${isAnimatingOut ? 'opacity-0' : 'opacity-100'}`}>
-            <h1
-              key={currentGreeting}
-              className="animate-bulletin-pop text-white text-4xl sm:text-6xl md:text-8xl font-black text-center"
-              style={{textShadow: "0 0 50px rgba(255,255,255,0.7), 0 0 100px rgba(255,255,255,0.35)"}}
-            >
-              {currentGreeting}
-            </h1>
-          </div>
-        </div>
-      )}
+      {showIntro && <IntroSplash onDone={finishIntro} />}
       <div className={darkMode ? 'dark bg-[#1B1B2A] text-[#FFEA00]' : 'light bg-[#FFEA00] text-[#1B1B2A]'}>
       <ThemeTransitionStyles />
       <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#00FFB3] selection:text-white pb-20 overflow-x-hidden bg-inherit">
