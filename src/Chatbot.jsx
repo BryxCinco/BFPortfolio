@@ -488,11 +488,11 @@ const CertsAttach = ({ onPreview, onNavigate }) => (
 );
 
 const ProfileAttach = () => (
-  <div className={`${cardBase} flex flex-col sm:flex-row`} style={cardStyle}>
-    <div className="sm:w-44 shrink-0 bg-neutral-200">
-      <img src={brian1} alt="Brian Paul Francisco" className="w-full h-56 sm:h-full object-cover object-top" />
+  <div className={`${cardBase} flex`} style={cardStyle}>
+    <div className="w-28 sm:w-44 shrink-0 bg-neutral-200">
+      <img src={brian1} alt="Brian Paul Francisco" decoding="sync" className="w-full h-full object-cover object-top" />
     </div>
-    <div className="p-5 flex-1">
+    <div className="p-4 sm:p-5 flex-1 min-w-0">
       <p className="text-xl font-black">Brian Paul Francisco</p>
       <p className="cb-acc text-xs font-black uppercase tracking-[0.2em] mt-1">Full-stack developer · UI/UX</p>
       <div className="mt-4 grid grid-cols-2 gap-2">
