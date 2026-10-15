@@ -1,13 +1,24 @@
 import React, {
   forwardRef,
+  memo,
   useImperativeHandle,
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
   useCallback,
 } from 'react';
-import { X, Keyboard, RotateCcw } from 'lucide-react';
+import { X, Keyboard, RotateCcw, MousePointerClick, ArrowBigUpDash, Crown, Quote, Code2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import { getPalette, cssVars } from './theme';
+
+// ============================================================================
+// TYPINGTEST.JSX — a Monkeytype-style speed test. Three lines of text with a
+// smooth sliding caret; the passage scrolls a line at a time as you type.
+// Two word sets (quotes / dev words), four durations, per-mode personal bests,
+// and a results screen with raw WPM, consistency and a WPM-over-time chart.
+// ============================================================================
 
 // ============================================================================
 // CONFIG
@@ -15,6 +26,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const DURATIONS = [15, 30, 60, 120];
 const WORDS_PER_BATCH = 220; // generous buffer so the passage never "runs out"
+const PB_KEY = 'bp_typing_pb';
+
+const MODES = [
+  { id: 'quotes', label: 'Quotes', Icon: Quote },
+  { id: 'dev', label: 'Dev words', Icon: Code2 },
+];
 
 // A pool of varied passages — a fresh random mix is shuffled together every
 // time a test starts/restarts, so it's never the same single block of text.
@@ -39,6 +56,16 @@ const TEXT_BANK = [
   'Small daily improvements compound over months into results that once seemed impossible.',
 ];
 
+const DEV_WORDS = (
+  'const let function return async await promise array object string number boolean null undefined ' +
+  'react component state props hook effect render memo context router query schema index table join ' +
+  'select insert update delete commit branch merge rebase push pull deploy build bundle vite tailwind ' +
+  'node express server client request response fetch cache token session cookie header middleware ' +
+  'module import export default class interface type enum map filter reduce spread callback event ' +
+  'listener handler debug console log error throw catch try finally test mock lint format refactor ' +
+  'supabase postgres vercel expo mobile layout flex grid padding margin border shadow hover focus'
+).split(' ');
+
 function shuffleArray(arr) {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -48,25 +75,52 @@ function shuffleArray(arr) {
   return copy;
 }
 
-function generateWords(minWordCount = WORDS_PER_BATCH) {
+function generateWords(mode, minWordCount = WORDS_PER_BATCH) {
   let words = [];
   while (words.length < minWordCount) {
-    words = words.concat(shuffleArray(TEXT_BANK).join(' ').split(' '));
+    words =
+      mode === 'dev'
+        ? words.concat(shuffleArray(DEV_WORDS))
+        : words.concat(shuffleArray(TEXT_BANK).join(' ').split(' '));
   }
   return words;
 }
 
-function computeStats(typed, target, elapsedSeconds) {
+function countCorrect(typed, target) {
   let correct = 0;
-  let incorrect = 0;
-  for (let i = 0; i < typed.length; i++) {
-    if (typed[i] === target[i]) correct++;
-    else incorrect++;
-  }
+  for (let i = 0; i < typed.length; i++) if (typed[i] === target[i]) correct++;
+  return correct;
+}
+
+function computeStats(typed, target, elapsedSeconds) {
+  const correct = countCorrect(typed, target);
+  const incorrect = typed.length - correct;
   const minutes = Math.max(elapsedSeconds, 1) / 60;
-  const wpm = Math.round(correct / 5 / minutes);
-  const accuracy = typed.length > 0 ? Math.round((correct / typed.length) * 100) : 100;
-  return { correct, incorrect, wpm, accuracy, typedLength: typed.length };
+  return {
+    correct,
+    incorrect,
+    wpm: Math.round(correct / 5 / minutes),
+    raw: Math.round(typed.length / 5 / minutes),
+    accuracy: typed.length > 0 ? Math.round((correct / typed.length) * 100) : 100,
+    typedLength: typed.length,
+  };
+}
+
+// 100 = perfectly even pace; drops as per-second speed swings around
+function consistencyOf(samples) {
+  const vals = samples.filter((v) => v > 0);
+  if (vals.length < 2) return 100;
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+  return Math.max(0, Math.round(100 - (sd / mean) * 100));
+}
+
+function readPBs() {
+  try {
+    return JSON.parse(localStorage.getItem(PB_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
 }
 
 // ============================================================================
@@ -125,89 +179,153 @@ export const TypingTestTrigger = ({ darkMode, onClick, className = '' }) => {
 };
 
 // ============================================================================
-// MINI CHARTS (plain SVG — no extra chart dependency needed)
+// STYLES — scoped through the overlay id (very high specificity) plus
+// !important, so the site's global `.light/.dark span { color }` rules
+// can't recolor the letters.
 // ============================================================================
 
-const WpmLineChart = ({ data, accent, darkMode }) => {
-  const width = 640;
-  const height = 180;
-  const padding = 28;
+const TypingStyles = ({ darkMode }) => (
+  <style>{`
+    #claude-typing-test-overlay :is(h2,h3,p,span,div).tt-ink { color: var(--ink) !important; }
+    #claude-typing-test-overlay :is(h2,h3,p,span,div).tt-acc { color: var(--acc) !important; }
+    #claude-typing-test-overlay :is(h2,h3,p,span,div).tt-on { color: var(--acc-ink) !important; }
+    #claude-typing-test-overlay :is(p,span).tt-red { color: #F43F5E !important; }
+    #claude-typing-test-overlay .tt-pending { color: ${darkMode ? 'rgba(255,255,255,0.28)' : 'rgba(27,27,42,0.32)'} !important; }
+    #claude-typing-test-overlay .tt-correct { color: ${darkMode ? '#F5F5FA' : '#1B1B2A'} !important; }
+    #claude-typing-test-overlay .tt-incorrect { color: #F43F5E !important; }
+    #claude-typing-test-overlay .tt-incorrect.tt-space { background: rgba(244,63,94,0.28); border-radius: 3px; }
+    #claude-typing-test-overlay .tt-word-err { text-decoration: underline wavy rgba(244,63,94,0.75); text-underline-offset: 6px; text-decoration-thickness: 1.5px; }
+    .tt-caret { transition: transform 0.09s cubic-bezier(.3,.7,.4,1); }
+    @keyframes tt-blink { 0%, 45% { opacity: 1; } 55%, 100% { opacity: 0; } }
+    .tt-blink { animation: tt-blink 1s step-end infinite; }
+    .tt-lines { transition: transform 0.22s cubic-bezier(.22,1,.36,1); }
+    .tt-mono { font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, 'Cascadia Code', Consolas, monospace; }
+    @media (prefers-reduced-motion: reduce) { .tt-caret, .tt-lines { transition: none; } }
+  `}</style>
+);
 
-  if (!data.length) return null;
+// ============================================================================
+// PASSAGE — one memoized component per word, so a keystroke only re-renders
+// the word being typed (and the one just left), not the whole passage.
+// ============================================================================
 
-  const maxWpm = Math.max(...data.map((d) => d.wpm), 10);
-  const plotW = width - padding * 2;
-  const plotH = height - padding * 2;
-
-  const toXY = (d, i) => {
-    const x = padding + (data.length === 1 ? 0 : (i / (data.length - 1)) * plotW);
-    const y = padding + plotH - (d.wpm / maxWpm) * plotH;
-    return [x, y];
-  };
-
-  const linePoints = data.map((d, i) => toXY(d, i).join(',')).join(' ');
-  const gridColor = darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const labelColor = darkMode ? 'rgba(255,255,255,0.35)' : 'rgba(27,27,42,0.4)';
-
+const Word = memo(({ word, start, typedSlice, passed }) => {
+  const hasError = passed && typedSlice.slice(0, word.length) !== word;
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 190 }}>
-      {[0, 0.25, 0.5, 0.75, 1].map((t) => {
-        const y = padding + plotH - t * plotH;
+    <span className="inline-block">
+      <span className={hasError ? 'tt-word-err' : ''}>
+      {[...word].map((ch, ci) => {
+        const t = typedSlice[ci];
+        const cls = t === undefined ? 'tt-pending' : t === ch ? 'tt-correct' : 'tt-incorrect';
         return (
-          <g key={t}>
-            <line x1={padding} y1={y} x2={width - padding} y2={y} stroke={gridColor} strokeWidth="1" />
-            <text x={4} y={y + 4} fontSize="10" fill={labelColor}>
-              {Math.round(maxWpm * t)}
-            </text>
-          </g>
+          <span key={ci} data-i={start + ci} className={cls}>
+            {ch}
+          </span>
         );
       })}
-      <polyline points={linePoints} fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      {data.map((d, i) => {
-        const [x, y] = toXY(d, i);
-        return <circle key={i} cx={x} cy={y} r="3" fill={accent} />;
-      })}
-      <text x={padding} y={height - 4} fontSize="10" fill={labelColor}>0s</text>
-      <text x={width - padding - 24} y={height - 4} fontSize="10" fill={labelColor}>
-        {data[data.length - 1]?.time ?? ''}s
-      </text>
+      </span>
+      {/* the space after the word is a real target character too */}
+      <span
+        data-i={start + word.length}
+        className={`tt-space ${typedSlice.length > word.length && typedSlice[word.length] !== ' ' ? 'tt-incorrect' : ''}`}
+        style={{ display: 'inline-block', width: '0.6em' }}
+      >
+        {' '}
+      </span>
+    </span>
+  );
+});
+Word.displayName = 'Word';
+
+// WPM over time: area for net WPM, dashed line for raw, red marks for errors
+const WpmChart = ({ data, darkMode }) => {
+  const width = 720;
+  const height = 200;
+  const padL = 34;
+  const padR = 12;
+  const padT = 14;
+  const padB = 26;
+  if (!data.length) return null;
+
+  const maxV = Math.max(...data.map((d) => Math.max(d.wpm, d.raw)), 20);
+  const top = Math.ceil(maxV / 20) * 20;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+  const X = (i) => padL + (data.length === 1 ? plotW / 2 : (i / (data.length - 1)) * plotW);
+  const Y = (v) => padT + plotH - (v / top) * plotH;
+
+  const line = (key) => data.map((d, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(d[key]).toFixed(1)}`).join(' ');
+  const area = `${line('wpm')} L${X(data.length - 1)},${padT + plotH} L${X(0)},${padT + plotH} Z`;
+  const grid = darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(27,27,42,0.08)';
+  const label = darkMode ? 'rgba(255,255,255,0.4)' : 'rgba(27,27,42,0.45)';
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" role="img" aria-label="Words per minute over time">
+      <defs>
+        <linearGradient id="tt-area" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--acc)" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="var(--acc)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+        <g key={t}>
+          <line x1={padL} x2={width - padR} y1={Y(top * t)} y2={Y(top * t)} stroke={grid} />
+          <text x={padL - 8} y={Y(top * t) + 4} fontSize="10" textAnchor="end" fill={label}>
+            {Math.round(top * t)}
+          </text>
+        </g>
+      ))}
+      <path d={area} fill="url(#tt-area)" />
+      <path d={line('raw')} fill="none" stroke={label} strokeWidth="1.5" strokeDasharray="4 4" />
+      <path d={line('wpm')} fill="none" stroke="var(--acc)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+      {data.map((d, i) =>
+        d.errors > 0 ? (
+          <g key={i} stroke="#F43F5E" strokeWidth="2" strokeLinecap="round">
+            <line x1={X(i) - 3.5} y1={padT + 2} x2={X(i) + 3.5} y2={padT + 9} />
+            <line x1={X(i) + 3.5} y1={padT + 2} x2={X(i) - 3.5} y2={padT + 9} />
+          </g>
+        ) : null
+      )}
+      {data.map((d, i) => (
+        <circle key={`p${i}`} cx={X(i)} cy={Y(d.wpm)} r="2.5" fill="var(--acc)" />
+      ))}
+      {data.map((d, i) =>
+        data.length <= 15 || i % Math.ceil(data.length / 12) === 0 || i === data.length - 1 ? (
+          <text key={`t${i}`} x={X(i)} y={height - 8} fontSize="10" textAnchor="middle" fill={label}>
+            {d.time}s
+          </text>
+        ) : null
+      )}
     </svg>
   );
 };
 
-const AccuracyRing = ({ accuracy, accent, darkMode, size = 120 }) => {
+const AccuracyRing = ({ accuracy, darkMode, size = 128 }) => {
   const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (accuracy / 100) * c;
-  const trackColor = darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
-      <circle
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} strokeWidth={stroke} />
+      <motion.circle
         cx={size / 2}
         cy={size / 2}
         r={r}
         fill="none"
-        stroke={accent}
+        stroke="var(--acc)"
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={c}
-        strokeDashoffset={offset}
+        initial={{ strokeDashoffset: c }}
+        animate={{ strokeDashoffset: c - (accuracy / 100) * c }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
       />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontSize="22"
-        fontWeight="900"
-        fill={accent}
-      >
+      <text x="50%" y="47%" dominantBaseline="middle" textAnchor="middle" fontSize="26" fontWeight="900" fill="var(--acc)">
         {accuracy}%
+      </text>
+      <text x="50%" y="66%" dominantBaseline="middle" textAnchor="middle" fontSize="9" fontWeight="800" letterSpacing="2" fill={darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(27,27,42,0.5)'}>
+        ACCURACY
       </text>
     </svg>
   );
@@ -218,23 +336,35 @@ const AccuracyRing = ({ accuracy, accent, darkMode, size = 120 }) => {
 // ============================================================================
 
 const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, ref) => {
+  const p = getPalette(darkMode);
   const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState('quotes');
   const [duration, setDuration] = useState(30);
   const [status, setStatus] = useState('idle'); // idle | running | finished
   const [timeLeft, setTimeLeft] = useState(30);
-  const [words, setWords] = useState(() => generateWords());
+  const [words, setWords] = useState(() => generateWords('quotes'));
   const [typed, setTyped] = useState('');
-  const [wpmHistory, setWpmHistory] = useState([]);
-  const [liveStats, setLiveStats] = useState({ wpm: 0, accuracy: 100 });
+  const [history, setHistory] = useState([]);
+  const [live, setLive] = useState({ wpm: 0, accuracy: 100 });
   const [finalStats, setFinalStats] = useState(null);
+  const [focused, setFocused] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
+  const [typing, setTyping] = useState(false); // caret stops blinking while keys are flowing
+  const [caret, setCaret] = useState({ x: 0, y: 0, h: 0 });
+  const [lineShift, setLineShift] = useState(0);
+  const [pbs, setPbs] = useState(readPBs);
+  const [newPb, setNewPb] = useState(false);
 
   const inputRef = useRef(null);
-  const wordRefs = useRef([]);
-  const lastScrolledWordRef = useRef(-1);
+  const linesRef = useRef(null);
   const typedRef = useRef('');
   const targetRef = useRef('');
   const intervalRef = useRef(null);
-  const elapsedRef = useRef(0);
+  const startRef = useRef(0);
+  const secondRef = useRef(0);
+  const lastSecondRef = useRef({ typed: 0, errors: 0 });
+  const errorsRef = useRef(0);
+  const typingTimerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     open: () => setIsOpen(true),
@@ -244,139 +374,186 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
     targetRef.current = words.join(' ');
   }, [words]);
 
-  // Lock scroll + esc to close, matching the rest of the site's overlays
+  const focusInput = () => inputRef.current?.focus();
+
+  const resetTest = useCallback(
+    (opts = {}) => {
+      clearInterval(intervalRef.current);
+      const d = opts.duration ?? duration;
+      const m = opts.mode ?? mode;
+      const fresh = generateWords(m);
+      setWords(fresh);
+      targetRef.current = fresh.join(' ');
+      setMode(m);
+      setDuration(d);
+      setTimeLeft(d);
+      setTyped('');
+      typedRef.current = '';
+      setHistory([]);
+      setLive({ wpm: 0, accuracy: 100 });
+      setFinalStats(null);
+      setNewPb(false);
+      setLineShift(0);
+      setStatus('idle');
+      errorsRef.current = 0;
+      secondRef.current = 0;
+      lastSecondRef.current = { typed: 0, errors: 0 };
+      setTimeout(focusInput, 30);
+    },
+    [duration, mode]
+  );
+
+  const resetRef = useRef(resetTest);
   useEffect(() => {
-    if (isOpen) {
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      const t = setTimeout(() => inputRef.current?.focus(), 250);
-      const onKey = (e) => {
-        if (e.key === 'Escape') setIsOpen(false);
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          resetTest();
-        }
-      };
-      window.addEventListener('keydown', onKey);
-      return () => {
-        document.body.style.overflow = prevOverflow;
-        clearTimeout(t);
-        window.removeEventListener('keydown', onKey);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    resetRef.current = resetTest;
+  }, [resetTest]);
+
+  // Lock scroll; Esc closes, Tab restarts, any key refocuses the passage
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    setPbs(readPBs());
+    const t = setTimeout(focusInput, 250);
+    const onKey = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+      else if (e.key === 'Tab') {
+        e.preventDefault();
+        resetRef.current();
+      } else if (document.activeElement !== inputRef.current && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        focusInput();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [isOpen]);
 
-  useEffect(() => () => clearInterval(intervalRef.current), []);
+  useEffect(
+    () => () => {
+      clearInterval(intervalRef.current);
+      clearTimeout(typingTimerRef.current);
+    },
+    []
+  );
 
-  const resetTest = useCallback((newDuration) => {
-    clearInterval(intervalRef.current);
-    const d = newDuration ?? duration;
-    const freshWords = generateWords();
-    setWords(freshWords);
-    targetRef.current = freshWords.join(' ');
-    setDuration(d);
-    setTimeLeft(d);
-    setTyped('');
-    typedRef.current = '';
-    setWpmHistory([]);
-    setLiveStats({ wpm: 0, accuracy: 100 });
-    setFinalStats(null);
-    setStatus('idle');
-    lastScrolledWordRef.current = -1;
-    elapsedRef.current = 0;
-    setTimeout(() => inputRef.current?.focus(), 30);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration]);
-
-  const finishTest = useCallback(() => {
-    clearInterval(intervalRef.current);
-    const stats = computeStats(typedRef.current, targetRef.current, duration);
-    setFinalStats(stats);
-    setStatus('finished');
-  }, [duration]);
+  const finishTest = useCallback(
+    (samples) => {
+      clearInterval(intervalRef.current);
+      const stats = computeStats(typedRef.current, targetRef.current, duration);
+      stats.consistency = consistencyOf(samples.map((s) => s.raw));
+      setFinalStats(stats);
+      setStatus('finished');
+      const key = `${mode}-${duration}`;
+      const prev = readPBs();
+      if (stats.wpm > 0 && stats.wpm > (prev[key] || 0)) {
+        const next = { ...prev, [key]: stats.wpm };
+        try {
+          localStorage.setItem(PB_KEY, JSON.stringify(next));
+        } catch {
+          /* storage may be unavailable */
+        }
+        setPbs(next);
+        setNewPb(true);
+      }
+    },
+    [duration, mode]
+  );
 
   const startTest = useCallback(() => {
     setStatus('running');
-    elapsedRef.current = 0;
+    startRef.current = performance.now();
+    secondRef.current = 0;
+    const samples = [];
     intervalRef.current = setInterval(() => {
-      elapsedRef.current += 1;
-      const remaining = duration - elapsedRef.current;
-      const stats = computeStats(typedRef.current, targetRef.current, elapsedRef.current);
-      setLiveStats({ wpm: stats.wpm, accuracy: stats.accuracy });
-      setWpmHistory((prev) => [...prev, { time: elapsedRef.current, wpm: stats.wpm, accuracy: stats.accuracy }]);
-      setTimeLeft(Math.max(remaining, 0));
-      if (remaining <= 0) {
-        finishTest();
+      const elapsed = (performance.now() - startRef.current) / 1000;
+      setTimeLeft(Math.max(0, Math.ceil(duration - elapsed)));
+      const whole = Math.floor(elapsed);
+      if (whole > secondRef.current) {
+        secondRef.current = whole;
+        const stats = computeStats(typedRef.current, targetRef.current, whole);
+        // raw speed of just this second, for the consistency score
+        const typedThisSecond = typedRef.current.length - lastSecondRef.current.typed;
+        const sample = {
+          time: whole,
+          wpm: stats.wpm,
+          raw: Math.round((Math.max(typedThisSecond, 0) / 5) * 60),
+          errors: errorsRef.current - lastSecondRef.current.errors,
+        };
+        lastSecondRef.current = { typed: typedRef.current.length, errors: errorsRef.current };
+        samples.push(sample);
+        setHistory([...samples]);
+        setLive({ wpm: stats.wpm, accuracy: stats.accuracy });
       }
-    }, 1000);
+      if (elapsed >= duration) finishTest(samples);
+    }, 100);
   }, [duration, finishTest]);
 
   const handleChange = (e) => {
     if (status === 'finished') return;
-    let val = e.target.value;
+    const val = e.target.value;
 
-    if (status === 'idle' && val.length > 0) {
-      startTest();
-    }
+    if (status === 'idle' && val.length > 0) startTest();
 
-    // Sound effect: only on new characters being typed (not backspace/deletes).
-    // Plays a normal click for a correct key, a lower "error" tone for a mistyped one.
-    if (soundEnabled && typeof onKeyPress === 'function' && val.length > typedRef.current.length) {
-      const newIndex = val.length - 1;
-      const typedChar = val[newIndex];
-      const targetChar = targetRef.current[newIndex];
-      onKeyPress(typedChar === targetChar ? 'key' : 'error');
+    if (val.length > typedRef.current.length) {
+      const i = val.length - 1;
+      const ok = val[i] === targetRef.current[i];
+      if (!ok) errorsRef.current += 1;
+      if (soundEnabled && typeof onKeyPress === 'function') onKeyPress(ok ? 'key' : 'error');
     }
 
     typedRef.current = val;
     setTyped(val);
+    setTyping(true);
+    clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setTyping(false), 550);
 
-    // Keep the passage effectively endless while the clock is running so a
-    // fast typer never "runs out" of text before time is up.
-    if (targetRef.current.length - val.length < 60) {
-      setWords((prevWords) => {
-        const extended = [...prevWords, ...generateWords(80)];
+    // keep the passage effectively endless while the clock runs
+    if (targetRef.current.length - val.length < 80) {
+      setWords((prev) => {
+        const extended = [...prev, ...generateWords(mode, 80)];
         targetRef.current = extended.join(' ');
         return extended;
       });
     }
   };
 
-  // Keep the current word scrolled into view
-  useEffect(() => {
-    const currentWordIndex = typed.split(' ').length - 1;
-    if (currentWordIndex !== lastScrolledWordRef.current) {
-      lastScrolledWordRef.current = currentWordIndex;
-      wordRefs.current[currentWordIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [typed]);
+  // place the caret on the next character and scroll a line at a time
+  useLayoutEffect(() => {
+    if (!isOpen || status === 'finished') return;
+    const box = linesRef.current;
+    if (!box) return;
+    const el = box.querySelector(`[data-i="${typed.length}"]`);
+    if (!el) return;
+    const lineH = parseFloat(getComputedStyle(box).lineHeight) || 44;
+    const line = Math.floor((el.offsetTop + el.offsetHeight / 2) / lineH);
+    // keep the active line in the middle row once we're past the first line
+    setLineShift(Math.max(0, line - 1) * lineH);
+    setCaret({ x: el.offsetLeft, y: line * lineH, h: lineH });
+  }, [typed, words, isOpen, status]);
 
   const closeTest = () => setIsOpen(false);
 
-  const theme = darkMode
-    ? {
-        backdrop: 'bg-[#1B1B2A]/95',
-        text: 'text-white',
-        title: 'text-white/60',
-        divider: 'border-white/10',
-        accent: '#00FFB3',
-        pillIdle: 'border-white/10 text-white/50 hover:text-white hover:border-[#00FFB3]/50',
-        pillActive: 'border-[#00FFB3] text-[#00FFB3] bg-[#00FFB3]/10',
-        iconIdle: 'text-white/40 hover:text-white/70 hover:bg-white/5',
-      }
-    : {
-        backdrop: 'bg-white/95',
-        text: 'text-[#1B1B2A]',
-        title: 'text-[#1B1B2A]/60',
-        divider: 'border-black/10',
-        accent: '#FF007A',
-        pillIdle: 'border-black/10 text-[#1B1B2A]/50 hover:text-[#1B1B2A] hover:border-[#FF007A]/50',
-        pillActive: 'border-[#FF007A] text-[#FF007A] bg-[#FF007A]/10',
-        iconIdle: 'text-[#1B1B2A]/40 hover:text-[#1B1B2A]/70 hover:bg-black/5',
-      };
+  const pbKey = `${mode}-${duration}`;
+  const pb = pbs[pbKey] || 0;
 
-  let globalIdx = 0;
+  // build the per-word render list with each word's start index in the text
+  let cursor = 0;
+  const currentWord = typed.split(' ').length - 1;
+
+  const pill = (on) =>
+    `cursor-target inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+      on ? '' : 'hover:bg-[color:var(--acc-soft)]'
+    }`;
+  const pillStyle = (on) => ({
+    background: on ? 'var(--acc)' : 'transparent',
+    color: on ? 'var(--acc-ink)' : 'var(--ink)',
+    opacity: on ? 1 : 0.6,
+  });
+  const statLabel = 'tt-ink text-[0.625rem] font-black uppercase tracking-[0.3em] opacity-50';
 
   return (
     <AnimatePresence>
@@ -387,135 +564,157 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className={`fixed inset-0 z-[1000] flex flex-col backdrop-blur-2xl ${theme.backdrop} ${theme.text} font-sans`}
+          className="fixed inset-0 z-[1000] flex flex-col font-sans"
+          style={{ ...cssVars(p), background: darkMode ? '#11111E' : '#FFFDF6', color: p.ink }}
         >
-          {/* Forced letter-coloring — scoped through the #claude-typing-test-overlay
-              id (very high specificity) plus !important, so nothing else on the
-              site — global resets, typography plugins, dark-mode text rules,
-              even other !important declarations of lower specificity — can
-              silently override the typed-letter colors. */}
-          <style>{`
-            #claude-typing-test-overlay .tt-pending { color: ${darkMode ? 'rgba(255,255,255,0.25)' : 'rgba(27,27,42,0.3)'} !important; }
-            #claude-typing-test-overlay .tt-correct { color: ${darkMode ? '#ffffff' : '#000000'} !important; }
-            #claude-typing-test-overlay .tt-incorrect { color: #ef4444 !important; text-decoration: underline !important; }
-            #claude-typing-test-overlay .tt-caret { color: ${darkMode ? '#1B1B2A' : '#ffffff'} !important; }
-          `}</style>
+          <TypingStyles darkMode={darkMode} />
 
           {/* Top bar */}
-          <div className="relative flex items-center justify-center px-6 shrink-0" style={{ height: 68 }}>
-            <span className={`text-sm font-black uppercase tracking-[0.5em] ${theme.title}`}>
-              Typing Test
+          <div className="relative flex items-center justify-center px-6 shrink-0" style={{ height: 64 }}>
+            <span className="tt-ink inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.5em] opacity-60">
+              <Keyboard size={16} /> Typing Test
             </span>
             <button
               onClick={closeTest}
               aria-label="Close typing test"
-              className={`cursor-target absolute right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-colors ${theme.iconIdle}`}
+              className="cursor-target absolute right-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:rotate-90"
+              style={{ color: 'var(--ink)' }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
           <div className="relative flex-1 overflow-y-auto px-6 custom-scrollbar">
-            <div className="mx-auto w-full min-h-full flex flex-col justify-center items-center gap-8 py-10" style={{ width: 880 }}>
+            <div className="mx-auto w-full max-w-[56rem] min-h-full flex flex-col justify-center items-center gap-8 py-8">
               {status !== 'finished' ? (
                 <>
-                  {/* Tab/Esc hint — centered, right above the timer selection */}
-                  <span className={`inline-flex items-center gap-2 text-sm font-medium tracking-wide ${theme.title} opacity-90`}>
-                    press
-                    <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>tab</kbd>
-                    to restart,
-                    <kbd className={`px-2.5 py-1 rounded-md border text-sm font-bold ${theme.divider} ${theme.title}`}>esc</kbd>
-                    to close
-                  </span>
-
-                  {/* Duration selector */}
-                  <div className="flex items-center justify-center gap-3">
+                  {/* settings bar: word set + duration */}
+                  <div
+                    className="flex flex-wrap items-center justify-center gap-1 p-1.5 rounded-full border border-[color:var(--line)] transition-opacity"
+                    style={{ background: 'var(--surface-strong)', opacity: status === 'running' ? 0.35 : 1 }}
+                  >
+                    {MODES.map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        disabled={status === 'running'}
+                        onClick={() => resetTest({ mode: id })}
+                        className={pill(mode === id)}
+                        style={pillStyle(mode === id)}
+                      >
+                        <Icon size={13} /> {label}
+                      </button>
+                    ))}
+                    <span className="w-px h-5 mx-1.5 bg-[color:var(--line)]" />
                     {DURATIONS.map((d) => (
                       <button
                         key={d}
                         type="button"
                         disabled={status === 'running'}
-                        onClick={() => resetTest(d)}
-                        className={`cursor-target px-4 py-1.5 rounded-full border text-xs font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                          duration === d ? theme.pillActive : theme.pillIdle
-                        }`}
+                        onClick={() => resetTest({ duration: d })}
+                        className={pill(duration === d)}
+                        style={pillStyle(duration === d)}
                       >
                         {d}s
                       </button>
                     ))}
                   </div>
 
-                  {/* Live counters */}
-                  <div className="flex items-center justify-center gap-16">
-                    <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Time</p>
-                      <p className="text-5xl font-black tabular-nums" style={{ color: theme.accent }}>
-                        {timeLeft}
-                      </p>
+                  {/* live counters */}
+                  <div className="w-full flex items-end justify-between gap-6">
+                    <div>
+                      <p className={statLabel}>Time</p>
+                      <p className="tt-acc text-6xl font-black tabular-nums leading-none mt-1">{timeLeft}</p>
                     </div>
-                    <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
-                      <p className="text-5xl font-black tabular-nums">{liveStats.wpm}</p>
-                    </div>
-                    <div className="text-center" style={{ width: 120 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Accuracy</p>
-                      <p className="text-5xl font-black tabular-nums">{liveStats.accuracy}%</p>
+                    <div className="flex items-end gap-10">
+                      <div className="text-right">
+                        <p className={statLabel}>WPM</p>
+                        <p className="tt-ink text-4xl font-black tabular-nums leading-none mt-1">{live.wpm}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={statLabel}>Accuracy</p>
+                        <p className="tt-ink text-4xl font-black tabular-nums leading-none mt-1">{live.accuracy}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={statLabel}>Best</p>
+                        <p className="tt-ink text-4xl font-black tabular-nums leading-none mt-1 opacity-60">{pb || '—'}</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Typing passage */}
-                  <div
-                    className="relative overflow-hidden cursor-text"
-                    style={{ height: 168, width: '100%' }}
-                    onClick={() => inputRef.current?.focus()}
-                  >
-                    <div className={`absolute inset-x-0 top-0 h-6 bg-gradient-to-b ${darkMode ? 'from-[#1B1B2A]' : 'from-white'} to-transparent pointer-events-none z-10`} />
-                    <div className={`absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t ${darkMode ? 'from-[#1B1B2A]' : 'from-white'} to-transparent pointer-events-none z-10`} />
-                    <p className="text-2xl font-light leading-relaxed tracking-wide select-none" style={{ fontSize: 26 }}>
-                      {words.map((word, wi) => {
-                        const chars = [...word].map((ch, ci) => {
-                          const idx = globalIdx++;
-                          const typedCh = typed[idx];
-                          // The "you are here" marker: the very next character to
-                          // type gets a solid highlighted block (cyan in dark mode,
-                          // pink in light mode) so position is easy to track.
-                          const isCaret = idx === typed.length && status !== 'finished';
+                  {/* passage */}
+                  <div className="relative w-full">
+                    {/* time progress */}
+                    <div className="h-1 w-full rounded-full overflow-hidden mb-6" style={{ background: 'var(--acc-soft)' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(timeLeft / duration) * 100}%`,
+                          background: 'var(--acc)',
+                          transition: status === 'running' ? 'width 1s linear' : 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
 
-                          let colorCls = 'tt-pending';
-                          if (typedCh !== undefined) {
-                            colorCls = typedCh === ch ? 'tt-correct' : 'tt-incorrect';
-                          }
-                          if (isCaret) colorCls = 'tt-caret';
-
+                    <div
+                      className="relative overflow-hidden cursor-text"
+                      style={{ height: '8.4rem' }}
+                      onClick={focusInput}
+                    >
+                      <div
+                        ref={linesRef}
+                        className="tt-lines tt-mono relative select-none text-[1.75rem] leading-[2.8rem] tracking-wide"
+                        style={{ transform: `translate3d(0, ${-lineShift}px, 0)`, filter: focused ? 'none' : 'blur(5px)' }}
+                      >
+                        {words.map((word, wi) => {
+                          const start = cursor;
+                          cursor += word.length + 1;
                           return (
-                            <span
-                              key={ci}
-                              className={`${colorCls} rounded-[0.1875rem] ${isCaret ? 'animate-pulse' : ''}`}
-                              style={{ backgroundColor: isCaret ? theme.accent : undefined }}
-                            >
-                              {ch}
-                            </span>
+                            <Word
+                              key={wi}
+                              word={word}
+                              start={start}
+                              typedSlice={typed.length > start ? typed.slice(start, start + word.length + 1) : ''}
+                              passed={wi < currentWord}
+                            />
                           );
-                        });
-                        const spaceIdx = globalIdx++;
-                        const isCaretSpace = spaceIdx === typed.length && status !== 'finished';
-                        return (
-                          <span
-                            key={wi}
-                            ref={(el) => (wordRefs.current[wi] = el)}
-                            className="inline-block mr-[0.4em]"
-                          >
-                            {chars}
-                            <span
-                              className={`rounded-[0.1875rem] ${isCaretSpace ? 'animate-pulse' : ''}`}
-                              style={{ backgroundColor: isCaretSpace ? theme.accent : undefined }}
-                            >
-                              {'\u00A0'}
-                            </span>
+                        })}
+
+                        {/* the caret */}
+                        <span
+                          aria-hidden="true"
+                          className={`tt-caret absolute left-0 top-0 w-[3px] rounded-full ${typing ? '' : 'tt-blink'}`}
+                          style={{
+                            height: caret.h * 0.72,
+                            transform: `translate3d(${caret.x - 1}px, ${caret.y + caret.h * 0.14}px, 0)`,
+                            background: 'var(--acc)',
+                            boxShadow: '0 0 10px var(--acc-glow)',
+                          }}
+                        />
+                      </div>
+
+                      {!focused && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="tt-ink inline-flex items-center gap-2 text-sm font-bold opacity-80">
+                            <MousePointerClick size={16} /> Click here or press any key to focus
                           </span>
-                        );
-                      })}
-                    </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <AnimatePresence>
+                      {capsLock && focused && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          className="absolute left-1/2 -translate-x-1/2 -top-12 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg bg-amber-400"
+                        >
+                          <ArrowBigUpDash size={15} className="text-[#1B1B2A]" />
+                          <span className="tt-on" style={{ color: '#1B1B2A' }}>Caps Lock is on</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   <input
@@ -523,60 +722,110 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                     type="text"
                     value={typed}
                     onChange={handleChange}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    onKeyDown={(e) => setCapsLock(e.getModifierState?.('CapsLock') ?? false)}
+                    onKeyUp={(e) => setCapsLock(e.getModifierState?.('CapsLock') ?? false)}
                     autoComplete="off"
                     autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck="false"
                     className="absolute opacity-0 w-0 h-0"
-                    aria-hidden="true"
+                    aria-label="Type the passage"
                   />
+
+                  <div className="flex items-center gap-6">
+                    <button
+                      onClick={() => resetTest()}
+                      aria-label="Restart test"
+                      className="cursor-target w-11 h-11 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:-rotate-180 duration-500"
+                      style={{ color: 'var(--ink)' }}
+                    >
+                      <RotateCcw size={17} />
+                    </button>
+                    <span className="tt-ink inline-flex items-center gap-2 text-xs font-medium opacity-55">
+                      <kbd className="px-2 py-0.5 rounded-md border border-[color:var(--line)] font-bold">tab</kbd> restart
+                      <kbd className="ml-3 px-2 py-0.5 rounded-md border border-[color:var(--line)] font-bold">esc</kbd> close
+                    </span>
+                  </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-10 animate-fade-in">
-                  <div className="flex items-center justify-center gap-16">
-                    <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>WPM</p>
-                      <p className="text-7xl font-black tabular-nums" style={{ color: theme.accent }}>
-                        {finalStats.wpm}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-full flex flex-col items-center gap-8"
+                >
+                  {newPb && (
+                    <motion.span
+                      initial={{ scale: 0.5, rotate: -8 }}
+                      animate={{ scale: 1, rotate: -3 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.3 }}
+                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400 shadow-lg"
+                    >
+                      <Crown size={14} className="text-[#1B1B2A]" />
+                      <span className="tt-on text-xs font-black uppercase tracking-widest" style={{ color: '#1B1B2A' }}>
+                        New personal best!
+                      </span>
+                    </motion.span>
+                  )}
+
+                  <div className="w-full flex items-center justify-center gap-14">
+                    <div className="text-right">
+                      <p className={statLabel}>WPM</p>
+                      <p className="tt-acc text-8xl font-black tabular-nums leading-none mt-1">{finalStats.wpm}</p>
+                    </div>
+                    <AccuracyRing accuracy={finalStats.accuracy} darkMode={darkMode} />
+                    <div>
+                      <p className={statLabel}>Test</p>
+                      <p className="tt-ink text-2xl font-black mt-1">{duration}s</p>
+                      <p className="tt-ink text-sm font-bold opacity-60">{MODES.find((m) => m.id === mode).label}</p>
+                    </div>
+                  </div>
+
+                  <div className="w-full grid grid-cols-4 gap-3">
+                    {[
+                      { label: 'Raw', value: finalStats.raw },
+                      { label: 'Consistency', value: `${finalStats.consistency}%` },
+                      { label: 'Characters', value: (
+                        <>
+                          <span className="tt-acc">{finalStats.correct}</span>
+                          <span className="tt-ink opacity-40"> / </span>
+                          <span className="tt-red">{finalStats.incorrect}</span>
+                        </>
+                      ) },
+                      { label: 'Personal best', value: pb || finalStats.wpm },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-2xl border border-[color:var(--line)] p-4 text-center" style={{ background: 'var(--surface-strong)' }}>
+                        <p className={statLabel}>{s.label}</p>
+                        <p className="tt-ink text-2xl font-black tabular-nums mt-1">{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="w-full rounded-2xl border border-[color:var(--line)] p-4" style={{ background: 'var(--surface-strong)' }}>
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <p className={statLabel}>WPM over time</p>
+                      <p className="tt-ink text-[0.625rem] font-bold opacity-50">
+                        <span className="tt-acc">━</span> wpm · <span className="tt-ink">┅</span> raw · <span className="tt-red">✕</span> errors
                       </p>
                     </div>
-                    <AccuracyRing accuracy={finalStats.accuracy} accent={theme.accent} darkMode={darkMode} />
-                    <div className="text-center" style={{ width: 160 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${theme.title}`}>Duration</p>
-                      <p className="text-7xl font-black tabular-nums">{duration}s</p>
-                    </div>
+                    <WpmChart data={history} darkMode={darkMode} />
                   </div>
 
-                  <div className="flex items-center gap-10 text-center">
-                    <div style={{ width: 130 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Correct</p>
-                      <p className="text-xl font-black" style={{ color: theme.accent }}>{finalStats.correct}</p>
-                    </div>
-                    <div style={{ width: 130 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Incorrect</p>
-                      <p className="text-xl font-black text-red-500">{finalStats.incorrect}</p>
-                    </div>
-                    <div style={{ width: 130 }}>
-                      <p className={`text-[0.625rem] font-black uppercase tracking-widest ${theme.title}`}>Characters Typed</p>
-                      <p className="text-xl font-black">{finalStats.typedLength}</p>
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => resetTest()}
+                      className="cursor-target inline-flex items-center gap-3 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
+                      style={{ backgroundColor: 'var(--acc)', color: 'var(--acc-ink)' }}
+                    >
+                      <RotateCcw size={16} /> Try again
+                    </button>
+                    <span className="tt-ink text-xs font-medium opacity-50">
+                      or press <kbd className="px-2 py-0.5 rounded-md border border-[color:var(--line)] font-bold">tab</kbd>
+                    </span>
                   </div>
-
-                  <div style={{ width: 640 }}>
-                    <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] mb-2 text-center ${theme.title}`}>
-                      WPM Over Time
-                    </p>
-                    <WpmLineChart data={wpmHistory} accent={theme.accent} darkMode={darkMode} />
-                  </div>
-
-                  <button
-                    onClick={() => resetTest()}
-                    className="cursor-target flex items-center gap-3 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
-                    style={{ backgroundColor: theme.accent, color: darkMode ? '#1B1B2A' : '#fff' }}
-                  >
-                    <RotateCcw size={16} /> Try Again
-                  </button>
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
@@ -585,5 +834,7 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
     </AnimatePresence>
   );
 });
+
+TypingTest.displayName = 'TypingTest';
 
 export default TypingTest;
