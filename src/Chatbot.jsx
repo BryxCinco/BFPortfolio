@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { getPalette, cssVars } from './theme';
 import { getReply, CONTACT } from './ChatBrain';
+import AppIcon from './AppIcon';
 import { websites } from './Project';
 import { stackCategories } from './Stacks';
 import { featuredCerts, CERT_TOTAL } from './Certifications';
@@ -359,7 +360,10 @@ const ProjectCard = ({ p, onAsk }) => {
       </a>
       <div className="p-4 flex flex-col gap-2 flex-1">
         <p className="cb-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{p.tag}</p>
-        <p className="text-lg font-black leading-tight">{p.name}</p>
+        <div className="flex items-center gap-3">
+          {p.logo && <AppIcon src={p.logo} name={p.name} size={40} />}
+          <p className="text-lg font-black leading-tight">{p.name}</p>
+        </div>
         <p className="text-sm font-medium opacity-70 line-clamp-2">{p.desc}</p>
         <div className="mt-auto pt-2 flex flex-wrap gap-2">
           {live && <LinkPill href={p.url} solid>Open <ArrowUpRight size={12} /></LinkPill>}
@@ -394,7 +398,10 @@ const ProjectAttach = ({ name, onNavigate }) => {
       </a>
       <div className="p-5">
         <p className="cb-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{p.subtitle}</p>
-        <p className="text-2xl font-black mt-1">{p.name}</p>
+        <div className="flex items-center gap-3 mt-2">
+          {p.logo && <AppIcon src={p.logo} name={p.name} size={52} />}
+          <p className="text-2xl font-black">{p.name}</p>
+        </div>
         <ul className="mt-3 space-y-1.5">
           {p.highlights.map((h) => (
             <li key={h} className="flex gap-2 text-sm font-medium opacity-80">

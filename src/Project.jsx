@@ -4,14 +4,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Layers,
-  MousePointerClick,
   ArrowUpRight,
   Rocket,
   Zap,
 } from 'lucide-react';
 
-import Carousel from './Carousel';
 import { rgba, getPalette, cssVars } from './theme';
 import { HandStyles, HandNote, Doodle, Tape, StickyNote } from './HandTouch';
 import tideSite from './assets/Tide.png';
@@ -20,11 +17,12 @@ import neoChessSite from './assets/NeoChessXD.png';
 import snapzySite from './assets/Snapzy.png';
 import sweepXpressSite from './assets/SweepXpress.png';
 
-import adventurePoster from './assets/Keep On Keeping On.png';
-import lamboPoster from './assets/Lambo Poster.png';
-import dronePoster from './assets/Drown Poster.png';
-import matchaPoster from './assets/Matcha Poster.png';
-import musicFestPoster from './assets/Music Fest Poster.png';
+import tideLogo from './assets/logos/tide.png';
+import poopipooLogo from './assets/logos/poopipoo.png';
+import neoChessLogo from './assets/logos/neochess.svg';
+import snapzyLogo from './assets/logos/snapzy.png';
+import sweepXpressLogo from './assets/logos/sweepxpress.svg';
+import AppIcon from './AppIcon';
 
 // ============================================================================
 // DATA
@@ -43,6 +41,7 @@ const websites = [
     ],
     stack: ['React Native', 'Expo', 'AI Integration', 'Vercel'],
     image: tideSite,
+    logo: tideLogo,
     url: 'https://tide-rust.vercel.app/',
     featured: true,
     note: 'my fave ♥',
@@ -59,6 +58,7 @@ const websites = [
     ],
     stack: ['Next.js', 'React', 'OpenStreetMap', 'Vercel'],
     image: poopipooSite,
+    logo: poopipooLogo,
     url: 'https://poopipoo.vercel.app/',
     note: "yes, it's real 😂",
   },
@@ -74,6 +74,7 @@ const websites = [
     ],
     stack: ['React', 'Vite', 'JavaScript', 'Vercel'],
     image: neoChessSite,
+    logo: neoChessLogo,
     url: 'https://neo-chess-xd.vercel.app/',
     note: 'try beating the CPU',
   },
@@ -89,6 +90,7 @@ const websites = [
     ],
     stack: ['Next.js', 'Tailwind', 'AI Integration', 'Vercel'],
     image: snapzySite,
+    logo: snapzyLogo,
     url: 'https://snapzy-tau.vercel.app/',
     note: 'bye, messy camera roll ✿',
   },
@@ -103,6 +105,7 @@ const websites = [
     ],
     stack: ['PHP', 'MySQL', 'Tailwind'],
     image: sweepXpressSite,
+    logo: sweepXpressLogo,
     url: '#',
     note: 'demo coming soon…',
   },
@@ -116,38 +119,7 @@ const hostOf = (url) => {
   }
 };
 
-const posters = [
-  {
-    name: 'Adventure Awaits',
-    tag: 'Travel & Outdoor',
-    desc: 'A warm, layered forest silhouette poster built around a hand-lettered script mark — made to invite wanderlust at a glance.',
-    image: adventurePoster,
-  },
-  {
-    name: 'Huracán — Instinctive Technology',
-    tag: 'Automotive Print Ad',
-    desc: 'A moody, high-contrast automotive spread pairing a matte hero shot with a macro detail — precision engineering rendered in near-black tones.',
-    image: lamboPoster,
-  },
-  {
-    name: 'Advanced Drone System',
-    tag: 'Product & E-Commerce',
-    desc: 'A specs-first product poster over a coastal sunset backdrop, built to sell performance features and a limited-time offer at a glance.',
-    image: dronePoster,
-  },
-  {
-    name: 'HookieCoofie — Matcha Special',
-    tag: 'Cafe Promo Poster',
-    desc: 'A breezy, leaf-strewn promo for a seasonal matcha menu, priced clearly and finished with a bold savings callout.',
-    image: matchaPoster,
-  },
-  {
-    name: 'Eclipse — Midnight Music Fest',
-    tag: 'Event Poster',
-    desc: 'A neon-drenched rave flyer built around a lunar eclipse motif, with tiered ticketing laid out for fast scanning on the go.',
-    image: musicFestPoster,
-  },
-];
+const slugOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 // ============================================================================
 // STYLES
@@ -158,6 +130,15 @@ const ProjectStyles = () => (
     @keyframes pj-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
     @keyframes pj-scan { 0% { transform: translateY(-120%); } 100% { transform: translateY(320%); } }
     @keyframes pj-spin { to { transform: rotate(360deg); } }
+    @keyframes pj-pop { 0% { opacity: 0; transform: translateY(18px) scale(0.6); } 70% { opacity: 1; transform: translateY(-4px) scale(1.06); } 100% { opacity: 1; transform: none; } }
+    @keyframes pj-jiggle { 0% { transform: rotate(-1.6deg); } 100% { transform: rotate(1.6deg); } }
+    @keyframes pj-flash { 0% { box-shadow: 0 0 0 0 var(--acc-glow); } 40% { box-shadow: 0 0 0 10px var(--acc-soft); } 100% { box-shadow: 0 0 0 0 transparent; } }
+    .pj-app { transition: transform 260ms cubic-bezier(.3,1.6,.5,1); }
+    .pj-app:hover, .pj-app:focus-visible { transform: translateY(-8px) scale(1.08); }
+    .pj-dock:hover .pj-app:not(:hover) .pj-app-icon { animation: pj-jiggle 0.16s ease-in-out infinite alternate; }
+    .pj-dock .pj-app:nth-child(even) .pj-app-icon { animation-delay: -0.08s; }
+    .pj-flash { animation: pj-flash 1.2s ease-out 2; }
+    @media (prefers-reduced-motion: reduce) { .pj-dock .pj-app-icon, .pj-app { animation: none !important; transition: none; } }
     @keyframes pj-blink { 50% { opacity: 0; } }
     @keyframes pj-glitch {
       0%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0); }
@@ -326,7 +307,7 @@ const LaunchButton = ({ site, live, onLaunch }) => (
 // PROJECT CARD — staggered wipe-in, 3D tilt, cursor spotlight
 // ============================================================================
 
-const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
+const ProjectCard = ({ site, index, reduced, onPreview, onLaunch, flash }) => {
   const [revealRef, inView] = useInViewOnce(0.15);
   const cardRef = useRef(null);
   const host = hostOf(site.url);
@@ -361,7 +342,8 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
   return (
     <div
       ref={revealRef}
-      className={`relative ${site.featured ? 'md:col-span-2 xl:col-span-4' : ''}`}
+      id={`project-${slugOf(site.name)}`}
+      className={`relative scroll-mt-28 ${site.featured ? 'md:col-span-2 xl:col-span-4' : ''}`}
       style={{
         opacity: shown ? 1 : 0,
         transform: shown ? 'none' : 'translateY(40px)',
@@ -382,7 +364,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
         ref={cardRef}
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
-        className={`group relative h-full flex flex-col overflow-hidden rounded-md border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md shadow-lg transition-[transform,box-shadow,border-color] duration-200 ease-out hover:border-[color:var(--acc-line)] hover:shadow-[0_25px_50px_-12px_var(--acc-glow)] ${
+        className={`${flash ? 'pj-flash ' : ''}group relative h-full flex flex-col overflow-hidden rounded-md border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md shadow-lg transition-[transform,box-shadow,border-color] duration-200 ease-out hover:border-[color:var(--acc-line)] hover:shadow-[0_25px_50px_-12px_var(--acc-glow)] ${
           site.featured ? 'lg:grid lg:grid-cols-[1.25fr_1fr]' : ''
         }`}
       >
@@ -428,13 +410,23 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
               Live
             </span>
           )}
-          <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 text-left">
-            <p className="pj-hi text-[0.625rem] font-black uppercase tracking-[0.25em] mb-1 drop-shadow">
-              {site.tag}
-            </p>
-            <h4 className="pj-white text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
-              {site.name}
-            </h4>
+          <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 flex items-end gap-3 sm:gap-4 text-left">
+            {site.logo && (
+              <AppIcon
+                src={site.logo}
+                name={site.name}
+                size={site.featured ? 72 : 52}
+                className="transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="pj-hi text-[0.625rem] font-black uppercase tracking-[0.25em] mb-1 drop-shadow">
+                {site.tag}
+              </p>
+              <h4 className="pj-white text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
+                {site.name}
+              </h4>
+            </div>
           </div>
         </button>
 
@@ -946,101 +938,45 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
 };
 
 // ============================================================================
-// POSTER STACK — fans out from a single pile when scrolled into view
+// APP DOCK — the projects as an iOS-style home screen; tap one to jump to it
 // ============================================================================
 
-const PosterStack = ({ items, reduced, onPreview }) => {
-  const [hoveredIdx, setHoveredIdx] = useState(null);
-  const [ref, inView] = useInViewOnce(0.25);
-  const [settled, setSettled] = useState(false);
-  const shown = inView || reduced;
-  const mid = (items.length - 1) / 2;
-
-  useEffect(() => {
-    if (!shown) return undefined;
-    const t = setTimeout(() => setSettled(true), items.length * 90 + 900);
-    return () => clearTimeout(t);
-  }, [shown, items.length]);
-
-  return (
-    <div ref={ref} className="flex flex-col items-center gap-6 sm:gap-8 select-none">
-      <div className="relative w-[17.5rem] h-[25rem] sm:w-[21.25rem] sm:h-[30rem] md:w-[25rem] md:h-[35rem]">
-        {items.map((poster, idx) => {
-          const offset = idx - mid;
-          const isHovered = hoveredIdx === idx;
-          const piled = `translateX(0px) translateY(70px) rotate(${offset * 2}deg) scale(0.9)`;
-          const fanned = `translateX(${offset * 92}px) translateY(${Math.abs(offset) * 22}px) rotate(${offset * 7}deg)`;
-          const lifted = `translateX(${offset * 92}px) translateY(-36px) rotate(0deg) scale(1.06)`;
-
-          return (
-            <div
-              key={poster.name}
-              onMouseEnter={() => setHoveredIdx(idx)}
-              onMouseLeave={() => setHoveredIdx((cur) => (cur === idx ? null : cur))}
-              onClick={() => onPreview(poster, idx)}
-              role="button"
-              tabIndex={0}
-              aria-label={`Preview ${poster.name}`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onPreview(poster, idx);
-                }
-              }}
-              onFocus={() => setHoveredIdx(idx)}
-              onBlur={() => setHoveredIdx((cur) => (cur === idx ? null : cur))}
-              style={{
-                transform: !shown ? piled : isHovered ? lifted : fanned,
-                opacity: shown ? 1 : 0,
-                zIndex: isHovered ? 100 : items.length - Math.abs(offset),
-                transitionProperty: 'transform, opacity, box-shadow, border-color',
-                transitionDuration: settled ? '400ms' : '900ms',
-                transitionTimingFunction: settled ? 'ease-out' : 'cubic-bezier(0.34,1.56,0.64,1)',
-                transitionDelay: shown && !settled && !reduced ? `${idx * 90}ms` : '0ms',
-              }}
-              className={`group/poster absolute top-0 left-1/2 -ml-[8.75rem] sm:-ml-[10.625rem] md:-ml-[12.5rem] w-[17.5rem] h-[25rem] sm:w-[21.25rem] sm:h-[30rem] md:w-[25rem] md:h-[35rem] overflow-hidden rounded-md border-2 cursor-pointer outline-none ${
-                isHovered
-                  ? 'shadow-[0_35px_60px_rgba(0,0,0,0.55)] border-[color:var(--acc)]'
-                  : 'shadow-[0_15px_30px_rgba(0,0,0,0.35)] border-[color:var(--acc-line)]'
-              }`}
-            >
-              <RevealImage src={poster.image} alt={poster.name} active={shown} />
-              <div
-                className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/85 to-transparent transition-all duration-300"
-                style={{ opacity: isHovered ? 1 : 0, transform: isHovered ? 'none' : 'translateY(12px)' }}
-              >
-                <p className="pj-hi text-[0.5625rem] font-black uppercase tracking-[0.25em]">{poster.tag}</p>
-                <p className="pj-white text-base font-black leading-tight">{poster.name}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-10 sm:mt-14 flex items-center gap-2 text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.2em] opacity-50 text-[color:var(--ink)]">
-        <MousePointerClick size={12} /> Hover a poster to lift it out · Click for the full view
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// POSTER CAROUSEL CARD (mobile)
-// ============================================================================
-
-const PosterCarouselCard = ({ poster, onPreview }) => (
-  <button
-    onClick={onPreview}
-    aria-label={`Preview ${poster.name}`}
-    className="relative w-full aspect-[3/4] rounded-md overflow-hidden border-2 border-[color:var(--acc-line)] shadow-[0_15px_30px_rgba(0,0,0,0.35)] block text-left outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]"
+const AppDock = ({ sites, reduced, shown, onPick }) => (
+  <div
+    className="pj-dock relative inline-flex flex-wrap justify-center sm:justify-start gap-x-5 gap-y-4 sm:gap-x-7 px-5 sm:px-7 pt-5 pb-4 rounded-[1.75rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-xl shadow-[0_24px_50px_-28px_rgba(0,0,0,0.6)]"
+    role="list"
+    aria-label="My apps"
   >
-    <RevealImage src={poster.image} alt={poster.name} />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-    <div className="absolute bottom-4 left-4 right-4">
-      <p className="pj-hi text-[0.5625rem] font-black uppercase tracking-[0.25em] mb-1">{poster.tag}</p>
-      <h4 className="pj-white text-lg font-black tracking-tight leading-tight">{poster.name}</h4>
-    </div>
-  </button>
+    {sites.map((site, i) => {
+      const live = !!hostOf(site.url);
+      return (
+        <button
+          key={site.name}
+          role="listitem"
+          onClick={() => onPick(site)}
+          aria-label={`Jump to ${site.name}`}
+          className="pj-app cursor-target group flex flex-col items-center gap-2 w-[4.5rem] sm:w-[5.25rem] outline-none"
+          style={reduced || !shown ? { opacity: shown ? 1 : 0 } : { animation: `pj-pop 600ms cubic-bezier(.3,1.4,.5,1) ${300 + i * 90}ms both` }}
+        >
+          <span className="pj-app-icon relative block">
+            <AppIcon src={site.logo} name={site.name} size={64} className="sm:!w-[4.75rem] sm:!h-[4.75rem]" />
+            {live && (
+              <span
+                className="absolute -top-1.5 -right-1.5 min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full bg-[#34C759] border-2 flex items-center justify-center"
+                style={{ borderColor: 'var(--surface-strong)' }}
+                title="Live"
+              >
+                <span className="pj-white text-[0.5rem] font-black uppercase tracking-wider">live</span>
+              </span>
+            )}
+          </span>
+          <span className="text-[0.6875rem] sm:text-xs font-semibold leading-tight text-center w-full opacity-85 line-clamp-2">
+            {site.name}
+          </span>
+        </button>
+      );
+    })}
+  </div>
 );
 
 // ============================================================================
@@ -1150,9 +1086,18 @@ const Project = ({ darkMode = true }) => {
   const headerShown = headerIn || reduced;
 
   const liveCount = websites.filter((s) => hostOf(s.url)).length;
+  const [flashed, setFlashed] = useState(null);
+  const flashTimer = useRef(0);
+  useEffect(() => () => clearTimeout(flashTimer.current), []);
+  const jumpTo = (site) => {
+    document.getElementById(`project-${slugOf(site.name)}`)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    clearTimeout(flashTimer.current);
+    setFlashed(null);
+    requestAnimationFrame(() => setFlashed(site.name));
+    flashTimer.current = setTimeout(() => setFlashed(null), 2600);
+  };
 
   const openWebsite = (site) => setActive({ item: site, list: null, index: null });
-  const openPoster = (poster, index) => setActive({ item: poster, list: posters, index });
   const closeLightbox = useCallback(() => setActive(null), []);
   const navigate = useCallback((dir) => {
     setActive((prev) => {
@@ -1224,13 +1169,13 @@ const Project = ({ darkMode = true }) => {
             (all live — go click &apos;em!)
           </HandNote>
           <p style={headerStep(2)} className="text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
-            Live, deployed apps — from an AI productivity coach and an AI screenshot sorter to a community map and a retro chess game — plus
-            the print design work behind my eye for UI.
+            Live, deployed apps — from an AI productivity coach and an AI screenshot sorter to a community map and a
+            retro chess game. Tap an app to jump to it.
           </p>
           <div style={headerStep(3)} className="flex flex-wrap gap-3">
             {[
               `${String(liveCount).padStart(2, '0')} live apps`,
-              `${String(posters.length).padStart(2, '0')} poster designs`,
+              `${String(websites.length).padStart(2, '0')} apps built`,
               'Deployed on Vercel',
             ].map((label) => (
               <span
@@ -1240,6 +1185,9 @@ const Project = ({ darkMode = true }) => {
                 {label}
               </span>
             ))}
+          </div>
+          <div style={headerStep(4)} className="pt-2 sm:pt-4">
+            <AppDock sites={websites} reduced={reduced} shown={headerShown} onPick={jumpTo} />
           </div>
         </header>
 
@@ -1259,37 +1207,12 @@ const Project = ({ darkMode = true }) => {
                 reduced={reduced}
                 onPreview={openWebsite}
                 onLaunch={start}
+                flash={flashed === site.name}
               />
             ))}
           </div>
         </section>
 
-        {/* ================= POSTER DESIGN ================= */}
-        <section>
-          <SectionEyebrow label="Poster Design" icon={<Layers size={16} />} />
-          <div className="flex items-center gap-2 -mt-3 mb-4">
-            <HandNote className="text-2xl" rot={-3}>
-              my other hobby — print design
-            </HandNote>
-            <Doodle type="arrowDown" className="w-6 h-9" delay={0.4} />
-          </div>
-          <p className="text-sm sm:text-base opacity-65 max-w-2xl mb-8 sm:mb-10">
-            A fanned cascade of print work — hover any poster to lift it clear of the rest, and click it for the full
-            view.
-          </p>
-          <div className="sm:hidden py-6">
-            <Carousel
-              items={posters}
-              darkMode={darkMode}
-              renderItem={(poster, idx) => (
-                <PosterCarouselCard poster={poster} onPreview={() => openPoster(poster, idx)} />
-              )}
-            />
-          </div>
-          <div className="hidden sm:flex justify-center py-10 sm:py-16">
-            <PosterStack items={posters} reduced={reduced} onPreview={openPoster} />
-          </div>
-        </section>
       </div>
     </div>
   );

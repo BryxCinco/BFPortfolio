@@ -16,6 +16,12 @@ import tideImg from './assets/Tide.png';
 import poopipooImg from './assets/Poopipoo.png';
 import neoChessImg from './assets/NeoChessXD.png';
 import snapzyImg from './assets/Snapzy.png';
+import tideLogo from './assets/logos/tide.png';
+import poopipooLogo from './assets/logos/poopipoo.png';
+import neoChessLogo from './assets/logos/neochess.svg';
+import snapzyLogo from './assets/logos/snapzy.png';
+import sweepLogo from './assets/logos/sweepxpress.svg';
+import AppIcon from './AppIcon';
 import sweepImg from './assets/SweepXpress.png';
 
 // ============================================================================
@@ -90,11 +96,11 @@ const TOOLS = [
 ];
 
 const WORK = [
-  { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
-  { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
-  { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
-  { name: 'Snapzy', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
-  { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, rot: 1.6 },
+  { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, logo: tideLogo, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
+  { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
+  { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
+  { name: 'Snapzy', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
+  { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, logo: sweepLogo, rot: 1.6 },
 ];
 
 const FACTS = [
@@ -540,7 +546,14 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
                   <ArrowUpRight size={16} className="text-[#1B1B2A]" />
                 </span>
               </div>
-              <div className="px-3 pt-5 pb-4 space-y-1.5">
+              <div className="px-3 pt-2 pb-4 space-y-1.5">
+                <AppIcon
+                  src={w.logo}
+                  name={w.name}
+                  size={54}
+                  className="relative -mt-9 mb-1 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110"
+                  style={{ outline: '3px solid var(--surface-strong)' }}
+                />
                 <div className="flex items-center justify-between gap-2">
                   <p className="hm-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{w.tag}</p>
                   {w.url && (
