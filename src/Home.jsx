@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useReducedMotion, useMotionValue, useSpring, animate } from 'framer-motion';
-import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, MousePointer2 } from 'lucide-react';
+import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, MousePointer2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { getPalette, cssVars } from './theme';
 import { CertificationsPreview } from './Certifications';
@@ -96,10 +96,10 @@ const TOOLS = [
 ];
 
 const WORK = [
-  { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, logo: tideLogo, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
-  { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
-  { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
-  { name: 'Snapzy', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
+  { name: 'TIDE', badge: 'My fave · AI productivity', title: 'Productivity Coach', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, logo: tideLogo, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
+  { name: 'Poopipoo', badge: 'Community map app', title: 'Toilet Finder', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
+  { name: 'Neo Chess XD', badge: '8-bit chess game', title: 'Retro Chess', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
+  { name: 'Snapzy', badge: 'AI photo organizer', title: 'Screenshot Sorter', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
   { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, logo: sweepLogo, rot: 1.6 },
 ];
 
@@ -253,6 +253,187 @@ const SectionHead = ({ title, note, noteRot = -3, children }) => (
     {children}
   </div>
 );
+
+// ============================================================================
+// WORK FAN — three app cards fanned out like a hand of cards; the front one
+// is in focus, the side ones tilt away. Click a side card (or the arrows,
+// or swipe) to bring it forward; it also drifts on its own until hovered.
+// ============================================================================
+
+const FAN = WORK.filter((w) => w.url);
+
+const WebBadge = ({ url, name }) => (
+  <a
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    onClick={(e) => e.stopPropagation()}
+    aria-label={`Open ${name} on the web`}
+    className="cursor-target inline-flex items-center gap-2.5 pl-3 pr-5 py-2 rounded-xl bg-black border border-white/20 shadow-md transition-transform hover:-translate-y-0.5 active:scale-95"
+  >
+    <Globe size={24} className="text-white" />
+    <span className="leading-none text-left">
+      <span className="hm-white block text-[0.5625rem] font-semibold tracking-wide">Try it live on the</span>
+      <span className="hm-white block text-lg font-bold tracking-tight -mt-0.5">Web</span>
+    </span>
+  </a>
+);
+
+const FanCard = ({ w, front, darkMode, onDetails }) => (
+  <div
+    className={`relative rounded-[1.75rem] border p-6 sm:p-8 text-left transition-shadow duration-500 ${
+      front ? 'shadow-[0_40px_80px_-30px_rgba(0,0,0,0.55)]' : 'shadow-[0_20px_40px_-25px_rgba(0,0,0,0.45)]'
+    }`}
+    style={{ background: darkMode ? '#181826' : '#FFFFFF', borderColor: 'var(--line)' }}
+  >
+    <div
+      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-mono text-[0.625rem] sm:text-[0.6875rem] font-bold uppercase tracking-[0.14em] transition-colors"
+      style={{
+        background: front ? (darkMode ? 'var(--acc)' : '#111111') : '#6B6B76',
+        color: front && darkMode ? 'var(--acc-ink)' : '#FFFFFF',
+      }}
+    >
+      ❰ {w.badge} ❱
+    </div>
+
+    <div className="mt-5 flex items-center gap-4 sm:gap-5">
+      <AppIcon src={w.logo} name={w.name} size={72} className="sm:!w-[5.25rem] sm:!h-[5.25rem]" />
+      <h3 className="hm-ink font-mono text-xl sm:text-2xl leading-tight">
+        {w.name} <span className="hm-inherit opacity-50">—</span> {w.title}
+      </h3>
+    </div>
+
+    <p className="hm-ink mt-4 text-base sm:text-lg leading-relaxed opacity-70">{w.line}</p>
+
+    <div className="mt-5 flex flex-wrap items-center gap-3">
+      <WebBadge url={w.url} name={w.name} />
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDetails();
+        }}
+        className="cursor-target inline-flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[color:var(--line)] text-[0.6875rem] font-black uppercase tracking-widest transition-colors hover:border-[color:var(--acc)]"
+        style={{ color: 'var(--ink)' }}
+      >
+        Details <ArrowUpRight size={13} />
+      </button>
+    </div>
+  </div>
+);
+
+const WorkFan = ({ reduced, darkMode, onDetails }) => {
+  const n = FAN.length;
+  const [front, setFront] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
+
+  useEffect(() => {
+    const onResize = () => setWide(window.innerWidth >= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // drift to the next app every few seconds while nobody is interacting
+  useEffect(() => {
+    if (reduced || paused) return undefined;
+    const t = setInterval(() => setFront((v) => (v + 1) % n), 5200);
+    return () => clearInterval(t);
+  }, [reduced, paused, n]);
+
+  const step = (dir) => setFront((v) => (v + dir + n) % n);
+  const spread = wide ? 56 : 18; // how far the side cards sit, in % of a card's width
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+    >
+      <div className="relative overflow-x-clip -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="relative h-[29rem] sm:h-[27rem] max-w-6xl mx-auto">
+          {FAN.map((w, k) => {
+            let o = (((k - front) % n) + n) % n;
+            if (o > n / 2) o -= n;
+            const hidden = Math.abs(o) > 1;
+            const isFront = o === 0;
+            return (
+              <motion.div
+                key={w.name}
+                role={isFront ? undefined : 'button'}
+                tabIndex={hidden || isFront ? -1 : 0}
+                aria-label={isFront ? undefined : `Show ${w.name}`}
+                onClick={() => !isFront && !hidden && setFront(k)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !isFront && setFront(k)}
+                drag={isFront && !reduced ? 'x' : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.35}
+                onDragEnd={(_, info) => {
+                  if (info.offset.x < -60) step(1);
+                  else if (info.offset.x > 60) step(-1);
+                }}
+                className={`absolute left-1/2 top-6 w-[min(86vw,31rem)] ${isFront ? 'cursor-grab active:cursor-grabbing' : 'cursor-target cursor-pointer'}`}
+                initial={false}
+                animate={{
+                  x: `${-50 + o * spread}%`,
+                  y: isFront ? 0 : 42,
+                  rotate: o * 8,
+                  scale: isFront ? 1 : 0.9,
+                  opacity: hidden ? 0 : 1,
+                  filter: isFront ? 'grayscale(0) brightness(1)' : 'grayscale(0.85) brightness(0.96)',
+                }}
+                transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 22 }}
+                style={{ zIndex: isFront ? 30 : hidden ? 0 : 10, pointerEvents: hidden ? 'none' : 'auto', transformOrigin: '50% 100%' }}
+              >
+                <FanCard w={w} front={isFront} darkMode={darkMode} onDetails={onDetails} />
+                {w.note && isFront && (
+                  <span
+                    className="hm-hand absolute -top-3 -right-3 px-3 py-0.5 rounded-md text-xl shadow-md"
+                    style={{ background: '#FFB8D9', transform: 'rotate(7deg)' }}
+                  >
+                    <span className="hm-dark">{w.note}</span>
+                  </span>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-center gap-4">
+        <button
+          onClick={() => step(-1)}
+          aria-label="Previous app"
+          className="cursor-target w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-colors hover:border-[color:var(--acc)]"
+          style={{ color: 'var(--ink)' }}
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <div className="flex items-center gap-2">
+          {FAN.map((w, k) => (
+            <button
+              key={w.name}
+              onClick={() => setFront(k)}
+              aria-label={`Show ${w.name}`}
+              aria-current={k === front}
+              className="h-2 rounded-full transition-all duration-300"
+              style={{ width: k === front ? 28 : 8, background: k === front ? 'var(--acc)' : 'var(--line)' }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => step(1)}
+          aria-label="Next app"
+          className="cursor-target w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-colors hover:border-[color:var(--acc)]"
+          style={{ color: 'var(--ink)' }}
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // ============================================================================
 // MAIN
@@ -511,72 +692,20 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
       </section>
 
       {/* ================= SELECTED WORK ================= */}
-      <section className="space-y-10">
-        <motion.div {...reveal(0)}>
-          <SectionHead title="Things I've made." note="(click one!)" noteRot={-5}>
-            <button
-              onClick={() => go('projects')}
-              className="cursor-target group inline-flex items-center gap-2 text-[0.6875rem] font-black uppercase tracking-widest"
-              style={{ color: 'var(--acc)' }}
-            >
-              View all projects <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </button>
-          </SectionHead>
+      <section className="space-y-6">
+        <motion.div {...reveal(0)} className="flex items-center justify-between gap-4">
+          <p className="hm-ink font-mono text-base sm:text-xl opacity-45">02 — projects</p>
+          <button
+            onClick={() => go('projects')}
+            className="cursor-target group inline-flex items-center gap-2 font-mono text-sm sm:text-base uppercase tracking-[0.12em]"
+            style={{ color: 'var(--ink)' }}
+          >
+            All projects <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+          </button>
         </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 sm:gap-6">
-          {WORK.map((w, i) => (
-            <motion.button
-              key={w.name}
-              {...reveal(i * 0.08, 40)}
-              onClick={() => (w.url ? window.open(w.url, '_blank', 'noopener,noreferrer') : go('projects'))}
-              aria-label={w.url ? `Open ${w.name} live site` : `See ${w.name} in projects`}
-              whileHover={reduced ? undefined : { rotate: 0, y: -8 }}
-              className="cursor-target group relative text-left rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] p-3 shadow-[0_20px_40px_-25px_rgba(0,0,0,0.5)]"
-              style={{ rotate: reduced ? 0 : w.rot }}
-            >
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-200">
-                <img
-                  src={w.img}
-                  alt={`${w.name} screenshot`}
-                  loading="lazy"
-                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
-                />
-                <span className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all">
-                  <ArrowUpRight size={16} className="text-[#1B1B2A]" />
-                </span>
-              </div>
-              <div className="px-3 pt-2 pb-4 space-y-1.5">
-                <AppIcon
-                  src={w.logo}
-                  name={w.name}
-                  size={54}
-                  className="relative -mt-9 mb-1 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110"
-                  style={{ outline: '3px solid var(--surface-strong)' }}
-                />
-                <div className="flex items-center justify-between gap-2">
-                  <p className="hm-acc text-[0.625rem] font-black uppercase tracking-[0.2em]">{w.tag}</p>
-                  {w.url && (
-                    <span className="flex items-center gap-1.5 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00C48C]" />
-                      <span className="hm-ink text-[0.5625rem] font-black uppercase tracking-widest opacity-70">Live</span>
-                    </span>
-                  )}
-                </div>
-                <h3 className="hm-ink text-xl font-black tracking-tight">{w.name}</h3>
-                <p className="hm-ink text-sm opacity-65 leading-snug">{w.line}</p>
-              </div>
-              {w.note && (
-                <span
-                  className="hm-hand absolute -top-5 -left-3 px-3 py-0.5 rounded-md text-xl shadow-md"
-                  style={{ background: '#FFB8D9', transform: 'rotate(-8deg)' }}
-                >
-                  <span className="hm-dark">{w.note}</span>
-                </span>
-              )}
-            </motion.button>
-          ))}
-        </div>
+        <motion.div {...reveal(0.1, 40)}>
+          <WorkFan reduced={reduced} darkMode={darkMode} onDetails={() => go('projects')} />
+        </motion.div>
       </section>
 
       {/* ================= CERTIFICATIONS ================= */}
