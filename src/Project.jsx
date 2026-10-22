@@ -17,6 +17,7 @@ import { HandStyles, HandNote, Doodle, Tape, StickyNote } from './HandTouch';
 import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
 import neoChessSite from './assets/NeoChessXD.png';
+import snapzySite from './assets/Snapzy.png';
 import sweepXpressSite from './assets/SweepXpress.png';
 
 import adventurePoster from './assets/Keep On Keeping On.png';
@@ -75,6 +76,21 @@ const websites = [
     image: neoChessSite,
     url: 'https://neo-chess-xd.vercel.app/',
     note: 'try beating the CPU',
+  },
+  {
+    name: 'Snapzy',
+    subtitle: 'AI Screenshot Sorter',
+    tag: 'AI Photo Organizer',
+    desc: 'Your camera roll, curated like art. Drop in your screenshots and Snapzy reads, summarizes and sorts every one — receipts, WiFi passwords, boarding passes and memes each land on their own wall.',
+    highlights: [
+      'OCR pulls the text out of every screenshot, ready to copy in one tap',
+      'AI sorts pictures into albums you can rename, recolor and create',
+      'Search by what is inside a picture, not by its file name',
+    ],
+    stack: ['Next.js', 'Tailwind', 'AI Integration', 'Vercel'],
+    image: snapzySite,
+    url: 'https://snapzy-tau.vercel.app/',
+    note: 'bye, messy camera roll ✿',
   },
   {
     name: 'SweepXpress',
@@ -316,7 +332,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
   const host = hostOf(site.url);
   const live = !!host;
   const shown = inView || reduced;
-  const baseDelay = site.featured ? 0 : (index % 3) * 120;
+  const baseDelay = site.featured ? 0 : (index % 4) * 120;
 
   const handleMove = (e) => {
     if (reduced || e.pointerType !== 'mouse') return;
@@ -345,7 +361,7 @@ const ProjectCard = ({ site, index, reduced, onPreview, onLaunch }) => {
   return (
     <div
       ref={revealRef}
-      className={`relative ${site.featured ? 'md:col-span-2 xl:col-span-3' : ''}`}
+      className={`relative ${site.featured ? 'md:col-span-2 xl:col-span-4' : ''}`}
       style={{
         opacity: shown ? 1 : 0,
         transform: shown ? 'none' : 'translateY(40px)',
@@ -1208,7 +1224,7 @@ const Project = ({ darkMode = true }) => {
             (all live — go click &apos;em!)
           </HandNote>
           <p style={headerStep(2)} className="text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
-            Live, deployed apps — from an AI productivity coach to a community map and a retro chess game — plus
+            Live, deployed apps — from an AI productivity coach and an AI screenshot sorter to a community map and a retro chess game — plus
             the print design work behind my eye for UI.
           </p>
           <div style={headerStep(3)} className="flex flex-wrap gap-3">
@@ -1234,7 +1250,7 @@ const Project = ({ darkMode = true }) => {
             Click a screenshot for a closer look, or hit <span className="pj-acc font-black">Launch Site</span> to
             warp straight into the live app.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8">
             {websites.map((site, idx) => (
               <ProjectCard
                 key={site.name}

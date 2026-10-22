@@ -15,6 +15,7 @@ import brian6 from './assets/Brian6.png';
 import tideImg from './assets/Tide.png';
 import poopipooImg from './assets/Poopipoo.png';
 import neoChessImg from './assets/NeoChessXD.png';
+import snapzyImg from './assets/Snapzy.png';
 import sweepImg from './assets/SweepXpress.png';
 
 // ============================================================================
@@ -70,7 +71,7 @@ const STICKERS = [
   { label: '⭐ 1.25 GWA', bg: '#FFE873', rot: -8, pos: { left: '-8%', top: '8%' } },
   { label: '🎓 BSIT grad', bg: '#FFB8D9', rot: 6, pos: { right: '-10%', top: '22%' } },
   { label: '💼 Intern @ Grandline', bg: '#B8FFE4', rot: -4, pos: { left: '-12%', bottom: '24%' } },
-  { label: '🚀 3 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-6%', bottom: '8%' } },
+  { label: '🚀 4 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-6%', bottom: '8%' } },
 ];
 
 const TOOLS = [
@@ -92,6 +93,7 @@ const WORK = [
   { name: 'TIDE', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
   { name: 'Poopipoo', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
   { name: 'Neo Chess XD', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
+  { name: 'Snapzy', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
   { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, rot: 1.6 },
 ];
 
@@ -104,7 +106,7 @@ const FACTS = [
 
 const NOW = [
   { emoji: '💼', text: 'Interning at Grandline Maritime' },
-  { emoji: '🚀', text: 'Shipping TIDE, Poopipoo & Neo Chess XD' },
+  { emoji: '🚀', text: 'Shipping TIDE, Poopipoo, Neo Chess XD & Snapzy' },
   { emoji: '📜', text: 'Collecting certificates — 32 and counting' },
 ];
 
@@ -516,7 +518,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </SectionHead>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 sm:gap-6">
           {WORK.map((w, i) => (
             <motion.button
               key={w.name}

@@ -179,7 +179,7 @@ const INTENTS = [
   {
     test: (q) => has(q, 'hire you', 'why should (we|i) hire'),
     reply: () => ({
-      text: "Brian builds fast, responsive and reliable apps that solve real problems. He works across the whole stack, from friendly interfaces to secure backends, and he cares about shipping things people actually enjoy using — three of his apps are live right now.",
+      text: "Brian builds fast, responsive and reliable apps that solve real problems. He works across the whole stack, from friendly interfaces to secure backends, and he cares about shipping things people actually enjoy using — four of his apps are live right now.",
       attach: { type: 'projects' },
       chips: ['What is your tech stack?', 'How can I contact Brian?'],
     }),

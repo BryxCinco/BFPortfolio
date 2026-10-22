@@ -49,7 +49,7 @@ const experiences = [
     role: 'Full-Stack Developer (Solo Projects)',
     company: 'Personal & Academic Work',
     period: '2025 - 2026',
-    desc: 'Built and deployed TIDE, Poopipoo, and Neo Chess XD — plus e-commerce and logistics systems like SweepXpress.',
+    desc: 'Built and deployed TIDE, Poopipoo, Neo Chess XD and Snapzy — plus e-commerce and logistics systems like SweepXpress.',
     skills: ['React', 'Next.js', 'Expo'],
   },
 ];
