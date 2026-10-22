@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, useReducedMotion, useMotionValue, useSpring, animate } from 'framer-motion';
 import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, MousePointer2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -23,6 +23,7 @@ import snapzyLogo from './assets/logos/snapzy.png';
 import sweepLogo from './assets/logos/sweepxpress.svg';
 import AppIcon from './AppIcon';
 import { launchSite } from './WarpHost';
+import { websites, ProjectStyles, ProjectDetails } from './Project';
 import sweepImg from './assets/SweepXpress.png';
 
 // ============================================================================
@@ -317,7 +318,7 @@ const FanCard = ({ w, front, darkMode, onDetails }) => (
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onDetails();
+          onDetails(w.name);
         }}
         className="cursor-target inline-flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[color:var(--line)] text-[0.6875rem] font-black uppercase tracking-widest transition-colors hover:border-[color:var(--acc)]"
         style={{ color: 'var(--ink)' }}
@@ -470,6 +471,15 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
         };
 
   const go = (id) => onNavigate?.(id);
+
+  // the same App-Store-style details sheet as the Projects page
+  const [detailsSite, setDetailsSite] = useState(null);
+  const openDetails = (name) => setDetailsSite(websites.find((s) => s.name === name) ?? null);
+  const closeDetails = useCallback(() => setDetailsSite(null), []);
+  const launchFromDetails = (site, e) => {
+    setDetailsSite(null);
+    launchSite(site.name, e);
+  };
 
   return (
     <div className="hm-scope space-y-28 sm:space-y-36 pb-10" style={vars}>
@@ -711,8 +721,14 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </button>
         </motion.div>
         <motion.div {...reveal(0.1, 40)}>
-          <WorkFan reduced={reduced} darkMode={darkMode} onDetails={() => go('projects')} />
+          <WorkFan reduced={reduced} darkMode={darkMode} onDetails={openDetails} />
         </motion.div>
+        {detailsSite && (
+          <div className="pj-scope" style={cssVars(getPalette(darkMode))}>
+            <ProjectStyles />
+            <ProjectDetails site={detailsSite} darkMode={darkMode} onClose={closeDetails} onLaunch={launchFromDetails} />
+          </div>
+        )}
       </section>
 
       {/* ================= CERTIFICATIONS ================= */}
