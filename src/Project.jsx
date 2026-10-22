@@ -7,10 +7,14 @@ import {
   ArrowUpRight,
   Rocket,
   Zap,
+  Check,
+  Monitor,
+  Smartphone,
+  Info,
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
-import { HandStyles, HandNote, Doodle, Tape, StickyNote } from './HandTouch';
+import { HandStyles, HandNote, Doodle, StickyNote } from './HandTouch';
 import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
 import neoChessSite from './assets/NeoChessXD.png';
@@ -28,6 +32,16 @@ import AppIcon from './AppIcon';
 // DATA
 // ============================================================================
 
+const slugOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+// screenshots captured from each live site (desktop + phone)
+const SHOT_FILES = import.meta.glob('./assets/shots/*.jpg', { eager: true, import: 'default' });
+const caption = (key) => key.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).replace(/^Fx /, 'FX ');
+const shotsFor = (app, desktop, mobile) => ({
+  desktop: desktop.map((k) => ({ src: SHOT_FILES[`./assets/shots/${app}-d-${k}.jpg`], caption: caption(k) })),
+  mobile: mobile.map((k) => ({ src: SHOT_FILES[`./assets/shots/${app}-m-${k}.jpg`], caption: caption(k) })),
+});
+
 const websites = [
   {
     name: 'TIDE',
@@ -42,6 +56,7 @@ const websites = [
     stack: ['React Native', 'Expo', 'AI Integration', 'Vercel'],
     image: tideSite,
     logo: tideLogo,
+    shots: shotsFor('tide', ['dashboard', 'timer', 'tasks', 'journal'], ['dashboard', 'timer']),
     url: 'https://tide-rust.vercel.app/',
     featured: true,
     note: 'my fave ♥',
@@ -59,6 +74,7 @@ const websites = [
     stack: ['Next.js', 'React', 'OpenStreetMap', 'Vercel'],
     image: poopipooSite,
     logo: poopipooLogo,
+    shots: shotsFor('poopipoo', ['map', 'list', 'welcome'], ['map', 'list', 'welcome']),
     url: 'https://poopipoo.vercel.app/',
     note: "yes, it's real 😂",
   },
@@ -75,6 +91,7 @@ const websites = [
     stack: ['React', 'Vite', 'JavaScript', 'Vercel'],
     image: neoChessSite,
     logo: neoChessLogo,
+    shots: shotsFor('neochess', ['start', 'board', 'fx-gallery'], ['start', 'board', 'fx-gallery']),
     url: 'https://neo-chess-xd.vercel.app/',
     note: 'try beating the CPU',
   },
@@ -91,6 +108,7 @@ const websites = [
     stack: ['Next.js', 'Tailwind', 'AI Integration', 'Vercel'],
     image: snapzySite,
     logo: snapzyLogo,
+    shots: shotsFor('snapzy', ['home', 'login'], ['home', 'features', 'login']),
     url: 'https://snapzy-tau.vercel.app/',
     note: 'bye, messy camera roll ✿',
   },
@@ -106,6 +124,7 @@ const websites = [
     stack: ['PHP', 'MySQL', 'Tailwind'],
     image: sweepXpressSite,
     logo: sweepXpressLogo,
+    shots: { desktop: [{ src: sweepXpressSite, caption: 'Admin Sign-in' }], mobile: [] },
     url: '#',
     note: 'demo coming soon…',
   },
@@ -119,7 +138,6 @@ const hostOf = (url) => {
   }
 };
 
-const slugOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 // ============================================================================
 // STYLES
@@ -138,6 +156,9 @@ const ProjectStyles = () => (
     .pj-dock:hover .pj-app:not(:hover) .pj-app-icon { animation: pj-jiggle 0.16s ease-in-out infinite alternate; }
     .pj-dock .pj-app:nth-child(even) .pj-app-icon { animation-delay: -0.08s; }
     .pj-flash { animation: pj-flash 1.2s ease-out 2; }
+    @keyframes pj-sheet { from { opacity: 0; transform: translateY(40px) scale(0.98); } to { opacity: 1; transform: none; } }
+    .pj-sheet { animation: pj-sheet 450ms cubic-bezier(0.22,1,0.36,1) both; }
+    @media (prefers-reduced-motion: reduce) { .pj-sheet { animation: none; } }
     @media (prefers-reduced-motion: reduce) { .pj-dock .pj-app-icon, .pj-app { animation: none !important; transition: none; } }
     @keyframes pj-blink { 50% { opacity: 0; } }
     @keyframes pj-glitch {
@@ -304,171 +325,162 @@ const LaunchButton = ({ site, live, onLaunch }) => (
 );
 
 // ============================================================================
-// PROJECT CARD — staggered wipe-in, 3D tilt, cursor spotlight
+// PROJECT ROW — one roomy row per app: big icon + story on one side, a
+// browser-and-phone showcase of real screenshots on the other (sides
+// alternate). Everything opens the App-Store-style details sheet.
 // ============================================================================
 
-const ProjectCard = ({ site, index, reduced, onPreview, onLaunch, flash }) => {
-  const [revealRef, inView] = useInViewOnce(0.15);
-  const cardRef = useRef(null);
+const BrowserFrame = ({ src, host, alt, active }) => (
+  <div className="relative rounded-2xl overflow-hidden border border-[color:var(--line)] bg-[#0d0d16] shadow-[0_30px_60px_-25px_rgba(0,0,0,0.6)]">
+    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#16161f] border-b border-white/5">
+      <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
+      <span className="ml-3 flex-1 min-w-0 rounded-md bg-white/5 px-3 py-1 text-[0.625rem] font-mono pj-white opacity-60 truncate">
+        {host || 'coming soon'}
+      </span>
+    </div>
+    <div className="relative aspect-[16/10]">
+      <RevealImage src={src} alt={alt} active={active} imgClassName="object-top" />
+    </div>
+  </div>
+);
+
+const PhoneFrame = ({ src, alt, className = 'relative' }) => (
+  <div
+    className={`aspect-[390/844] rounded-[1.6rem] sm:rounded-[2rem] p-[5px] bg-gradient-to-b from-[#3a3a46] to-[#15151c] shadow-[0_30px_50px_-20px_rgba(0,0,0,0.7)] ${className}`}
+  >
+    <div className="relative w-full h-full rounded-[1.3rem] sm:rounded-[1.65rem] overflow-hidden bg-black">
+      <img src={src} alt={alt} loading="lazy" draggable={false} className="w-full h-full object-cover object-top" />
+      <span className="absolute top-1.5 left-1/2 -translate-x-1/2 w-[34%] h-[3.2%] rounded-full bg-black" />
+    </div>
+  </div>
+);
+
+const ProjectRow = ({ site, index, reduced, onDetails, onLaunch, flash }) => {
+  const [revealRef, inView] = useInViewOnce(0.12);
+  const shown = inView || reduced;
   const host = hostOf(site.url);
   const live = !!host;
-  const shown = inView || reduced;
-  const baseDelay = site.featured ? 0 : (index % 4) * 120;
-
-  const handleMove = (e) => {
-    if (reduced || e.pointerType !== 'mouse') return;
-    const el = cardRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    const max = site.featured ? 3 : 7;
-    el.style.setProperty('--mx', `${px * 100}%`);
-    el.style.setProperty('--my', `${py * 100}%`);
-    el.style.transform = `perspective(1100px) rotateX(${(0.5 - py) * max}deg) rotateY(${(px - 0.5) * max}deg) translateY(-4px)`;
-  };
-
-  const handleLeave = () => {
-    if (cardRef.current) cardRef.current.style.transform = '';
-  };
+  const flip = index % 2 === 1;
+  const desk = site.shots?.desktop?.[0]?.src ?? site.image;
+  const phone = site.shots?.mobile?.[0]?.src;
+  const shotCount = (site.shots?.desktop?.length ?? 0) + (site.shots?.mobile?.length ?? 0);
 
   const step = (n) => ({
     opacity: shown ? 1 : 0,
-    transform: shown ? 'none' : 'translateY(14px)',
-    transition: 'opacity 600ms ease, transform 600ms cubic-bezier(0.22,1,0.36,1)',
-    transitionDelay: reduced ? '0ms' : `${baseDelay + 300 + n * 70}ms`,
+    transform: shown ? 'none' : 'translateY(16px)',
+    transition: 'opacity 650ms ease, transform 650ms cubic-bezier(0.22,1,0.36,1)',
+    transitionDelay: reduced ? '0ms' : `${200 + n * 80}ms`,
   });
 
   return (
-    <div
-      ref={revealRef}
-      id={`project-${slugOf(site.name)}`}
-      className={`relative scroll-mt-28 ${site.featured ? 'md:col-span-2 xl:col-span-4' : ''}`}
-      style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? 'none' : 'translateY(40px)',
-        transition: 'opacity 800ms ease, transform 800ms cubic-bezier(0.22,1,0.36,1)',
-        transitionDelay: reduced ? '0ms' : `${baseDelay}ms`,
-      }}
-    >
+    <div ref={revealRef} id={`project-${slugOf(site.name)}`} className="relative scroll-mt-28">
       {site.note && (
         <span
-          className="absolute -top-4 left-4 z-30 px-3 py-0.5 shadow-md pointer-events-none"
-          style={{ background: site.featured ? '#FFB8D9' : '#FFE873', transform: `rotate(${index % 2 ? 4 : -5}deg)` }}
+          className="absolute -top-4 left-6 sm:left-10 z-30 px-3 py-0.5 shadow-md pointer-events-none"
+          style={{ background: site.featured ? '#FFB8D9' : '#FFE873', transform: `rotate(${index % 2 ? 3 : -4}deg)` }}
         >
           <span className="ht-hand ht-dark text-xl">{site.note}</span>
         </span>
       )}
-      {site.featured && <Tape className="-top-3 right-10" rot={6} />}
       <article
-        ref={cardRef}
-        onPointerMove={handleMove}
-        onPointerLeave={handleLeave}
-        className={`${flash ? 'pj-flash ' : ''}group relative h-full flex flex-col overflow-hidden rounded-md border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md shadow-lg transition-[transform,box-shadow,border-color] duration-200 ease-out hover:border-[color:var(--acc-line)] hover:shadow-[0_25px_50px_-12px_var(--acc-glow)] ${
-          site.featured ? 'lg:grid lg:grid-cols-[1.25fr_1fr]' : ''
-        }`}
+        className={`${flash ? 'pj-flash ' : ''}group relative grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 lg:gap-14 items-center rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md p-6 pt-10 sm:p-10 lg:p-14 shadow-lg transition-[border-color,box-shadow] duration-300 hover:border-[color:var(--acc-line)] hover:shadow-[0_30px_60px_-25px_var(--acc-glow)]`}
+        style={{
+          opacity: shown ? 1 : 0,
+          transform: shown ? 'none' : 'translateY(40px)',
+          transition: 'opacity 800ms ease, transform 800ms cubic-bezier(0.22,1,0.36,1), border-color 300ms, box-shadow 300ms',
+        }}
       >
-        {/* cursor spotlight */}
-        <div
-          className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: 'radial-gradient(460px circle at var(--mx, 50%) var(--my, 50%), var(--acc-soft), transparent 60%)' }}
-        />
-
-        <button
-          onClick={() => onPreview(site)}
-          aria-label={`Preview ${site.name}`}
-          className={`relative w-full overflow-hidden block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--acc)] ${
-            site.featured ? 'aspect-video lg:aspect-auto lg:h-full lg:min-h-[25rem]' : 'aspect-video'
-          }`}
-          style={{
-            clipPath: shown ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)',
-            transition: 'clip-path 1000ms cubic-bezier(0.77,0,0.18,1)',
-            transitionDelay: reduced ? '0ms' : `${baseDelay + 120}ms`,
-          }}
-        >
-          <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-            <RevealImage src={site.image} alt={`${site.name} screenshot`} active={shown} imgClassName="object-top" />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-          <div
-            className="pj-anim absolute inset-x-0 top-0 h-1/3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background: 'linear-gradient(to bottom, transparent, var(--acc-soft), transparent)',
-              animation: 'pj-scan 2.4s linear infinite',
-            }}
-          />
-          <span className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[0.625rem] font-black uppercase tracking-[0.25em] pj-white">
-            {String(index + 1).padStart(2, '0')}
-            {site.featured && <span className="pj-hi"> · Featured</span>}
-          </span>
-          {live && (
-            <span className="absolute top-4 right-4 sm:top-5 sm:right-5 flex items-center gap-2 px-3 py-1 rounded-md bg-black/60 backdrop-blur-md text-[0.625rem] font-black uppercase tracking-[0.2em] pj-white">
-              <span className="relative flex h-2 w-2">
-                <span className="pj-anim animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FFB3] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FFB3]" />
-              </span>
-              Live
-            </span>
-          )}
-          <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 flex items-end gap-3 sm:gap-4 text-left">
-            {site.logo && (
-              <AppIcon
-                src={site.logo}
-                name={site.name}
-                size={site.featured ? 72 : 52}
-                className="transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
-              />
-            )}
+        {/* ---------- the story ---------- */}
+        <div className={`flex flex-col gap-6 ${flip ? 'lg:order-2' : 'lg:order-1'}`}>
+          <div style={step(0)} className="flex items-center gap-5 sm:gap-6">
+            <AppIcon
+              src={site.logo}
+              name={site.name}
+              size={96}
+              className="sm:!w-[7.5rem] sm:!h-[7.5rem] transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
+            />
             <div className="min-w-0">
-              <p className="pj-hi text-[0.625rem] font-black uppercase tracking-[0.25em] mb-1 drop-shadow">
-                {site.tag}
+              <p className="pj-acc text-[0.6875rem] font-black uppercase tracking-[0.22em]">{site.tag}</p>
+              <h3 className="text-4xl sm:text-5xl font-black tracking-tighter leading-[0.95] mt-1">{site.name}</h3>
+              <p className="text-sm sm:text-base font-bold opacity-65 mt-1.5">{site.subtitle}</p>
+              <p className="mt-2 flex items-center gap-2 text-[0.6875rem] font-black uppercase tracking-[0.18em]">
+                {live ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="pj-anim animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34C759] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34C759]" />
+                    </span>
+                    <span className="pj-ink opacity-70">Live · {host}</span>
+                  </>
+                ) : (
+                  <span className="pj-ink opacity-50">Demo coming soon</span>
+                )}
               </p>
-              <h4 className="pj-white text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none">
-                {site.name}
-              </h4>
             </div>
           </div>
-        </button>
 
-        <div className="relative z-20 p-6 sm:p-8 flex flex-col gap-5 flex-1 text-[color:var(--ink)]">
-          {site.subtitle && (
-            <p style={step(0)} className="pj-acc text-xs font-black uppercase tracking-[0.2em]">
-              {site.subtitle}
-            </p>
-          )}
-          <p style={step(1)} className="text-sm sm:text-[0.9375rem] opacity-80 font-medium leading-relaxed">
+          <p style={step(1)} className="text-base sm:text-lg opacity-80 font-medium leading-relaxed">
             {site.desc}
           </p>
 
-          {site.highlights?.length > 0 && (
-            <ul className="space-y-2">
-              {site.highlights.map((h, i) => (
-                <li key={h} style={step(2 + i)} className="flex items-start gap-2 text-sm opacity-85 leading-snug">
-                  <ChevronRight size={16} className="shrink-0 mt-0.5 text-[color:var(--acc)]" />
-                  <span>{h}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {site.stack?.length > 0 && (
-            <div style={step(5)} className="flex flex-wrap gap-2">
-              {site.stack.map((s) => (
-                <span
-                  key={s}
-                  className="px-2.5 py-1 border rounded-md text-[0.625rem] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc"
-                >
-                  {s}
+          <ul style={step(2)} className="grid gap-2.5">
+            {site.highlights.map((h) => (
+              <li key={h} className="flex items-start gap-3 text-sm sm:text-base opacity-90 leading-snug">
+                <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-[color:var(--acc-soft)]">
+                  <Check size={12} strokeWidth={3} className="text-[color:var(--acc)]" />
                 </span>
-              ))}
-            </div>
-          )}
+                <span>{h}</span>
+              </li>
+            ))}
+          </ul>
 
-          <div style={step(6)} className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-3">
+          <div style={step(3)} className="flex flex-wrap gap-2">
+            {site.stack.map((s) => (
+              <span
+                key={s}
+                className="px-3 py-1.5 border rounded-full text-[0.625rem] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+
+          <div style={step(4)} className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              onClick={() => onDetails(site)}
+              className="cursor-target inline-flex items-center gap-2 px-6 py-3 rounded-full font-black text-[0.75rem] uppercase tracking-[0.16em] transition-transform hover:-translate-y-0.5 active:scale-95 shadow-[0_14px_30px_-12px_var(--acc-glow)]"
+              style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+            >
+              <Info size={15} /> <span className="pj-inherit">View details</span>
+            </button>
             <LaunchButton site={site} live={live} onLaunch={onLaunch} />
-            {host && <span className="text-[0.6875rem] font-mono opacity-55 truncate">{host}</span>}
           </div>
         </div>
+
+        {/* ---------- the showcase ---------- */}
+        <button
+          onClick={() => onDetails(site)}
+          aria-label={`View ${site.name} details`}
+          className={`cursor-target relative block w-full text-left outline-none order-first ${flip ? 'lg:order-1' : 'lg:order-2'} ${phone ? 'pr-[14%] pb-[10%]' : ''}`}
+        >
+          <div className="transition-transform duration-500 group-hover:-translate-y-1.5">
+            <BrowserFrame src={desk} host={host} alt={`${site.name} on desktop`} active={shown} />
+          </div>
+          {phone && (
+            <PhoneFrame
+              src={phone}
+              alt={`${site.name} on a phone`}
+              className="absolute right-0 bottom-0 w-[30%] rotate-[4deg] transition-transform duration-500 group-hover:rotate-0 group-hover:-translate-y-3"
+            />
+          )}
+          <span className="absolute left-4 bottom-4 sm:left-5 sm:bottom-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/65 backdrop-blur-md text-[0.625rem] font-black uppercase tracking-[0.18em] opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="pj-white">
+              {shotCount} screenshot{shotCount === 1 ? '' : 's'} · view details
+            </span>
+          </span>
+        </button>
       </article>
     </div>
   );
@@ -943,7 +955,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
 
 const AppDock = ({ sites, reduced, shown, onPick }) => (
   <div
-    className="pj-dock relative inline-flex flex-wrap justify-center sm:justify-start gap-x-5 gap-y-4 sm:gap-x-7 px-5 sm:px-7 pt-5 pb-4 rounded-[1.75rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-xl shadow-[0_24px_50px_-28px_rgba(0,0,0,0.6)]"
+    className="pj-dock relative inline-flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-5 sm:gap-x-8 px-5 sm:px-9 pt-6 pb-5 sm:pt-8 sm:pb-6 rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-xl shadow-[0_24px_50px_-28px_rgba(0,0,0,0.6)]"
     role="list"
     aria-label="My apps"
   >
@@ -955,11 +967,11 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
           role="listitem"
           onClick={() => onPick(site)}
           aria-label={`Jump to ${site.name}`}
-          className="pj-app cursor-target group flex flex-col items-center gap-2 w-[4.5rem] sm:w-[5.25rem] outline-none"
+          className="pj-app cursor-target group flex flex-col items-center gap-2.5 w-[5rem] sm:w-[6.5rem] outline-none"
           style={reduced || !shown ? { opacity: shown ? 1 : 0 } : { animation: `pj-pop 600ms cubic-bezier(.3,1.4,.5,1) ${300 + i * 90}ms both` }}
         >
           <span className="pj-app-icon relative block">
-            <AppIcon src={site.logo} name={site.name} size={64} className="sm:!w-[4.75rem] sm:!h-[4.75rem]" />
+            <AppIcon src={site.logo} name={site.name} size={72} className="sm:!w-[5.75rem] sm:!h-[5.75rem]" />
             {live && (
               <span
                 className="absolute -top-1.5 -right-1.5 min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full bg-[#34C759] border-2 flex items-center justify-center"
@@ -970,7 +982,7 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
               </span>
             )}
           </span>
-          <span className="text-[0.6875rem] sm:text-xs font-semibold leading-tight text-center w-full opacity-85 line-clamp-2">
+          <span className="text-xs sm:text-sm font-semibold leading-tight text-center w-full opacity-85 line-clamp-2">
             {site.name}
           </span>
         </button>
@@ -980,95 +992,262 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
 );
 
 // ============================================================================
-// LIGHTBOX — spinner while loading, keyboard: Esc / ← / →
+// PROJECT DETAILS — an App-Store-style sheet: big icon and actions, a quick
+// facts strip, a desktop/phone screenshot gallery (tap to zoom, ← / → to
+// browse), the story, features and stack. Esc closes the zoom, then the sheet.
 // ============================================================================
 
-const Lightbox = ({ active, onClose, onNav, onLaunch }) => {
-  const [loadedSrc, setLoadedSrc] = useState(null);
+const ProjectDetails = ({ site, darkMode, onClose, onLaunch }) => {
+  const hasMobile = (site.shots?.mobile?.length ?? 0) > 0;
+  const [tab, setTab] = useState('desktop');
+  const [zoom, setZoom] = useState(null); // index into the current tab's shots
+  const sheetRef = useRef(null);
+  const host = hostOf(site.url);
+  const live = !!host;
+  const shots = site.shots?.[tab]?.length ? site.shots[tab] : [{ src: site.image, caption: site.name }];
 
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   useEffect(() => {
-    if (!active) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
-      else if (e.key === 'ArrowRight') onNav(1);
-      else if (e.key === 'ArrowLeft') onNav(-1);
+      if (e.key === 'Escape') {
+        if (zoomRef.current !== null) setZoom(null);
+        else onClose();
+      } else if (zoomRef.current !== null && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        setZoom((z) => (z + dir + shots.length) % shots.length);
+      }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [active, onClose, onNav]);
+    sheetRef.current?.focus({ preventScroll: true });
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose, shots.length]);
 
-  if (!active) return null;
-  const { item, list, index } = active;
-  const hasNav = Array.isArray(list) && list.length > 1;
-  const loaded = loadedSrc === item.image;
-  const live = !!hostOf(item.url);
-  const navBtn =
-    'absolute top-1/2 -translate-y-1/2 z-[1001] p-2 rounded-full bg-black/40 text-white/80 hover:text-[color:var(--acc)] hover:bg-black/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)]';
+  const facts = [
+    { label: 'Category', value: site.tag },
+    { label: 'Platform', value: hasMobile ? 'Web · Mobile' : 'Web' },
+    { label: 'Status', value: live ? 'Live' : 'Coming soon', live },
+    { label: 'Built with', value: site.stack[0] },
+  ];
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[960] overflow-y-auto overscroll-contain"
+      style={{ background: darkMode ? 'rgba(6,6,14,0.82)' : 'rgba(40,20,50,0.45)', backdropFilter: 'blur(10px)' }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={item.name}
+      aria-label={`${site.name} details`}
     >
-      <button
-        onClick={onClose}
-        aria-label="Close preview"
-        className="absolute top-6 right-6 sm:top-10 sm:right-10 text-white hover:text-[color:var(--acc)] transition-colors z-[1001] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--acc)] rounded-md"
-      >
-        <X size={36} />
-      </button>
-
-      {hasNav && (
-        <>
-          <button onClick={(e) => { e.stopPropagation(); onNav(-1); }} aria-label="Previous" className={`${navBtn} left-3 sm:left-8`}>
-            <ChevronLeft size={36} />
+      <div className="min-h-full flex items-start sm:items-center justify-center sm:p-6 lg:p-10">
+        <div
+          ref={sheetRef}
+          tabIndex={-1}
+          onClick={(e) => e.stopPropagation()}
+          className="pj-sheet relative w-full max-w-5xl outline-none sm:rounded-[2rem] border border-[color:var(--line)] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] overflow-hidden"
+          style={{ background: darkMode ? '#13131F' : '#FFFDF7', color: 'var(--ink)' }}
+        >
+          <button
+            onClick={onClose}
+            aria-label="Close details"
+            className="cursor-target absolute top-4 right-4 sm:top-6 sm:right-6 z-10 w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:rotate-90"
+            style={{ background: 'var(--surface-strong)' }}
+          >
+            <X size={18} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); onNav(1); }} aria-label="Next" className={`${navBtn} right-3 sm:right-8`}>
-            <ChevronRight size={36} />
-          </button>
-        </>
-      )}
 
-      <div className="relative flex flex-col items-center gap-5 sm:gap-6 max-w-[92vw]" onClick={(e) => e.stopPropagation()}>
-        <div className="relative flex items-center justify-center min-w-[12.5rem] min-h-[12.5rem]">
-          {!loaded && (
+          {/* header */}
+          <div className="relative px-6 sm:px-10 pt-12 sm:pt-12 pb-8 overflow-hidden">
             <div
-              className="pj-anim absolute w-12 h-12 rounded-full border-2 border-white/10 border-t-[color:var(--acc)]"
-              style={{ animation: 'pj-spin 0.8s linear infinite' }}
+              className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 rounded-full opacity-40"
+              style={{ background: 'radial-gradient(closest-side, var(--acc-glow), transparent)' }}
             />
-          )}
-          <img
-            key={item.image}
-            src={item.image}
-            alt={item.name}
-            onLoad={() => setLoadedSrc(item.image)}
-            className="max-w-full max-h-[70vh] object-contain rounded-md shadow-2xl"
-            style={{
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? 'scale(1)' : 'scale(0.94)',
-              filter: loaded ? 'blur(0px)' : 'blur(8px)',
-              transition: 'opacity 400ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1), filter 500ms ease',
-            }}
-          />
-        </div>
-        <div className="text-center space-y-2 max-w-xl px-2">
-          {hasNav && (
-            <p className="pj-white font-mono text-[0.625rem] tracking-[0.3em] opacity-50">
-              {String(index + 1).padStart(2, '0')} / {String(list.length).padStart(2, '0')}
-            </p>
-          )}
-          <h4 className="pj-white text-xl sm:text-2xl font-black tracking-tight">{item.name}</h4>
-          <p className="pj-white text-sm font-medium leading-relaxed opacity-75">{item.desc}</p>
-          {live && (
-            <div className="pt-3 flex justify-center">
-              <LaunchButton site={item} live onLaunch={onLaunch} />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-6">
+              <AppIcon src={site.logo} name={site.name} size={120} className="sm:!w-36 sm:!h-36" />
+              <div className="flex-1 min-w-0">
+                <p className="pj-acc text-[0.6875rem] font-black uppercase tracking-[0.22em]">{site.tag}</p>
+                <h2 className="text-4xl sm:text-6xl font-black tracking-tighter leading-[0.95] mt-1">{site.name}</h2>
+                <p className="text-base sm:text-lg font-bold opacity-65 mt-2">{site.subtitle}</p>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  {live ? (
+                    <button
+                      onClick={(e) => onLaunch(site, e)}
+                      className="cursor-target inline-flex items-center gap-2 px-7 py-3 rounded-full font-black text-[0.75rem] uppercase tracking-[0.16em] transition-transform hover:-translate-y-0.5 active:scale-95 shadow-[0_14px_30px_-12px_var(--acc-glow)]"
+                      style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+                    >
+                      <Rocket size={15} /> <span className="pj-inherit">Open app</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[color:var(--line)] font-black text-[0.75rem] uppercase tracking-[0.16em] opacity-60">
+                      <span className="pj-ink">Coming soon</span>
+                    </span>
+                  )}
+                  {host && <span className="text-xs font-mono opacity-55">{host}</span>}
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* quick facts */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 border-y border-[color:var(--line)]">
+            {facts.map((f, i) => (
+              <div
+                key={f.label}
+                className={`px-6 py-4 text-center ${i % 2 ? 'border-l' : ''} ${i > 1 ? 'border-t sm:border-t-0' : ''} ${i === 2 ? 'sm:border-l' : ''} border-[color:var(--line)]`}
+              >
+                <p className="text-[0.5625rem] font-black uppercase tracking-[0.22em] opacity-50">{f.label}</p>
+                <p className={`mt-1 text-sm sm:text-base font-black ${f.live ? 'pj-acc' : ''}`}>
+                  {f.live && <span className="inline-block w-2 h-2 rounded-full bg-[#34C759] mr-1.5 align-middle" />}
+                  {f.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* gallery */}
+          <section className="px-6 sm:px-10 pt-8">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight">Preview</h3>
+              {hasMobile && (
+                <div className="inline-flex p-1 rounded-full border border-[color:var(--line)]" style={{ background: 'var(--surface-strong)' }}>
+                  {[
+                    ['desktop', 'Desktop', Monitor],
+                    ['mobile', 'Mobile', Smartphone],
+                  ].map(([id, label, Icon]) => (
+                    <button
+                      key={id}
+                      onClick={() => setTab(id)}
+                      aria-pressed={tab === id}
+                      className="cursor-target inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-colors"
+                      style={tab === id ? { background: 'var(--acc)', color: 'var(--acc-ink)' } : { color: 'var(--ink)' }}
+                    >
+                      <Icon size={13} /> <span className="pj-inherit">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-6 sm:scroll-px-10 pb-4 -mx-6 px-6 sm:-mx-10 sm:px-10 [scrollbar-width:thin]">
+              {shots.map((sh, i) => (
+                <button
+                  key={`${tab}-${sh.caption}`}
+                  onClick={() => setZoom(i)}
+                  className={`cursor-target group/shot shrink-0 snap-start text-left ${tab === 'mobile' ? 'w-44 sm:w-56' : 'w-[85%] sm:w-[68%]'}`}
+                >
+                  <span
+                    className={`block overflow-hidden border border-[color:var(--line)] shadow-lg transition-transform duration-300 group-hover/shot:-translate-y-1 ${
+                      tab === 'mobile' ? 'rounded-[1.75rem] aspect-[390/844]' : 'rounded-2xl aspect-[16/10]'
+                    }`}
+                  >
+                    <img src={sh.src} alt={`${site.name} — ${sh.caption}`} loading="lazy" className="w-full h-full object-cover object-top" />
+                  </span>
+                  <span className="block mt-2 text-xs font-bold opacity-60">{sh.caption}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* story, features, stack */}
+          <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8 lg:gap-12 px-6 sm:px-10 py-8 sm:pb-10">
+            <section>
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-3">About this app</h3>
+              <p className="text-base sm:text-lg opacity-80 font-medium leading-relaxed">{site.desc}</p>
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight mt-8 mb-3">What it does</h3>
+              <ul className="grid gap-3">
+                {site.highlights.map((h) => (
+                  <li key={h} className="flex items-start gap-3 rounded-2xl border border-[color:var(--line)] p-4" style={{ background: 'var(--surface)' }}>
+                    <span className="mt-0.5 shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-[color:var(--acc-soft)]">
+                      <Check size={13} strokeWidth={3} className="text-[color:var(--acc)]" />
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold leading-snug">{h}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <aside className="space-y-6">
+              <div className="rounded-2xl border border-[color:var(--line)] p-5" style={{ background: 'var(--surface)' }}>
+                <h4 className="text-[0.625rem] font-black uppercase tracking-[0.22em] opacity-55 mb-3">Tech stack</h4>
+                <div className="flex flex-wrap gap-2">
+                  {site.stack.map((s) => (
+                    <span key={s} className="px-3 py-1.5 border rounded-full text-[0.625rem] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[color:var(--line)] p-5" style={{ background: 'var(--surface)' }}>
+                <h4 className="text-[0.625rem] font-black uppercase tracking-[0.22em] opacity-55 mb-3">Information</h4>
+                <dl className="space-y-2.5 text-sm">
+                  {[
+                    ['Developer', 'Brian Paul Francisco'],
+                    ['Category', site.tag],
+                    ['Screenshots', String((site.shots?.desktop?.length ?? 0) + (site.shots?.mobile?.length ?? 0))],
+                    ['Website', host || 'Coming soon'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-4 border-b border-[color:var(--line)] pb-2 last:border-0 last:pb-0">
+                      <dt className="opacity-55 font-semibold">{k}</dt>
+                      <dd className="font-bold text-right truncate">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
+
+      {/* zoomed screenshot */}
+      {zoom !== null && (
+        <div
+          className="fixed inset-0 z-[970] flex flex-col items-center justify-center p-4 sm:p-10 bg-black/90"
+          onClick={(e) => {
+            e.stopPropagation();
+            setZoom(null);
+          }}
+        >
+          <img
+            src={shots[zoom].src}
+            alt={`${site.name} — ${shots[zoom].caption}`}
+            className={`max-w-full object-contain rounded-xl shadow-2xl ${tab === 'mobile' ? 'max-h-[82vh]' : 'max-h-[80vh]'}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="mt-4 text-sm font-bold pj-white opacity-80">
+            {shots[zoom].caption} · {zoom + 1} / {shots.length}
+          </p>
+          {shots.length > 1 &&
+            [
+              [-1, 'left-3 sm:left-8', ChevronLeft, 'Previous screenshot'],
+              [1, 'right-3 sm:right-8', ChevronRight, 'Next screenshot'],
+            ].map(([dir, pos, Icon, label]) => (
+              <button
+                key={dir}
+                aria-label={label}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoom((z) => (z + dir + shots.length) % shots.length);
+                }}
+                className={`cursor-target absolute top-1/2 -translate-y-1/2 ${pos} w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white`}
+              >
+                <Icon size={22} />
+              </button>
+            ))}
+          <button
+            aria-label="Close screenshot"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoom(null);
+            }}
+            className="cursor-target absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -1080,7 +1259,7 @@ const Lightbox = ({ active, onClose, onNav, onLaunch }) => {
 const Project = ({ darkMode = true }) => {
   const palette = getPalette(darkMode);
   const reduced = usePrefersReducedMotion();
-  const [active, setActive] = useState(null);
+  const [details, setDetails] = useState(null);
   const { launch, start, setStage, close } = useWarpLaunch(reduced);
   const [headerRef, headerIn] = useInViewOnce(0.2);
   const headerShown = headerIn || reduced;
@@ -1097,17 +1276,9 @@ const Project = ({ darkMode = true }) => {
     flashTimer.current = setTimeout(() => setFlashed(null), 2600);
   };
 
-  const openWebsite = (site) => setActive({ item: site, list: null, index: null });
-  const closeLightbox = useCallback(() => setActive(null), []);
-  const navigate = useCallback((dir) => {
-    setActive((prev) => {
-      if (!prev || !prev.list) return prev;
-      const nextIndex = (prev.index + dir + prev.list.length) % prev.list.length;
-      return { item: prev.list[nextIndex], list: prev.list, index: nextIndex };
-    });
-  }, []);
-  const launchFromLightbox = (site, e) => {
-    setActive(null);
+  const closeDetails = useCallback(() => setDetails(null), []);
+  const launchFromDetails = (site, e) => {
+    setDetails(null);
     start(site, e);
   };
 
@@ -1123,7 +1294,7 @@ const Project = ({ darkMode = true }) => {
     <div className="pj-scope relative" style={cssVars(palette)}>
       <ProjectStyles />
 
-      <Lightbox active={active} onClose={closeLightbox} onNav={navigate} onLaunch={launchFromLightbox} />
+      {details && <ProjectDetails site={details} darkMode={darkMode} onClose={closeDetails} onLaunch={launchFromDetails} />}
       {launch && (
         <WarpLaunch
           key={launch.id}
@@ -1195,17 +1366,17 @@ const Project = ({ darkMode = true }) => {
         <section>
           <SectionEyebrow label="Websites & Apps" icon={<Globe size={16} />} />
           <p className="text-sm sm:text-base opacity-65 max-w-2xl mb-8 sm:mb-10">
-            Click a screenshot for a closer look, or hit <span className="pj-acc font-black">Launch Site</span> to
-            warp straight into the live app.
+            Tap <span className="pj-acc font-black">View details</span> for screenshots and the full story, or hit{' '}
+            <span className="pj-acc font-black">Launch Site</span> to warp straight into the live app.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div className="space-y-12 sm:space-y-16">
             {websites.map((site, idx) => (
-              <ProjectCard
+              <ProjectRow
                 key={site.name}
                 site={site}
                 index={idx}
                 reduced={reduced}
-                onPreview={openWebsite}
+                onDetails={setDetails}
                 onLaunch={start}
                 flash={flashed === site.name}
               />
