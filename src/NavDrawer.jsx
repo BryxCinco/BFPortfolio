@@ -41,6 +41,7 @@ const NavDrawer = ({
   onAskMe,
   onPlayGame,
   themeSwitch,
+  autoSwitch,
   soundSwitch,
   soundEnabled,
 }) => {
@@ -178,6 +179,12 @@ const NavDrawer = ({
                   <span className="nd-ink text-xs font-black uppercase tracking-widest">{darkMode ? 'Dark mode' : 'Light mode'}</span>
                   {themeSwitch}
                 </div>
+                {autoSwitch && (
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="nd-ink text-xs font-black uppercase tracking-widest">Match my device</span>
+                    {autoSwitch}
+                  </div>
+                )}
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="nd-ink text-xs font-black uppercase tracking-widest">Sound {soundEnabled ? 'on' : 'off'}</span>
                   {soundSwitch}

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 // INTROSPLASH.JSX — the first-visit "hello in many languages" opener, shot
 // like a film title: letterbox bars, a soft drifting glow and grain, each
 // greeting focusing in from a blur with its language underneath, then a
-// gradient "Kamusta." and the screen splits open onto the site. About 3.3s
+// gradient "Kamusta." and the screen splits open onto the site. It matches the device's light or dark display. About 3.3s
 // in total; a click or any key skips straight to the reveal. No white
 // flashes or hard strobing, just quick fades, so it stays easy on the eyes.
 // ============================================================================
@@ -29,7 +29,33 @@ const WORD_MS = 150; // each greeting's screen time
 const HOLD_MS = 780; // how long "Kamusta." stays
 const EXIT_MS = 700; // the split-open reveal
 
-const BG = '#0C0C16';
+// the intro follows the device's display mode, like the rest of the site
+const THEMES = {
+  dark: {
+    bg: '#0C0C16',
+    bar: '#000000',
+    ink: '255,255,255',
+    glowA: 'rgba(0,255,179,0.16)',
+    glowB: 'rgba(255,0,122,0.14)',
+    vignette: 'rgba(0,0,0,0.6)',
+    grain: { opacity: 0.07, blend: 'screen' },
+    grad: 'is-grad',
+    rule: 'rgba(255,255,255,0.6)',
+    wordGlow: '0 0 40px rgba(255,255,255,0.18)',
+  },
+  light: {
+    bg: '#FFFBF3',
+    bar: '#F1E9DC',
+    ink: '27,27,42',
+    glowA: 'rgba(0,200,140,0.16)',
+    glowB: 'rgba(255,0,122,0.13)',
+    vignette: 'rgba(150,110,80,0.16)',
+    grain: { opacity: 0.05, blend: 'multiply' },
+    grad: 'is-grad-light',
+    rule: 'rgba(27,27,42,0.35)',
+    wordGlow: '0 10px 40px rgba(255,0,122,0.12)',
+  },
+};
 
 // static film grain (an SVG noise tile, drawn once — no per-frame cost)
 const GRAIN =
@@ -66,6 +92,11 @@ const Styles = () => (
       background-size: 100% 100%;
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
+    .is-grad-light {
+      background-image: linear-gradient(100deg, #00A877 0%, #0E7C66 22%, #1B1B2A 42%, #C2006A 62%, #FF007A 78%, #7A00D9 100%);
+      background-size: 100% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
     .is-sheen {
       background-image: linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.85) 50%, transparent 65%);
       background-size: 250% 100%;
@@ -86,7 +117,9 @@ const Styles = () => (
   `}</style>
 );
 
-const IntroSplash = ({ onDone }) => {
+const IntroSplash = ({ onDone, dark = true }) => {
+  const T = THEMES[dark ? 'dark' : 'light'];
+  const ink = (a) => `rgba(${T.ink},${a})`;
   const reduced =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [index, setIndex] = useState(reduced ? GREETINGS.length : -1); // -1 = bars only, length = Kamusta
@@ -138,8 +171,8 @@ const IntroSplash = ({ onDone }) => {
       <Styles />
 
       {/* the two halves that split open on the way out */}
-      <div className="is-half absolute inset-x-0 top-0 h-1/2" style={{ background: BG, transform: leaving ? 'translateY(-100%)' : 'none' }} />
-      <div className="is-half absolute inset-x-0 bottom-0 h-1/2" style={{ background: BG, transform: leaving ? 'translateY(100%)' : 'none' }} />
+      <div className="is-half absolute inset-x-0 top-0 h-1/2" style={{ background: T.bg, transform: leaving ? 'translateY(-100%)' : 'none' }} />
+      <div className="is-half absolute inset-x-0 bottom-0 h-1/2" style={{ background: T.bg, transform: leaving ? 'translateY(100%)' : 'none' }} />
 
       {/* the stage */}
       <div
@@ -149,23 +182,23 @@ const IntroSplash = ({ onDone }) => {
         {/* soft drifting light */}
         <div
           className="is-glow-a absolute left-1/2 top-1/2 -ml-[35vmax] -mt-[35vmax] w-[70vmax] h-[70vmax] rounded-full"
-          style={{ background: 'radial-gradient(closest-side, rgba(0,255,179,0.16), transparent 70%)' }}
+          style={{ background: `radial-gradient(closest-side, ${T.glowA}, transparent 70%)` }}
         />
         <div
           className="is-glow-b absolute left-1/2 top-1/2 -ml-[30vmax] -mt-[30vmax] w-[60vmax] h-[60vmax] rounded-full"
-          style={{ background: 'radial-gradient(closest-side, rgba(255,0,122,0.14), transparent 70%)' }}
+          style={{ background: `radial-gradient(closest-side, ${T.glowB}, transparent 70%)` }}
         />
         {/* grain + vignette */}
-        <div className="absolute inset-0 opacity-[0.07] mix-blend-screen" style={{ backgroundImage: GRAIN }} />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.6) 100%)' }} />
+        <div className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: T.grain.opacity, mixBlendMode: T.grain.blend }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, transparent 45%, ${T.vignette} 100%)` }} />
 
         {/* letterbox */}
-        <div className="is-bar-top absolute inset-x-0 top-0 h-[9vh] bg-black flex items-end justify-between px-5 sm:px-10 pb-3">
-          <span className="text-[0.625rem] sm:text-xs font-black uppercase tracking-[0.4em] text-white/40">Brian Francisco</span>
-          <span className="text-[0.625rem] sm:text-xs font-black uppercase tracking-[0.4em] text-white/40">Portfolio · {new Date().getFullYear()}</span>
+        <div style={{ background: T.bar }} className="is-bar-top absolute inset-x-0 top-0 h-[9vh] flex items-end justify-between px-5 sm:px-10 pb-3">
+          <span className="text-[0.625rem] sm:text-xs font-black uppercase tracking-[0.4em]" style={{ color: ink(0.45) }}>Brian Francisco</span>
+          <span className="text-[0.625rem] sm:text-xs font-black uppercase tracking-[0.4em]" style={{ color: ink(0.45) }}>Portfolio · {new Date().getFullYear()}</span>
         </div>
-        <div className="is-bar-bot absolute inset-x-0 bottom-0 h-[9vh] bg-black flex flex-col justify-start px-5 sm:px-10 pt-3 gap-2">
-          <div className="h-px w-full bg-white/10 overflow-hidden">
+        <div style={{ background: T.bar }} className="is-bar-bot absolute inset-x-0 bottom-0 h-[9vh] flex flex-col justify-start px-5 sm:px-10 pt-3 gap-2">
+          <div className="h-px w-full overflow-hidden" style={{ background: ink(0.1) }}>
             <div
               className="is-progress h-full"
               style={{
@@ -175,10 +208,10 @@ const IntroSplash = ({ onDone }) => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[0.625rem] sm:text-xs font-black tabular-nums tracking-[0.3em] text-white/45">
+            <span className="text-[0.625rem] sm:text-xs font-black tabular-nums tracking-[0.3em]" style={{ color: ink(0.5) }}>
               {String(isFinal ? GREETINGS.length + 1 : Math.max(count, 0)).padStart(2, '0')} / {GREETINGS.length + 1}
             </span>
-            <span className="text-[0.625rem] sm:text-xs font-bold uppercase tracking-[0.3em] text-white/30">click to skip</span>
+            <span className="text-[0.625rem] sm:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: ink(0.35) }}>click to skip</span>
           </div>
         </div>
 
@@ -187,12 +220,12 @@ const IntroSplash = ({ onDone }) => {
           {word && (
             <div key={index} className="flex flex-col items-center">
               <h1
-                className="is-word font-black text-white leading-none text-[clamp(3rem,10vw,8rem)]"
-                style={{ textShadow: '0 0 40px rgba(255,255,255,0.18)' }}
+                className="is-word font-black leading-none text-[clamp(3rem,10vw,8rem)]"
+                style={{ color: ink(1), textShadow: T.wordGlow }}
               >
                 {word}
               </h1>
-              <span className="is-sub mt-4 text-[0.6875rem] sm:text-sm font-bold uppercase tracking-[0.5em] text-white">
+              <span className="is-sub mt-4 text-[0.6875rem] sm:text-sm font-bold uppercase tracking-[0.5em]" style={{ color: ink(1) }}>
                 {lang}
               </span>
             </div>
@@ -201,11 +234,11 @@ const IntroSplash = ({ onDone }) => {
           {isFinal && (
             <div className="flex flex-col items-center">
               <h1 className="is-final relative font-black leading-none text-[clamp(3.5rem,12vw,10rem)]">
-                <span className="is-grad">Kamusta.</span>
+                <span className={T.grad}>Kamusta.</span>
                 <span className="is-sheen absolute inset-0" aria-hidden="true">Kamusta.</span>
               </h1>
-              <span className="is-rule mt-6 block h-px w-40 sm:w-64" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)' }} />
-              <span className="is-sub mt-4 text-[0.6875rem] sm:text-sm font-bold uppercase tracking-[0.5em] text-white" style={{ animationDelay: '0.25s' }}>
+              <span className="is-rule mt-6 block h-px w-40 sm:w-64" style={{ background: `linear-gradient(90deg, transparent, ${T.rule}, transparent)` }} />
+              <span className="is-sub mt-4 text-[0.6875rem] sm:text-sm font-bold uppercase tracking-[0.5em]" style={{ color: ink(1), animationDelay: '0.25s' }}>
                 Filipino · welcome in
               </span>
             </div>

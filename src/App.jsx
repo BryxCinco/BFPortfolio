@@ -12,7 +12,8 @@ import {
   Box,
   Layers,
   Volume2,
-  VolumeX
+  VolumeX,
+  MonitorSmartphone
 } from 'lucide-react';
 
 // Import ang Components
@@ -30,6 +31,7 @@ import { useFitScale } from './useFitScale';
 import NavDrawer from './NavDrawer';
 import IntroSplash from './IntroSplash';
 import WarpHost from './WarpHost';
+import { useThemePreference } from './useThemePreference';
 
 // ============================================================================
 // THEME TRANSITION & ANIMATION ENGINE
@@ -213,7 +215,7 @@ const RevealOnScroll = ({ children }) => {
 // ANIMATED NAVIGATION BAR
 // ============================================================================
 
-const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, chatbotRef, typingTestRef, playGameRef, setIsSidebarOpen, isDesktop, soundEnabled, onToggleSound }) => {
+const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggleTheme, followsSystem, onFollowSystem, chatbotRef, typingTestRef, playGameRef, setIsSidebarOpen, isDesktop, soundEnabled, onToggleSound }) => {
   const navRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
   const [loaded, setLoaded] = useState(false);
@@ -382,7 +384,10 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
         {isDesktop && (
           <div className="flex items-center gap-4 sm:gap-5">
             <PlayGameTrigger darkMode={darkMode} onClick={() => playGameRef.current?.open()} />
-            <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
+            <span className="inline-flex items-center gap-2">
+              <AutoThemeButton darkMode={darkMode} active={followsSystem} onClick={onFollowSystem} />
+              <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
+            </span>
           </div>
         )}
       </div>
@@ -419,6 +424,27 @@ const SoundSwitch = ({ soundEnabled, toggleSound, darkMode, className = '' }) =>
         <VolumeX size={13} className="text-[#00FFB3]" />
       )}
     </span>
+  </button>
+);
+
+// "Auto" — go back to matching the device's light/dark display
+const AutoThemeButton = ({ darkMode, active, onClick, label = false }) => (
+  <button
+    onClick={onClick}
+    aria-pressed={active}
+    title={active ? 'Following your device display' : 'Match my device display'}
+    className={`cursor-target inline-flex items-center gap-1.5 shrink-0 h-7 sm:h-8 px-2.5 rounded-full border text-[0.5625rem] font-black uppercase tracking-widest transition-colors duration-300 ${
+      active
+        ? darkMode
+          ? 'bg-[#00FFB3]/15 border-[#00FFB3] text-[#00FFB3]'
+          : 'bg-[#FF007A]/12 border-[#FF007A] text-[#FF007A]'
+        : darkMode
+          ? 'border-white/15 text-white/50 hover:text-white hover:border-[#00FFB3]/50'
+          : 'border-black/15 text-[#1B1B2A]/50 hover:text-[#1B1B2A] hover:border-[#FF007A]/50'
+    }`}
+  >
+    <MonitorSmartphone size={13} />
+    {label ? (active ? 'On' : 'Off') : 'Auto'}
   </button>
 );
 
@@ -460,10 +486,8 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
 const DESKTOP_NAV_MIN_WIDTH = 1750;
 
 function App() {
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved !== null ? saved === 'true' : true;
-  });
+  // light/dark follows the visitor's device until they pick one themselves
+  const { darkMode, setDarkMode, followsSystem, followSystem } = useThemePreference();
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
@@ -490,10 +514,6 @@ function App() {
     localStorage.setItem('activeSection', activeSection);
   }, [activeSection]);
 
-  useEffect(() => {
-    localStorage.setItem('darkMode', darkMode);
-  }, [darkMode]);
-
   const { toggleTheme } = useThemeTransition(setDarkMode);
   const { width: layoutWidth } = useFitScale();
   const isDesktop = layoutWidth >= DESKTOP_NAV_MIN_WIDTH;
@@ -515,7 +535,7 @@ function App() {
 
   return (
     <>
-      {showIntro && <IntroSplash onDone={finishIntro} />}
+      {showIntro && <IntroSplash dark={darkMode} onDone={finishIntro} />}
       <div className={darkMode ? 'dark bg-[#1B1B2A] text-[#FFEA00]' : 'light bg-[#FFEA00] text-[#1B1B2A]'}>
       <ThemeTransitionStyles />
       <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#00FFB3] selection:text-white pb-20 overflow-x-hidden bg-inherit">
@@ -558,6 +578,7 @@ function App() {
             }}
             soundEnabled={soundEnabled}
             themeSwitch={<ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />}
+            autoSwitch={<AutoThemeButton darkMode={darkMode} active={followsSystem} onClick={followSystem} label />}
             soundSwitch={<SoundSwitch soundEnabled={soundEnabled} toggleSound={toggleSound} darkMode={darkMode} />}
           />
         )}
@@ -569,6 +590,8 @@ function App() {
           navItems={navItems}
           goToSection={goToSection}
           toggleTheme={toggleTheme}
+          followsSystem={followsSystem}
+          onFollowSystem={followSystem}
           chatbotRef={chatbotRef}
           typingTestRef={typingTestRef}
           playGameRef={playGameRef}
