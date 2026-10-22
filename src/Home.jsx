@@ -22,6 +22,7 @@ import neoChessLogo from './assets/logos/neochess.svg';
 import snapzyLogo from './assets/logos/snapzy.png';
 import sweepLogo from './assets/logos/sweepxpress.svg';
 import AppIcon from './AppIcon';
+import { launchSite } from './WarpHost';
 import sweepImg from './assets/SweepXpress.png';
 
 // ============================================================================
@@ -267,7 +268,13 @@ const WebBadge = ({ url, name }) => (
     href={url}
     target="_blank"
     rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
+    onClick={(e) => {
+      // plain click warps in like the Projects page; ctrl/cmd-click still opens a tab
+      e.stopPropagation();
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      launchSite(name, e);
+    }}
     aria-label={`Open ${name} on the web`}
     className="cursor-target inline-flex items-center gap-2.5 pl-3 pr-5 py-2 rounded-xl bg-black border border-white/20 shadow-md transition-transform hover:-translate-y-0.5 active:scale-95"
   >

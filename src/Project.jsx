@@ -1391,5 +1391,5 @@ const Project = ({ darkMode = true }) => {
 
 export default Project;
 
-// shared with the chat assistant
-export { websites };
+// shared with the chat assistant and the site-wide warp launcher
+export { websites, ProjectStyles, WarpLaunch, useWarpLaunch };

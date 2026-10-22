@@ -29,6 +29,7 @@ import HomePage from './Home';
 import { useFitScale } from './useFitScale';
 import NavDrawer from './NavDrawer';
 import IntroSplash from './IntroSplash';
+import WarpHost from './WarpHost';
 
 // ============================================================================
 // THEME TRANSITION & ANIMATION ENGINE
@@ -616,6 +617,7 @@ function App() {
             </footer>
           </RevealOnScroll>
 
+          <WarpHost darkMode={darkMode} />
           <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} onNavigate={goToSection} />
           <TypingTest ref={typingTestRef} darkMode={darkMode} soundEnabled={soundEnabled} onKeyPress={playClick} />
           <PlayGame ref={playGameRef} darkMode={darkMode} soundEnabled={soundEnabled} onAction={playClick} />

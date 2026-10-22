@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getPalette, cssVars } from './theme';
 import { getReply, CONTACT } from './ChatBrain';
 import AppIcon from './AppIcon';
+import { launchSite } from './WarpHost';
 import { websites } from './Project';
 import { stackCategories } from './Stacks';
 import { featuredCerts, CERT_TOTAL } from './Certifications';
@@ -328,12 +329,20 @@ const Orb = ({ state = 'idle', size = 40 }) => (
 const cardBase = 'rounded-2xl border border-[color:var(--line)] overflow-hidden';
 const cardStyle = { background: 'var(--card)' };
 
-const LinkPill = ({ href, children, solid = false }) => (
+// opens a live project with the site-wide warp launch (ctrl/cmd-click = plain new tab)
+const warpTo = (name) => (e) => {
+  e.stopPropagation();
+  if (!name || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  e.preventDefault();
+  launchSite(name, e);
+};
+
+const LinkPill = ({ href, children, solid = false, launch }) => (
   <a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
+    onClick={launch ? warpTo(launch) : (e) => e.stopPropagation()}
     className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-transform hover:-translate-y-0.5"
     style={solid ? { background: 'var(--acc)', color: 'var(--acc-ink)' } : { border: '1px solid var(--line)', color: 'var(--ink)' }}
   >
@@ -349,6 +358,7 @@ const ProjectCard = ({ p, onAsk }) => {
         href={live ? p.url : undefined}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={live ? warpTo(p.name) : undefined}
         className={`relative block aspect-[16/10] overflow-hidden bg-black/10 ${live ? 'cursor-target group' : 'pointer-events-none'}`}
       >
         <img src={p.image} alt={`${p.name} screenshot`} loading="lazy" className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" />
@@ -366,7 +376,7 @@ const ProjectCard = ({ p, onAsk }) => {
         </div>
         <p className="text-sm font-medium opacity-70 line-clamp-2">{p.desc}</p>
         <div className="mt-auto pt-2 flex flex-wrap gap-2">
-          {live && <LinkPill href={p.url} solid>Open <ArrowUpRight size={12} /></LinkPill>}
+          {live && <LinkPill href={p.url} launch={p.name} solid>Open <ArrowUpRight size={12} /></LinkPill>}
           <button
             onClick={() => onAsk(`Tell me about ${p.name}`)}
             className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest border border-[color:var(--line)] transition-transform hover:-translate-y-0.5"
@@ -393,7 +403,7 @@ const ProjectAttach = ({ name, onNavigate }) => {
   const live = p.url && p.url !== '#';
   return (
     <div className={cardBase} style={cardStyle}>
-      <a href={live ? p.url : undefined} target="_blank" rel="noopener noreferrer" className={`block aspect-[16/9] overflow-hidden bg-black/10 ${live ? 'cursor-target' : 'pointer-events-none'}`}>
+      <a href={live ? p.url : undefined} target="_blank" rel="noopener noreferrer" onClick={live ? warpTo(p.name) : undefined} className={`block aspect-[16/9] overflow-hidden bg-black/10 ${live ? 'cursor-target' : 'pointer-events-none'}`}>
         <img src={p.image} alt={`${p.name} screenshot`} className="w-full h-full object-cover object-top" />
       </a>
       <div className="p-5">
@@ -418,7 +428,7 @@ const ProjectAttach = ({ name, onNavigate }) => {
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          {live && <LinkPill href={p.url} solid>Open live site <ArrowUpRight size={12} /></LinkPill>}
+          {live && <LinkPill href={p.url} launch={p.name} solid>Open live site <ArrowUpRight size={12} /></LinkPill>}
           <button
             onClick={() => onNavigate('projects')}
             className="cursor-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-black uppercase tracking-widest border border-[color:var(--line)]"
