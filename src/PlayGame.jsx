@@ -76,6 +76,7 @@ const TECH_STACK = [
   { name: 'TypeScript', bg: '#3178C6', fg: '#ffffff', logo: DEVICON('typescript') },
   { name: 'React', bg: '#149ECA', fg: '#ffffff', logo: DEVICON('react') },
   { name: 'Next.js', bg: '#111111', fg: '#ffffff', logo: DEVICON('nextjs') },
+  { name: 'Nuxt.js', bg: '#00DC82', fg: '#0B1120', logo: DEVICON('nuxtjs') },
   { name: 'Tailwind', bg: '#38BDF8', fg: '#0B1120', logo: DEVICON('tailwindcss') },
   { name: 'Vite', bg: '#8B5CF6', fg: '#ffffff', logo: DEVICON('vitejs') },
   { name: 'Node.js', bg: '#3C873A', fg: '#ffffff', logo: DEVICON('nodejs') },
@@ -85,12 +86,16 @@ const TECH_STACK = [
   { name: 'MySQL', bg: '#00618A', fg: '#ffffff', logo: DEVICON('mysql') },
   { name: 'PostgreSQL', bg: '#336791', fg: '#ffffff', logo: DEVICON('postgresql') },
   { name: 'MongoDB', bg: '#13AA52', fg: '#ffffff', logo: DEVICON('mongodb') },
+  { name: 'Oracle', bg: '#C74634', fg: '#ffffff', logo: DEVICON('oracle') },
   { name: 'Supabase', bg: '#1F9D6B', fg: '#ffffff', logo: DEVICON('supabase') },
   { name: 'Firebase', bg: '#FFA611', fg: '#1B1B2A', logo: DEVICON('firebase') },
   { name: 'Figma', bg: '#A259FF', fg: '#ffffff', logo: DEVICON('figma') },
   { name: 'Git', bg: '#F1502F', fg: '#ffffff', logo: DEVICON('git') },
   { name: 'GitHub', bg: '#24292F', fg: '#ffffff', logo: DEVICON('github') },
   { name: 'Docker', bg: '#2496ED', fg: '#ffffff', logo: DEVICON('docker') },
+  { name: 'Google Cloud', bg: '#4285F4', fg: '#ffffff', logo: DEVICON('googlecloud') },
+  { name: 'AWS', bg: '#FF9900', fg: '#1B1B2A', logo: DEVICON('amazonwebservices', 'original-wordmark') },
+  { name: 'Azure', bg: '#0078D4', fg: '#ffffff', logo: DEVICON('azure') },
   { name: 'Postman', bg: '#FF6C37', fg: '#ffffff', logo: DEVICON('postman') },
   { name: 'Vercel', bg: '#000000', fg: '#ffffff', logo: DEVICON('vercel') },
 ];
@@ -872,7 +877,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                       {status === 'idle' && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 px-8 text-center">
                           <div className="pg-bob flex flex-col items-center gap-1">
-                            {[TECH_STACK[4], TECH_STACK[8], TECH_STACK[13]].map((t, i) => (
+                            {['React', 'Node.js', 'PostgreSQL'].map((n) => TECH_STACK.find((t) => t.name === n)).map((t, i) => (
                               <div
                                 key={t.name}
                                 className="pg-brick relative rounded-lg flex items-center justify-center"
