@@ -838,7 +838,7 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavig
           {/* soft backdrop glow */}
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: `radial-gradient(60% 50% at 50% 0%, ${darkMode ? 'rgba(0,255,179,0.08)' : 'rgba(255,0,122,0.07)'}, transparent 70%)` }}
+            style={{ background: `radial-gradient(60% 50% at 50% 0%, ${darkMode ? 'rgba(0,255,179,0.08)' : 'rgba(0,122,89,0.07)'}, transparent 70%)` }}
           />
 
           {/* header */}

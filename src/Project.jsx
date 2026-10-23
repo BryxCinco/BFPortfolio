@@ -982,7 +982,7 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
               </span>
             )}
           </span>
-          <span className="text-xs sm:text-sm font-semibold leading-tight text-center w-full opacity-85 line-clamp-2">
+          <span className="text-[0.6875rem] sm:text-sm font-semibold tracking-tight leading-tight text-center w-full opacity-85 line-clamp-2">
             {site.name}
           </span>
         </button>

@@ -507,20 +507,20 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
               initial={reduced ? false : { opacity: 0, y: 8, rotate: -6 }}
               animate={{ opacity: 1, y: 0, rotate: -6 }}
               transition={{ delay: 0.9, duration: 0.5 }}
-              className="hm-hand hm-acc hidden sm:block absolute -top-9 left-[52%] lg:left-[46%] text-2xl sm:text-3xl whitespace-nowrap"
+              className="hm-hand hm-acc hidden sm:block absolute -top-12 left-[54%] lg:left-[50%] text-2xl sm:text-3xl whitespace-nowrap"
             >
               hey there, nice to meet you!
             </motion.span>
             <Scribble
               viewBox="0 0 80 60"
-              className="hidden sm:block absolute -top-4 left-[45%] lg:left-[39%] w-14 h-11"
+              className="hidden sm:block absolute -top-6 left-[47%] lg:left-[43%] w-14 h-11"
               d="M70 6 C 50 4, 28 14, 14 44 M14 44 L 10 30 M14 44 L 27 38"
               delay={1.1}
               reduced={reduced}
               strokeWidth={3}
             />
 
-            <h1 className="hm-ink text-5xl sm:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.95]">
+            <h1 className="hm-ink text-[2.6rem] sm:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.95]">
               <WordReveal text="Hi, I'm Brian." reduced={reduced} />
               <span
                 className="hm-anim inline-block origin-[70%_70%]"

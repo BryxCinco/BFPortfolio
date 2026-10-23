@@ -162,7 +162,7 @@ export const TypingTestTrigger = ({ darkMode, onClick, className = '' }) => {
   const isDesktop = useIsDesktopOnly();
   if (!isDesktop) return null;
 
-  const accent = darkMode ? '#00FFB3' : '#FF007A';
+  const accent = darkMode ? '#00FFB3' : '#007A59';
 
   return (
     <button

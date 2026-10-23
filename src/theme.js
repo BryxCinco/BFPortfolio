@@ -11,28 +11,30 @@ export const rgba = (hex, a) => {
 export const getPalette = (darkMode) =>
   darkMode
     ? {
-        acc: '#00FFB3',
+        // mint for text and buttons; the full neon is saved for glows
+        acc: '#2EE6A8',
         accHi: '#00FFB3',
-        acc2: '#A700FF',
+        acc2: '#FF4D9A',
         accInk: '#1B1B2A',
         ink: '#FFFFFF',
         surface: 'rgba(255,255,255,0.04)',
         surfaceStrong: 'rgba(255,255,255,0.08)',
-        line: 'rgba(0,255,179,0.14)',
+        line: 'rgba(46,230,168,0.14)',
         warpBg: '#0B0B16',
-        stars: ['#00FFB3', '#7DFFE0', '#FFFFFF', '#A700FF', '#00F0FF'],
+        stars: ['#00FFB3', '#7DFFE0', '#FFFFFF', '#FF4D9A', '#A700FF'],
       }
     : {
-        acc: '#FF007A',
-        accHi: '#FF8AC2',
-        acc2: '#A700FF',
+        // the same mint, deepened so it passes contrast on cream (~5:1)
+        acc: '#007A59',
+        accHi: '#2EE6A8',
+        acc2: '#D6006A',
         accInk: '#FFFFFF',
         ink: '#1B1B2A',
         surface: 'rgba(255,255,255,0.62)',
         surfaceStrong: 'rgba(255,255,255,0.85)',
         line: 'rgba(27,27,42,0.12)',
-        warpBg: '#FFF8D6',
-        stars: ['#FF007A', '#A700FF', '#FF4FA3', '#1B1B2A', '#7A00FF'],
+        warpBg: '#F3FBF7',
+        stars: ['#007A59', '#2EE6A8', '#D6006A', '#1B1B2A', '#A700FF'],
       };
 
 export const cssVars = (p) => ({

@@ -102,8 +102,8 @@ const SoundToggle = ({ darkMode, soundEnabled, onToggle }) => {
       title={soundEnabled ? 'Sound: On' : 'Sound: Off'}
       className={`cursor-target shrink-0 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
         darkMode
-          ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 text-[#00FFB3]'
-          : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_20px_rgba(255,234,0,0.35)] text-[#1B1B2A]'
+          ? 'bg-white/5 border-[#2EE6A8]/20 hover:border-[#2EE6A8]/60 text-[#2EE6A8]'
+          : 'bg-white/70 border-black/10 hover:border-[#007A59]/50 text-[#1B1B2A]'
       }`}
     >
       {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} className="opacity-50" />}
@@ -220,10 +220,10 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
   const [loaded, setLoaded] = useState(false);
 
-  // Nav accent color: pink/red (matches the "Download CV" button) in light mode, cyan in dark mode
-  const navAccent = darkMode ? '#00FFB3' : '#FF007A';
-  const navAccentShadow = darkMode ? 'rgba(0,255,179,0.9)' : 'rgba(255,0,122,0.9)';
-  const navAccentGlow = darkMode ? 'rgba(0,255,179,0.35)' : 'rgba(255,0,122,0.35)';
+  // Nav accent: the brand mint — bright in dark mode, deep teal in light mode (matches theme.js)
+  const navAccent = darkMode ? '#2EE6A8' : '#007A59';
+  const navAccentShadow = darkMode ? 'rgba(0,255,179,0.9)' : 'rgba(0,122,89,0.55)';
+  const navAccentGlow = darkMode ? 'rgba(46,230,168,0.35)' : 'rgba(0,122,89,0.25)';
 
   // Entrance animation trigger
   useEffect(() => {
@@ -266,7 +266,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
     <nav
       className={`fixed top-0 w-full z-[100] p-4 sm:p-6 grid grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 md:px-10 backdrop-blur-xl border-b transition-all duration-700 ${
         loaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-      } ${darkMode ? 'bg-[#1B1B2A]/30 border-[#00FFB3]/10' : 'bg-white/60 border-[#FF007A]/20'}`}
+      } ${darkMode ? 'bg-[#0E0E18]/40 border-[#2EE6A8]/10' : 'bg-white/60 border-black/[0.06]'}`}
     >
       {/* Left: Logo + Typing Speed Test trigger */}
       <div className="flex items-center gap-3 sm:gap-4 justify-self-start">
@@ -274,7 +274,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           onClick={() => goToSection('home')}
           aria-label="Go to home"
           className={`cursor-target backdrop-blur-xl border px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-black tracking-tighter text-lg sm:text-xl hover:scale-105 active:scale-95 transition-all duration-300 shrink-0 ${
-            darkMode ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/60 hover:shadow-[0_0_30px_rgba(0,255,179,0.25)]' : 'bg-white/70 border-[#FFEA00] hover:shadow-[0_0_30px_rgba(255,234,0,0.35)]'
+            darkMode ? 'bg-white/5 border-[#2EE6A8]/20 hover:border-[#2EE6A8]/60 hover:shadow-[0_0_30px_rgba(0,255,179,0.25)]' : 'bg-white/70 border-black/10 hover:border-[#007A59]/50 hover:shadow-[0_0_30px_rgba(0,122,89,0.18)]'
           }`}
         >
           <span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}>Brian Francisco</span>
@@ -292,7 +292,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
       <div
         ref={navRef}
         className={`${isDesktop ? 'flex' : 'hidden'} items-center gap-1 backdrop-blur-xl border rounded-full px-2 py-2 relative justify-self-center ${
-          darkMode ? 'bg-white/5 border-[#00FFB3]/20' : 'bg-white/70 border-[#FFEA00]'
+          darkMode ? 'bg-white/5 border-[#2EE6A8]/20' : 'bg-white/70 border-black/10'
         }`}
       >
         {/* THE SLIDING INDICATOR — bright neon underline */}
@@ -324,7 +324,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
               e.currentTarget.style.color = navAccent;
               e.currentTarget.style.backgroundColor = darkMode
                 ? 'rgba(0,255,179,0.12)'
-                : 'rgba(255,0,122,0.12)';
+                : 'rgba(0,122,89,0.1)';
               if (activeSection !== item.id) {
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }
@@ -351,7 +351,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           }`}
           style={{
             transitionDelay: loaded ? `${navItems.length * 60 + 100}ms` : '0ms',
-            backgroundColor: darkMode ? 'rgba(0,255,179,0.12)' : 'rgba(255,0,122,0.12)',
+            backgroundColor: darkMode ? 'rgba(46,230,168,0.12)' : 'rgba(0,122,89,0.1)',
             color: navAccent,
             boxShadow: `0 0 0 1px ${navAccentGlow}`,
           }}
@@ -371,11 +371,11 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           title="Menu"
           className={`cursor-target ${isDesktop ? 'hidden' : 'block'} p-3 rounded-full backdrop-blur-xl border hover:scale-110 active:scale-95 transition-all duration-300 ${
             darkMode
-              ? 'bg-white/5 border-[#00FFB3]/20 hover:border-[#00FFB3]/50'
-              : 'bg-white/70 border-[#FFEA00] hover:border-[#FF007A]/60 hover:bg-[#FF007A]/10'
+              ? 'bg-white/5 border-[#2EE6A8]/20 hover:border-[#2EE6A8]/50'
+              : 'bg-white/70 border-black/10 hover:border-[#007A59]/50 hover:bg-[#007A59]/10'
           }`}
         >
-          <Menu size={20} className={darkMode ? 'text-[#00FFB3]' : 'text-[#A700FF]'} />
+          <Menu size={20} className={darkMode ? 'text-[#2EE6A8]' : 'text-[#007A59]'} />
         </button>
 
         {/* Play Game + Theme toggle — grouped together with a comfortable gap so
@@ -402,16 +402,16 @@ const SoundSwitch = ({ soundEnabled, toggleSound, darkMode, className = '' }) =>
     aria-label={soundEnabled ? 'Turn sound off' : 'Turn sound on'}
     title={soundEnabled ? 'Turn sound off' : 'Turn sound on'}
     className={`cursor-target relative inline-flex items-center shrink-0 w-14 h-7 sm:w-16 sm:h-8 rounded-full border transition-colors duration-300 ${
-      darkMode ? 'bg-[#00FFB3]/10 border-[#00FFB3]/40' : 'bg-[#FF007A]/10 border-[#FF007A]/40'
+      darkMode ? 'bg-[#2EE6A8]/10 border-[#2EE6A8]/40' : 'bg-[#007A59]/10 border-[#007A59]/35'
     } ${className}`}
   >
     <VolumeX
       size={12}
-      className={`absolute left-1.5 sm:left-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-0' : 'opacity-50 text-[#FF007A]'}`}
+      className={`absolute left-1.5 sm:left-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-0' : 'opacity-50 text-[#D6006A]'}`}
     />
     <Volume2
       size={12}
-      className={`absolute right-1.5 sm:right-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-50 text-[#00FFB3]' : 'opacity-0'}`}
+      className={`absolute right-1.5 sm:right-2 transition-opacity duration-300 ${soundEnabled ? 'opacity-50 text-[#2EE6A8]' : 'opacity-0'}`}
     />
     <span
       className={`absolute top-0.5 left-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
@@ -419,9 +419,9 @@ const SoundSwitch = ({ soundEnabled, toggleSound, darkMode, className = '' }) =>
       }`}
     >
       {soundEnabled ? (
-        <Volume2 size={13} className="text-[#FF007A]" />
+        <Volume2 size={13} className="text-[#007A59]" />
       ) : (
-        <VolumeX size={13} className="text-[#00FFB3]" />
+        <VolumeX size={13} className="text-[#2EE6A8]" />
       )}
     </span>
   </button>
@@ -436,11 +436,11 @@ const AutoThemeButton = ({ darkMode, active, onClick, label = false }) => (
     className={`cursor-target inline-flex items-center gap-1.5 shrink-0 h-7 sm:h-8 px-2.5 rounded-full border text-[0.5625rem] font-black uppercase tracking-widest transition-colors duration-300 ${
       active
         ? darkMode
-          ? 'bg-[#00FFB3]/15 border-[#00FFB3] text-[#00FFB3]'
-          : 'bg-[#FF007A]/12 border-[#FF007A] text-[#FF007A]'
+          ? 'bg-[#2EE6A8]/15 border-[#2EE6A8] text-[#2EE6A8]'
+          : 'bg-[#007A59]/10 border-[#007A59] text-[#007A59]'
         : darkMode
-          ? 'border-white/15 text-white/50 hover:text-white hover:border-[#00FFB3]/50'
-          : 'border-black/15 text-[#1B1B2A]/50 hover:text-[#1B1B2A] hover:border-[#FF007A]/50'
+          ? 'border-white/15 text-white/50 hover:text-white hover:border-[#2EE6A8]/50'
+          : 'border-black/15 text-[#1B1B2A]/50 hover:text-[#1B1B2A] hover:border-[#007A59]/50'
     }`}
   >
     <MonitorSmartphone size={13} />
@@ -454,16 +454,16 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
     aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     className={`cursor-target relative inline-flex items-center shrink-0 w-14 h-7 sm:w-16 sm:h-8 rounded-full border transition-colors duration-300 ${
-      darkMode ? 'bg-[#00FFB3]/10 border-[#00FFB3]/40' : 'bg-[#FF007A]/10 border-[#FF007A]/40'
+      darkMode ? 'bg-[#2EE6A8]/10 border-[#2EE6A8]/40' : 'bg-[#007A59]/10 border-[#007A59]/35'
     } ${className}`}
   >
     <Moon
       size={12}
-      className={`absolute left-1.5 sm:left-2 transition-opacity duration-300 ${darkMode ? 'opacity-0' : 'opacity-50 text-[#FF007A]'}`}
+      className={`absolute left-1.5 sm:left-2 transition-opacity duration-300 ${darkMode ? 'opacity-0' : 'opacity-50 text-[#D6006A]'}`}
     />
     <Sun
       size={12}
-      className={`absolute right-1.5 sm:right-2 transition-opacity duration-300 ${darkMode ? 'opacity-50 text-[#00FFB3]' : 'opacity-0'}`}
+      className={`absolute right-1.5 sm:right-2 transition-opacity duration-300 ${darkMode ? 'opacity-50 text-[#2EE6A8]' : 'opacity-0'}`}
     />
     <span
       className={`absolute top-0.5 left-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow-md transition-transform duration-300 ${
@@ -471,9 +471,9 @@ const ThemeSwitch = ({ darkMode, toggleTheme, className = '' }) => (
       }`}
     >
       {darkMode ? (
-        <Moon size={13} className="text-[#00FFB3]" />
+        <Moon size={13} className="text-[#2EE6A8]" />
       ) : (
-        <Sun size={13} className="text-[#FF007A]" />
+        <Sun size={13} className="text-[#D6006A]" />
       )}
     </span>
   </button>
@@ -536,16 +536,16 @@ function App() {
   return (
     <>
       {showIntro && <IntroSplash dark={darkMode} onDone={finishIntro} />}
-      <div className={darkMode ? 'dark bg-[#1B1B2A] text-[#FFEA00]' : 'light bg-[#FFEA00] text-[#1B1B2A]'}>
+      <div className={darkMode ? 'dark bg-[#0E0E18] text-white' : 'light bg-[#FCFAF7] text-[#1B1B2A]'}>
       <ThemeTransitionStyles />
-      <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#00FFB3] selection:text-white pb-20 overflow-x-hidden bg-inherit">
+      <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#2EE6A8] selection:text-[#1B1B2A] pb-20 overflow-x-hidden bg-inherit">
 
-        <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#FF007A]/20 blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" />
-        <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#A700FF]/20 blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="fixed top-[-10%] left-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#2EE6A8]/[0.14] blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" />
+        <div className="fixed bottom-[-10%] right-[-10%] w-[70%] h-[70%] sm:w-[50%] sm:h-[50%] rounded-full bg-[#A700FF]/[0.14] blur-[5rem] sm:blur-[7.5rem] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
         {selectedImage && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setSelectedImage(null)}>
-            <button className="cursor-target absolute top-6 right-6 sm:top-10 sm:right-10 text-white hover:text-[#00FFB3] transition-colors z-[1001]" aria-label="Close preview">
+            <button className="cursor-target absolute top-6 right-6 sm:top-10 sm:right-10 text-white hover:text-[#2EE6A8] transition-colors z-[1001]" aria-label="Close preview">
               <X size={32} className="sm:hidden" />
               <X size={40} className="hidden sm:block" />
             </button>
@@ -628,13 +628,13 @@ function App() {
           )}
 
           <RevealOnScroll>
-            <footer className="pt-14 sm:pt-20 border-t border-[#00FFB3]/10 text-center space-y-6 sm:space-y-8 pb-10 px-4">
+            <footer className="pt-14 sm:pt-20 border-t border-[#2EE6A8]/10 text-center space-y-6 sm:space-y-8 pb-10 px-4">
               <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] opacity-60">
-                 <a href="https://github.com/BryxCinco" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Github</a>
-                 <a href="https://www.linkedin.com/in/brianfrancisco10/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">LinkedIn</a>
-                 <a href="https://www.facebook.com/Bryx.Francisco111/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#00FFB3] transition-colors">Facebook</a>
+                 <a href="https://github.com/BryxCinco" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">Github</a>
+                 <a href="https://www.linkedin.com/in/brianfrancisco10/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">LinkedIn</a>
+                 <a href="https://www.facebook.com/Bryx.Francisco111/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">Facebook</a>
               </div>
-              <p className="text-[0.5625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#00FFB3]">
+              <p className="text-[0.5625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#2EE6A8]">
                  © {new Date().getFullYear()} Brian Paul Francisco
               </p>
             </footer>
