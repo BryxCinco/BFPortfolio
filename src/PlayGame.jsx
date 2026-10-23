@@ -12,27 +12,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getPalette, cssVars } from './theme';
 
 // ============================================================================
-// PLAYGAME.JSX — "Stack Game": drop tech blocks on top of each other. Each
-// block is a glossy brick carrying a real logo; the overhang gets chopped off
-// and falls away, perfect drops build a combo, and the sky changes as the
-// tower climbs. The moving block is driven straight from requestAnimationFrame
-// (no React re-render per frame), so it stays smooth on any machine.
+// PLAYGAME.JSX — "Stack Game": a 3D tower of tech blocks. Each block slides
+// in from alternating sides and carries a real logo; the overhang gets chopped
+// off and tumbles away, perfect drops build a combo, and the sky changes as
+// the tower climbs. The 3D scene lives in Stack3D.js (three.js), loaded only
+// when the game opens; this file owns scoring, the career ladder and the UI.
 // ============================================================================
 
 // ============================================================================
 // CONFIG
 // ============================================================================
 
+// the playfield's design size; it is scaled to fit the screen
 const PLAYFIELD_WIDTH = 400;
-const BLOCK_HEIGHT = 40;
-const VISIBLE_ROWS = 12;
-const FIELD_HEIGHT = VISIBLE_ROWS * BLOCK_HEIGHT;
-const BASE_WIDTH = 240;
-const BASE_SPEED = 90; // px/sec — starts gentle, ramps up per successful stack
-const SPEED_STEP = 8; // px/sec added per successful stack
-const MAX_SPEED = 330;
-const PERFECT_TOLERANCE = 0.97; // overlap this close to full width counts as "perfect"
-const MISS_TOLERANCE = 1.5; // px of overlap below which it's a miss
+const FIELD_HEIGHT = 480;
+const GROW_HINT = 'four'; // perfect drops in a row before the block grows (Stack3D GROW_AFTER)
 
 // Career milestones — reached in order as the stack grows.
 const MILESTONES = [
@@ -65,9 +59,13 @@ function prevMilestoneScore(score) {
 }
 
 // Every block that lands gets the next technology in this list, so the tower
-// reads like a real stack from markup up to deployment, then loops.
+// reads like a real stack from markup through AI to deployment, then loops.
+// Each game starts at a random point in it. Logos come from CORS-enabled CDNs
+// so the 3D blocks can paint them into textures.
 const DEVICON = (name, variant = 'original') =>
   `https://cdn.jsdelivr.net/gh/devicons/devicon@master/icons/${name}/${name}-${variant}.svg`;
+const LOBE = (name) => `https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@1.95.1/icons/${name}.svg`;
+const SIMPLE = (name) => `https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/${name}.svg`;
 
 const TECH_STACK = [
   { name: 'HTML', bg: '#E44D26', fg: '#ffffff', logo: DEVICON('html5') },
@@ -83,6 +81,14 @@ const TECH_STACK = [
   { name: 'Express', bg: '#2D2D2D', fg: '#ffffff', logo: DEVICON('express') },
   { name: 'PHP', bg: '#777BB4', fg: '#ffffff', logo: DEVICON('php') },
   { name: 'Python', bg: '#3776AB', fg: '#ffffff', logo: DEVICON('python') },
+  { name: 'GPT', bg: '#10A37F', fg: '#ffffff', logo: LOBE('openai') },
+  { name: 'Gemini', bg: '#1A73E8', fg: '#ffffff', logo: LOBE('gemini-color') },
+  { name: 'Claude Code', bg: '#D97757', fg: '#ffffff', logo: LOBE('claudecode-color') },
+  { name: 'Codex', bg: '#1E1E24', fg: '#ffffff', logo: LOBE('codex-color') },
+  { name: 'Groq', bg: '#F55036', fg: '#ffffff', logo: LOBE('groq') },
+  { name: 'Hugging Face', bg: '#FFB000', fg: '#1B1B2A', logo: LOBE('huggingface-color') },
+  { name: 'LangChain', bg: '#1C3C3C', fg: '#ffffff', logo: LOBE('langchain-color') },
+  { name: 'CrewAI', bg: '#FF5A50', fg: '#ffffff', logo: LOBE('crewai-color') },
   { name: 'MySQL', bg: '#00618A', fg: '#ffffff', logo: DEVICON('mysql') },
   { name: 'PostgreSQL', bg: '#336791', fg: '#ffffff', logo: DEVICON('postgresql') },
   { name: 'MongoDB', bg: '#13AA52', fg: '#ffffff', logo: DEVICON('mongodb') },
@@ -96,6 +102,7 @@ const TECH_STACK = [
   { name: 'Google Cloud', bg: '#4285F4', fg: '#ffffff', logo: DEVICON('googlecloud') },
   { name: 'AWS', bg: '#FF9900', fg: '#1B1B2A', logo: DEVICON('amazonwebservices', 'original-wordmark') },
   { name: 'Azure', bg: '#0078D4', fg: '#ffffff', logo: DEVICON('azure') },
+  { name: 'Hostinger', bg: '#673DE6', fg: '#ffffff', logo: SIMPLE('hostinger') },
   { name: 'Postman', bg: '#FF6C37', fg: '#ffffff', logo: DEVICON('postman') },
   { name: 'Vercel', bg: '#000000', fg: '#ffffff', logo: DEVICON('vercel') },
 ];
@@ -168,35 +175,8 @@ const GameStyles = () => (
     #claude-play-game-overlay :is(p,span).pg-fg { color: var(--fg) !important; }
     #claude-play-game-overlay :is(p,span).pg-white { color: #fff !important; }
 
-    .pg-brick {
-      background: linear-gradient(180deg,
-        color-mix(in srgb, var(--bg) 62%, white) 0%,
-        var(--bg) 42%,
-        color-mix(in srgb, var(--bg) 78%, black) 100%);
-      box-shadow:
-        inset 0 1.5px 0 rgba(255,255,255,0.45),
-        inset 0 -3px 0 rgba(0,0,0,0.22),
-        0 3px 8px -2px rgba(0,0,0,0.35);
-    }
-    .pg-brick::after {
-      content: ''; position: absolute; inset: 3px 6px auto 6px; height: 34%;
-      border-radius: 6px; background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0));
-      pointer-events: none;
-    }
     .pg-chip { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
 
-    @keyframes pg-land { 0% { transform: scaleY(0.78) scaleX(1.03); } 60% { transform: scaleY(1.06) scaleX(0.99); } 100% { transform: none; } }
-    .pg-land { animation: pg-land 0.28s cubic-bezier(.3,1.6,.5,1) both; transform-origin: 50% 100%; }
-
-    @keyframes pg-glow { 0% { box-shadow: 0 0 0 0 var(--glow), 0 0 26px 6px var(--glow); } 100% { box-shadow: 0 0 0 14px transparent, 0 0 0 0 transparent; } }
-    .pg-ring { animation: pg-glow 0.7s ease-out forwards; }
-
-    @keyframes pg-fall-l { to { transform: translate(-60px, 520px) rotate(-38deg); opacity: 0; } }
-    @keyframes pg-fall-r { to { transform: translate(60px, 520px) rotate(38deg); opacity: 0; } }
-    @keyframes pg-fall-d { to { transform: translate(0, 560px) rotate(8deg); opacity: 0; } }
-    .pg-fall-l { animation: pg-fall-l 1s cubic-bezier(.45,0,.9,.5) forwards; }
-    .pg-fall-r { animation: pg-fall-r 1s cubic-bezier(.45,0,.9,.5) forwards; }
-    .pg-fall-d { animation: pg-fall-d 1.1s cubic-bezier(.45,0,.9,.5) forwards; }
 
     @keyframes pg-pop { 0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; } 20% { transform: translate(-50%, -10px) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -64px) scale(1); opacity: 0; } }
     .pg-pop { animation: pg-pop 0.95s ease-out forwards; }
@@ -210,7 +190,7 @@ const GameStyles = () => (
     @keyframes pg-twinkle { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
 
     @media (prefers-reduced-motion: reduce) {
-      .pg-land, .pg-ring, .pg-shake, .pg-bob { animation: none !important; }
+      .pg-shake, .pg-bob, .pg-pop { animation: none !important; }
     }
   `}</style>
 );
@@ -242,72 +222,31 @@ const TechLogo = ({ tech, size = 22 }) => {
 };
 
 // what a brick shows depends on how much of it is left
-const BrickFace = ({ tech, width }) => {
-  if (!tech || width < 30) return null;
-  return (
-    <span className="relative z-[1] flex items-center gap-2 px-2 min-w-0">
-      <TechLogo tech={tech} size={width < 60 ? 20 : 24} />
-      {width >= 116 && (
-        <span className="pg-fg text-[0.6875rem] font-black uppercase tracking-wider truncate drop-shadow-sm">
-          {tech.name}
-        </span>
-      )}
-    </span>
-  );
-};
-
-const Brick = ({ block, tech, bottom, darkMode, className = '' }) => (
-  <div
-    className={`absolute rounded-lg flex items-center justify-center overflow-hidden pg-brick ${className}`}
-    style={{
-      left: block.x,
-      width: block.width,
-      height: BLOCK_HEIGHT - 4,
-      bottom,
-      '--bg': tech ? tech.bg : darkMode ? '#3A4A66' : '#CBD5E1',
-      '--fg': tech ? tech.fg : '#fff',
-    }}
-  >
-    {tech ? (
-      <BrickFace tech={tech} width={block.width} />
-    ) : (
-      <span className="pg-white relative z-[1] text-[0.625rem] font-black uppercase tracking-[0.3em] opacity-80">
-        npm init
-      </span>
-    )}
-  </div>
-);
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
 const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) => {
   const isDesktop = useIsDesktopOnly();
   const p = getPalette(darkMode);
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | playing | gameover
-  const [stack, setStack] = useState([]); // placed blocks, base included
-  const [moving, setMoving] = useState({ width: BASE_WIDTH, techIdx: 0 }); // re-rendered only on drop
+  const [height, setHeight] = useState(0); // floors placed
+  const [landed, setLanded] = useState([]); // tech index of every placed block
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [newBest, setNewBest] = useState(false);
   const [milestoneToast, setMilestoneToast] = useState(null);
   const [comboStreak, setComboStreak] = useState(0);
-  const [debris, setDebris] = useState([]);
   const [popups, setPopups] = useState([]);
   const [scale, setScale] = useState(1);
+  const [engine, setEngine] = useState('loading'); // loading | ready | failed
 
-  const rafRef = useRef(null);
-  const lastTsRef = useRef(0);
-  const movingElRef = useRef(null);
-  const currentRef = useRef({ x: 0, width: BASE_WIDTH, dir: 1, speed: BASE_SPEED, techIdx: 0 });
-  const stackRef = useRef([]);
+  const engineRef = useRef(null);
+  const hostRef = useRef(null); // the 3D canvas lives here
+  const darkRef = useRef(darkMode);
+  darkRef.current = darkMode;
   const scoreRef = useRef(0);
   const comboRef = useRef(0);
   const reachedMilestonesRef = useRef(new Set());
   const toastTimerRef = useRef(null);
-  const fieldWrapRef = useRef(null); // measures available space to scale the playfield
+  const fieldWrapRef = useRef(null); // measures available space to size the playfield
   const statusRef = useRef('idle');
   const fieldRef = useRef(null);
 
@@ -324,11 +263,12 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     }
   }, []);
 
-  // warm the logo cache the first time the game opens, so bricks never pop in
+  // warm the logo cache the first time the game opens (the game-over card uses them too)
   useEffect(() => {
     if (!isOpen) return;
     TECH_STACK.forEach((t) => {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.src = t.logo;
     });
   }, [isOpen]);
@@ -345,14 +285,8 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     setStatus(s);
   };
 
-  const placeMoving = () => {
-    const el = movingElRef.current;
-    if (el) el.style.transform = `translate3d(${currentRef.current.x}px,0,0)`;
-  };
-
   const resetGame = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    lastTsRef.current = 0;
+    engineRef.current?.reset();
     reachedMilestonesRef.current = new Set();
     clearTimeout(toastTimerRef.current);
     setMilestoneToast(null);
@@ -361,15 +295,37 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     setScore(0);
     scoreRef.current = 0;
     setNewBest(false);
-    setDebris([]);
     setPopups([]);
-    const base = { id: nextId(), x: (PLAYFIELD_WIDTH - BASE_WIDTH) / 2, width: BASE_WIDTH, techIdx: null, perfect: false };
-    setStack([base]);
-    stackRef.current = [base];
-    currentRef.current = { x: 0, width: BASE_WIDTH, dir: 1, speed: BASE_SPEED, techIdx: 0 };
-    setMoving({ width: BASE_WIDTH, techIdx: 0 });
+    setHeight(0);
+    setLanded([]);
     setStatusBoth('idle');
   }, []);
+
+  // the 3D engine (three.js) loads only when the game opens
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    let cancelled = false;
+    setEngine('loading');
+    import('./Stack3D')
+      .then(({ createStack3D }) => {
+        if (cancelled || !hostRef.current) return;
+        engineRef.current = createStack3D(hostRef.current, { techs: TECH_STACK, dark: darkRef.current });
+        if (import.meta.env.DEV) window.__stack3d = engineRef.current;
+        setEngine('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setEngine('failed');
+      });
+    return () => {
+      cancelled = true;
+      engineRef.current?.dispose();
+      engineRef.current = null;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    engineRef.current?.setDark(darkMode);
+  }, [darkMode, engine]);
 
   // Fresh board every time the modal opens; lock scroll + wire Space/Esc.
   useEffect(() => {
@@ -390,14 +346,13 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
       return () => {
         document.body.style.overflow = prevOverflow;
         window.removeEventListener('keydown', onKey);
-        cancelAnimationFrame(rafRef.current);
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // The game keeps its 400×480 logical size (physics untouched); the whole
-  // playfield is scaled with a transform to fit the space it's given.
+  // The playfield keeps a 400×480 shape and is sized to the space it's given;
+  // the 3D canvas renders at that real size, the overlays are scaled to match.
   useEffect(() => {
     if (!isOpen) return;
     const el = fieldWrapRef.current;
@@ -406,7 +361,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     const recompute = () => {
       const availW = el.clientWidth - 8;
       const availH = window.innerHeight - (window.innerWidth >= 1024 ? 190 : 300);
-      const next = Math.max(0.55, Math.min(1.35, availW / PLAYFIELD_WIDTH, availH / FIELD_HEIGHT));
+      const next = Math.max(0.55, Math.min(1.45, availW / PLAYFIELD_WIDTH, availH / FIELD_HEIGHT));
       setScale(next);
     };
 
@@ -420,56 +375,15 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     };
   }, [isOpen]);
 
-  // rAF loop — moves the current block by writing its transform directly
-  useEffect(() => {
-    if (status !== 'playing') return;
-
-    const tick = (ts) => {
-      if (!lastTsRef.current) lastTsRef.current = ts;
-      const dt = Math.min((ts - lastTsRef.current) / 1000, 0.05);
-      lastTsRef.current = ts;
-
-      const cur = currentRef.current;
-      let nx = cur.x + cur.dir * cur.speed * dt;
-      if (nx <= 0) {
-        nx = 0;
-        cur.dir = 1;
-      } else if (nx + cur.width >= PLAYFIELD_WIDTH) {
-        nx = PLAYFIELD_WIDTH - cur.width;
-        cur.dir = -1;
-      }
-      cur.x = nx;
-      placeMoving();
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      lastTsRef.current = 0;
-    };
-  }, [status]);
-
-  // keep the moving block's transform in sync after each React render
-  useEffect(() => {
-    placeMoving();
-  });
-
   const showMilestoneToast = useCallback((title) => {
     clearTimeout(toastTimerRef.current);
     setMilestoneToast(title);
     toastTimerRef.current = setTimeout(() => setMilestoneToast(null), 1900);
   }, []);
 
-  const addDebris = useCallback((piece) => {
-    const id = nextId();
-    setDebris((d) => [...d.slice(-6), { ...piece, id }]);
-    setTimeout(() => setDebris((d) => d.filter((x) => x.id !== id)), 1200);
-  }, []);
-
   const addPopup = useCallback((popup) => {
     const id = nextId();
-    setPopups((list) => [...list.slice(-4), { ...popup, id }]);
+    setPopups((list) => [...list.slice(-3), { ...popup, id }]);
     setTimeout(() => setPopups((list) => list.filter((x) => x.id !== id)), 1000);
   }, []);
 
@@ -489,73 +403,41 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
         try {
           localStorage.setItem(BEST_KEY, String(next));
         } catch {
-      /* storage may be unavailable */
-    }
+          /* storage may be unavailable */
+        }
         return next;
       });
     },
     [play]
   );
 
-  const spawnNext = useCallback((prevBlock, dir) => {
-    const speed = Math.min(currentRef.current.speed + SPEED_STEP, MAX_SPEED);
-    const width = prevBlock.width;
-    const x = dir === 1 ? 0 : PLAYFIELD_WIDTH - width;
-    const techIdx = (prevBlock.techIdx + 1) % TECH_STACK.length;
-    currentRef.current = { x, width, dir, speed, techIdx };
-    setMoving({ width, techIdx });
-  }, []);
-
   const handleDrop = useCallback(() => {
+    const eng = engineRef.current;
+    if (!eng) return;
     const st = statusRef.current;
     if (st === 'gameover') {
       resetGame();
       return;
     }
     if (st === 'idle') {
-      currentRef.current = { x: 0, width: BASE_WIDTH, dir: 1, speed: BASE_SPEED, techIdx: 0 };
-      setMoving({ width: BASE_WIDTH, techIdx: 0 });
+      eng.start();
       setStatusBoth('playing');
       return;
     }
 
-    const prevBlock = stackRef.current[stackRef.current.length - 1];
-    const cur = currentRef.current;
-    const row = stackRef.current.length;
-
-    const overlapLeft = Math.max(prevBlock.x, cur.x);
-    const overlapRight = Math.min(prevBlock.x + prevBlock.width, cur.x + cur.width);
-    const overlapWidth = overlapRight - overlapLeft;
-
-    if (overlapWidth <= MISS_TOLERANCE) {
-      // the whole block tumbles off
-      addDebris({ x: cur.x, width: cur.width, row, techIdx: cur.techIdx, fall: 'd' });
+    const r = eng.drop();
+    if (!r) return;
+    if (r.type === 'miss') {
       endGame(scoreRef.current);
       return;
     }
 
-    const isPerfect = overlapWidth >= prevBlock.width * PERFECT_TOLERANCE;
-    const newWidth = isPerfect ? prevBlock.width : overlapWidth;
-    const newX = isPerfect ? prevBlock.x : overlapLeft;
-    const newBlock = { id: nextId(), x: newX, width: newWidth, perfect: isPerfect, techIdx: cur.techIdx };
-
-    // chop the overhang and let it fall on its side
-    if (!isPerfect) {
-      if (cur.x < overlapLeft) {
-        addDebris({ x: cur.x, width: overlapLeft - cur.x, row, techIdx: cur.techIdx, fall: 'l' });
-      }
-      if (cur.x + cur.width > overlapRight) {
-        addDebris({ x: overlapRight, width: cur.x + cur.width - overlapRight, row, techIdx: cur.techIdx, fall: 'r' });
-      }
-    }
-
-    const nextStack = [...stackRef.current, newBlock];
-    stackRef.current = nextStack;
-    setStack(nextStack);
+    setHeight(r.height);
+    setLanded((list) => [...list, r.techIdx]);
 
     // Perfect stacks escalate: 2, 3, 4, then 5 points; anything else resets.
     let pointsGained;
-    if (isPerfect) {
+    if (r.perfect) {
       comboRef.current += 1;
       pointsGained = Math.min(comboRef.current + 1, 5);
     } else {
@@ -564,17 +446,16 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
     }
     setComboStreak(comboRef.current);
     addPopup({
-      x: newX + newWidth / 2,
-      row,
-      text: isPerfect ? `Perfect +${pointsGained}` : `+${pointsGained}`,
-      perfect: isPerfect,
+      text: r.perfect ? `Perfect +${pointsGained}` : `+${pointsGained}`,
+      sub: r.grew ? 'block grows' : TECH_STACK[r.techIdx].name,
+      perfect: r.perfect,
     });
 
     const prevScore = scoreRef.current;
     const newScore = prevScore + pointsGained;
     scoreRef.current = newScore;
     setScore(newScore);
-    play(isPerfect ? 'toggle' : 'key');
+    play(r.perfect ? 'toggle' : 'key');
 
     const milestone = MILESTONES.find(
       (m) => m.score > prevScore && m.score <= newScore && !reachedMilestonesRef.current.has(m.score)
@@ -583,10 +464,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
       reachedMilestonesRef.current.add(milestone.score);
       showMilestoneToast(milestone.title);
     }
-
-    // Next block comes from the opposite side, same width, a little faster.
-    spawnNext(newBlock, cur.dir === 1 ? -1 : 1);
-  }, [addDebris, addPopup, endGame, play, resetGame, showMilestoneToast, spawnNext]);
+  }, [addPopup, endGame, play, resetGame, showMilestoneToast]);
 
   // Keydown handler above needs the latest handleDrop without re-binding
   const handleDropRef = useRef(handleDrop);
@@ -596,23 +474,18 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
 
   const closeGame = () => setIsOpen(false);
 
-  // camera: keep the top of the tower about a third of the way down
-  const cameraY = Math.max(0, (stack.length - (VISIBLE_ROWS - 4)) * BLOCK_HEIGHT);
   const title = currentTitleForScore(score);
   const next = nextMilestone(score);
   const fromScore = prevMilestoneScore(score);
   const progress = next ? (score - fromScore) / (next.score - fromScore) : 1;
-  const height = Math.max(0, stack.length - 1);
 
   // the sky drifts through hues as the tower climbs
-  const hue = (darkMode ? 230 : 320) + Math.min(height, 60) * 2.2;
+  const hue = (darkMode ? 230 : 160) + Math.min(height, 60) * 2.2;
   const sky = darkMode
-    ? `linear-gradient(180deg, hsl(${hue + 30} 55% 9%) 0%, hsl(${hue} 50% 16%) 60%, hsl(${hue - 20} 45% 22%) 100%)`
-    : `linear-gradient(180deg, hsl(${hue + 40} 90% 96%) 0%, hsl(${hue} 85% 92%) 60%, hsl(${hue - 25} 80% 88%) 100%)`;
+    ? `linear-gradient(180deg, hsl(${hue + 30} 55% 9%) 0%, hsl(${hue} 50% 15%) 60%, hsl(${hue - 20} 45% 21%) 100%)`
+    : `linear-gradient(180deg, hsl(${hue + 40} 70% 97%) 0%, hsl(${hue} 60% 92%) 60%, hsl(${hue - 25} 55% 86%) 100%)`;
 
-  const landed = stack.slice(1).map((b) => TECH_STACK[b.techIdx]);
-  const uniqueLanded = [...new Map(landed.map((t) => [t.name, t])).values()];
-  const movingTech = TECH_STACK[moving.techIdx];
+  const uniqueLanded = [...new Map(landed.map((i) => [TECH_STACK[i].name, TECH_STACK[i]])).values()];
 
   const statLabel = 'pg-ink text-[0.5625rem] sm:text-[0.625rem] font-black uppercase tracking-[0.25em] opacity-55';
 
@@ -635,7 +508,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
             className="relative flex items-center justify-center px-4 sm:px-6 shrink-0"
             style={{ height: 60, marginTop: 'env(safe-area-inset-top)' }}
           >
-            <span className="pg-ink inline-flex items-center gap-2 text-[0.6875rem] sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] opacity-60">
+            <span className="pg-ink inline-flex items-center gap-2 text-[0.6875rem] sm:text-sm font-black uppercase tracking-[0.3em] opacity-60">
               <Layers size={16} /> Stack Game
             </span>
             <button
@@ -650,7 +523,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
 
           <div className="relative flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 custom-scrollbar">
             <div
-              className="mx-auto w-full max-w-[60rem] min-h-full flex flex-col lg:flex-row items-center lg:items-center justify-center gap-5 lg:gap-12 py-4 sm:py-6"
+              className="mx-auto w-full max-w-[64rem] min-h-full flex flex-col lg:flex-row items-center lg:items-center justify-center gap-5 lg:gap-12 py-4 sm:py-6"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
             >
               {/* ---------------- HUD ---------------- */}
@@ -732,7 +605,7 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                   ) : (
                     'Tap the tower to drop.'
                   )}{' '}
-                  Line blocks up perfectly to build a combo.
+                  Line blocks up perfectly to build a combo; {GROW_HINT} in a row grows the block back.
                 </p>
               </div>
 
@@ -740,7 +613,48 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
               <div ref={fieldWrapRef} className="w-full lg:w-auto lg:flex-1 flex justify-center order-2 lg:order-none">
                 <div style={{ width: PLAYFIELD_WIDTH * scale, height: FIELD_HEIGHT * scale }} className="relative">
                   <div
-                    className="absolute top-0 left-0"
+                    ref={fieldRef}
+                    onPointerDown={handleDrop}
+                    className="absolute inset-0 overflow-hidden rounded-3xl border border-[color:var(--line)] cursor-pointer select-none shadow-[0_30px_60px_-25px_rgba(0,0,0,0.5)]"
+                    style={{ touchAction: 'manipulation', background: sky, transition: 'background 0.8s ease' }}
+                  >
+                    {/* sky details: stars at night, a soft sun by day */}
+                    {darkMode ? (
+                      [...Array(22)].map((_, i) => (
+                        <span
+                          key={i}
+                          className="absolute rounded-full bg-white"
+                          style={{
+                            width: i % 3 ? 2 : 3,
+                            height: i % 3 ? 2 : 3,
+                            left: `${(i * 53) % 100}%`,
+                            top: `${(i * 31) % 70}%`,
+                            animation: `pg-twinkle ${2 + (i % 4)}s ease-in-out ${i * 0.2}s infinite`,
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <div
+                        className="absolute -top-1/4 -right-1/4 w-3/4 h-3/4 rounded-full"
+                        style={{ background: 'radial-gradient(closest-side, rgba(255,255,255,0.9), transparent)' }}
+                      />
+                    )}
+
+                    {/* the 3D tower */}
+                    <div ref={hostRef} className="absolute inset-0" />
+
+                    {engine !== 'ready' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <p className="pg-ink text-xs font-bold uppercase tracking-widest opacity-60">
+                          {engine === 'failed' ? '3D needs WebGL, which this browser has turned off.' : 'Loading 3D…'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* overlays, drawn at the 400×480 design size and scaled to fit */}
+                  <div
+                    className="absolute top-0 left-0 pointer-events-none"
                     style={{ width: PLAYFIELD_WIDTH, height: FIELD_HEIGHT, transform: `scale(${scale})`, transformOrigin: 'top left' }}
                   >
                     {/* Milestone toast */}
@@ -759,204 +673,100 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
                       )}
                     </AnimatePresence>
 
-                    <div
-                      ref={fieldRef}
-                      onPointerDown={handleDrop}
-                      className={`relative overflow-hidden rounded-3xl border border-[color:var(--line)] cursor-pointer select-none shadow-[0_30px_60px_-25px_rgba(0,0,0,0.5)]`}
-                      style={{ width: PLAYFIELD_WIDTH, height: FIELD_HEIGHT, touchAction: 'manipulation', background: sky, transition: 'background 0.8s ease' }}
-                    >
-                      {/* sky details: stars at night, soft grid by day */}
-                      {darkMode ? (
-                        [...Array(18)].map((_, i) => (
-                          <span
-                            key={i}
-                            className="absolute rounded-full bg-white"
-                            style={{
-                              width: i % 3 ? 2 : 3,
-                              height: i % 3 ? 2 : 3,
-                              left: `${(i * 53) % 100}%`,
-                              top: `${(i * 31) % 70}%`,
-                              animation: `pg-twinkle ${2 + (i % 4)}s ease-in-out ${i * 0.2}s infinite`,
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <div
-                          className="absolute inset-0 opacity-40"
-                          style={{ backgroundImage: 'linear-gradient(rgba(27,27,42,0.07) 1px, transparent 1px)', backgroundSize: `100% ${BLOCK_HEIGHT}px` }}
-                        />
-                      )}
-
-                      {/* the world: everything in it scrolls down as the tower grows */}
+                    {/* score popups, just above the tower top */}
+                    {popups.map((pp) => (
                       <div
-                        className="absolute inset-0"
-                        style={{ transform: `translate3d(0, ${cameraY}px, 0)`, transition: 'transform 0.45s cubic-bezier(.22,1,.36,1)' }}
+                        key={pp.id}
+                        className="pg-pop absolute left-1/2 top-[30%] flex flex-col items-center whitespace-nowrap pointer-events-none"
+                        style={{ textShadow: '0 2px 10px rgba(0,0,0,0.25)' }}
                       >
-                        {/* alignment guides from the top block's edges */}
-                        {status === 'playing' && (
-                          <>
-                            {[stack[stack.length - 1].x, stack[stack.length - 1].x + stack[stack.length - 1].width].map((gx, gi) => (
-                              <span
-                                key={gi}
-                                className="absolute w-px pointer-events-none"
-                                style={{
-                                  left: gx,
-                                  bottom: (stack.length - 1) * BLOCK_HEIGHT,
-                                  height: BLOCK_HEIGHT * 2.2,
-                                  background: `linear-gradient(to top, ${darkMode ? 'rgba(255,255,255,0.35)' : 'rgba(27,27,42,0.3)'}, transparent)`,
-                                }}
-                              />
-                            ))}
-                          </>
-                        )}
-
-                        {stack.map((b, i) => (
-                          <div key={b.id}>
-                            <Brick
-                              block={b}
-                              tech={b.techIdx != null ? TECH_STACK[b.techIdx] : null}
-                              bottom={i * BLOCK_HEIGHT}
-                              darkMode={darkMode}
-                              className={i > 0 && i === stack.length - 1 ? 'pg-land' : ''}
-                            />
-                            {b.perfect && i === stack.length - 1 && (
-                              <span
-                                className="pg-ring absolute rounded-lg pointer-events-none"
-                                style={{
-                                  left: b.x,
-                                  width: b.width,
-                                  height: BLOCK_HEIGHT - 4,
-                                  bottom: i * BLOCK_HEIGHT,
-                                  '--glow': `${TECH_STACK[b.techIdx].bg}AA`,
-                                }}
-                              />
-                            )}
-                          </div>
-                        ))}
-
-                        {/* chopped pieces */}
-                        {debris.map((d) => (
-                          <div key={d.id} className="absolute" style={{ left: 0, bottom: d.row * BLOCK_HEIGHT, width: '100%', height: BLOCK_HEIGHT }}>
-                            <div className={`absolute inset-0 pg-fall-${d.fall}`}>
-                              <Brick block={{ x: d.x, width: d.width }} tech={TECH_STACK[d.techIdx]} bottom={0} darkMode={darkMode} />
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* the moving block */}
-                        {status === 'playing' && (
-                          <div
-                            ref={movingElRef}
-                            className="absolute left-0 will-change-transform"
-                            style={{ bottom: stack.length * BLOCK_HEIGHT, width: moving.width, height: BLOCK_HEIGHT }}
-                          >
-                            <Brick block={{ x: 0, width: moving.width }} tech={movingTech} bottom={0} darkMode={darkMode} />
-                          </div>
-                        )}
-
-                        {/* score popups */}
-                        {popups.map((pp) => (
-                          <span
-                            key={pp.id}
-                            className={`pg-pop absolute whitespace-nowrap font-black uppercase pointer-events-none ${pp.perfect ? 'pg-acc text-base' : 'pg-ink text-sm opacity-80'}`}
-                            style={{ left: pp.x, bottom: (pp.row + 1) * BLOCK_HEIGHT + 4, textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}
-                          >
-                            {pp.perfect && <Sparkles size={12} className="inline -mt-0.5 mr-1" />}
-                            {pp.text}
-                          </span>
-                        ))}
+                        <span className={`font-black uppercase ${pp.perfect ? 'pg-acc text-lg' : 'pg-ink text-sm opacity-85'}`}>
+                          {pp.perfect && <Sparkles size={13} className="inline -mt-0.5 mr-1" />}
+                          {pp.text}
+                        </span>
+                        <span className="pg-ink text-[0.625rem] font-bold uppercase tracking-widest opacity-60">{pp.sub}</span>
                       </div>
+                    ))}
 
-                      {/* ground fade */}
-                      <div
-                        className="absolute inset-x-0 bottom-0 h-10 pointer-events-none"
-                        style={{ background: `linear-gradient(to top, ${darkMode ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.5)'}, transparent)` }}
-                      />
+                    {/* start card */}
+                    {status === 'idle' && engine === 'ready' && (
+                      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-3 px-8 pb-8 text-center">
+                        <span
+                          className="pg-on pg-bob text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full shadow-lg"
+                          style={{ backgroundColor: 'var(--acc)' }}
+                        >
+                          {isDesktop ? 'Click or Space to start' : 'Tap to start'}
+                        </span>
+                        <p className="pg-ink text-xs font-semibold leading-relaxed opacity-70 max-w-[17rem]">
+                          Drop each block on the one below. Whatever hangs off gets chopped. Perfect drops build a combo.
+                        </p>
+                      </div>
+                    )}
 
-                      {/* start card */}
-                      {status === 'idle' && (
-                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 px-8 text-center">
-                          <div className="pg-bob flex flex-col items-center gap-1">
-                            {['React', 'Node.js', 'PostgreSQL'].map((n) => TECH_STACK.find((t) => t.name === n)).map((t, i) => (
-                              <div
-                                key={t.name}
-                                className="pg-brick relative rounded-lg flex items-center justify-center"
-                                style={{ '--bg': t.bg, '--fg': t.fg, width: 150 - i * 20, height: 30, marginLeft: i === 1 ? 18 : 0 }}
-                              >
-                                <TechLogo tech={t} size={20} />
-                              </div>
-                            ))}
-                          </div>
-                          <span
-                            className="pg-on text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full shadow-lg"
-                            style={{ backgroundColor: 'var(--acc)' }}
-                          >
-                            {isDesktop ? 'Click or Space to start' : 'Tap to start'}
-                          </span>
-                          <p className="pg-ink text-xs leading-relaxed opacity-60 max-w-[15rem]">
-                            Drop each block on the one below. Whatever hangs off gets chopped. Perfect drops build a combo.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* game over card */}
-                      <AnimatePresence>
-                        {status === 'gameover' && (
+                    {/* game over card: sits low so the whole tower stays in view */}
+                    <AnimatePresence>
+                      {status === 'gameover' && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="absolute inset-x-0 bottom-0 z-20 p-4 pointer-events-auto"
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
                           <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ delay: 0.35 }}
-                            className="absolute inset-0 z-20 flex items-center justify-center p-6"
-                            style={{ background: darkMode ? 'rgba(10,10,20,0.55)' : 'rgba(255,255,255,0.55)' }}
-                            onPointerDown={(e) => e.stopPropagation()}
+                            initial={{ y: 40, scale: 0.94 }}
+                            animate={{ y: 0, scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.65 }}
+                            className="w-full rounded-3xl p-5 text-center shadow-2xl border border-[color:var(--line)] backdrop-blur-md"
+                            style={{ background: darkMode ? 'rgba(26,26,44,0.92)' : 'rgba(255,255,255,0.94)' }}
                           >
-                            <motion.div
-                              initial={{ y: 30, scale: 0.9 }}
-                              animate={{ y: 0, scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.4 }}
-                              className="w-full rounded-3xl p-6 text-center shadow-2xl border border-[color:var(--line)]"
-                              style={{ background: darkMode ? '#1A1A2C' : '#FFFFFF' }}
-                            >
-                              {newBest && (
-                                <span className="pg-on inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-[0.625rem] font-black uppercase tracking-widest bg-amber-400">
-                                  <Crown size={12} /> New best!
-                                </span>
-                              )}
-                              <p className={statLabel}>Final score</p>
-                              <p className="pg-acc text-6xl font-black tabular-nums leading-none mt-1">{score}</p>
-                              <p className="pg-ink mt-3 text-sm font-bold opacity-70">
-                                {height} floors · retired as <span className="pg-acc">{title}</span>
-                              </p>
+                            <div className="flex items-center justify-center gap-5">
+                              <div className="text-left">
+                                <p className={statLabel}>Final score</p>
+                                <p className="pg-acc text-5xl font-black tabular-nums leading-none mt-1">{score}</p>
+                              </div>
+                              <div className="text-left">
+                                {newBest && (
+                                  <span className="pg-on inline-flex items-center gap-1.5 mb-1.5 px-2.5 py-0.5 rounded-full text-[0.5625rem] font-black uppercase tracking-widest bg-amber-400">
+                                    <Crown size={11} /> New best!
+                                  </span>
+                                )}
+                                <p className="pg-ink text-sm font-bold opacity-75">
+                                  {height} floors
+                                  <br />
+                                  retired as <span className="pg-acc">{title}</span>
+                                </p>
+                              </div>
+                            </div>
 
-                              {uniqueLanded.length > 0 && (
-                                <div className="mt-5">
-                                  <p className={statLabel}>Your stack</p>
-                                  <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                                    {uniqueLanded.map((t) => (
-                                      <span key={t.name} title={t.name}>
-                                        <TechLogo tech={t} size={28} />
-                                      </span>
-                                    ))}
-                                  </div>
+                            {uniqueLanded.length > 0 && (
+                              <div className="mt-4">
+                                <p className={statLabel}>Your stack</p>
+                                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                                  {uniqueLanded.slice(0, 16).map((t) => (
+                                    <span key={t.name} title={t.name}>
+                                      <TechLogo tech={t} size={26} />
+                                    </span>
+                                  ))}
                                 </div>
-                              )}
+                              </div>
+                            )}
 
-                              <button
-                                onClick={resetGame}
-                                className="cursor-target mt-6 inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-black text-xs uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
-                                style={{ backgroundColor: 'var(--acc)', color: 'var(--acc-ink)' }}
-                              >
-                                <RotateCcw size={15} /> Play again
-                              </button>
-                              {isDesktop && (
-                                <p className="pg-ink mt-2 text-[0.625rem] font-bold uppercase tracking-widest opacity-40">or press space</p>
-                              )}
-                            </motion.div>
+                            <button
+                              onClick={resetGame}
+                              className="cursor-target mt-4 inline-flex items-center gap-2.5 px-7 py-3 rounded-full font-black text-xs uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
+                              style={{ backgroundColor: 'var(--acc)', color: 'var(--acc-ink)' }}
+                            >
+                              <RotateCcw size={15} /> Play again
+                            </button>
+                            {isDesktop && (
+                              <p className="pg-ink mt-2 text-[0.625rem] font-bold uppercase tracking-widest opacity-40">or press space</p>
+                            )}
                           </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
