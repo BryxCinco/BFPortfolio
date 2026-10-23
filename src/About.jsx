@@ -591,7 +591,8 @@ const About = ({ darkMode = true }) => {
               I&apos;m <span className="ab-acc font-black">Brian Paul Francisco</span>, a BSIT graduate of National
               Teachers College who bridges secure backend architecture and fluid user experiences — pairing UI/UX design
               with solid database work. I build across the LAMP stack (Linux, Apache, MySQL, PHP) and modern JavaScript
-              (Node.js, React, Next.js, Expo) to ship scalable, data-driven apps.
+              (Node.js, React, Next.js, Expo) to ship scalable, data-driven apps, and lately I wire LLMs into them, like
+              TIDE's AI coach and Snapzy's screenshot sorter.
             </motion.p>
 
             <motion.div {...reveal(0.24)} className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto lg:mx-0">
@@ -608,7 +609,7 @@ const About = ({ darkMode = true }) => {
                 <MapPin size={16} className="text-[color:var(--acc)]" /> Manila, PH
               </span>
               <span className="ab-ink flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest opacity-80">
-                <Globe size={16} className="text-[color:var(--acc)]" /> Full-Stack Developer
+                <Globe size={16} className="text-[color:var(--acc)]" /> Full-Stack LLM Developer
               </span>
             </motion.div>
           </div>
@@ -641,7 +642,7 @@ const About = ({ darkMode = true }) => {
                 style={{ animation: 'ab-float 4s ease-in-out infinite' }}
               >
                 <Sparkles size={14} className="text-[color:var(--acc)]" />
-                <span className="ab-ink text-[0.625rem] font-black uppercase tracking-widest">UI/UX · Full-Stack</span>
+                <span className="ab-ink text-[0.625rem] font-black uppercase tracking-widest">LLM · Full-Stack</span>
               </div>
               <div
                 className="ab-anim absolute z-10 -right-3 sm:-right-6 bottom-10 flex items-center gap-2 px-3 py-2 rounded-xl shadow-xl"
@@ -745,7 +746,7 @@ const About = ({ darkMode = true }) => {
 
             <motion.div {...reveal(0.2)} className="grid grid-cols-2 gap-4 sm:gap-6">
               {[
-                { Icon: ShieldCheck, label: 'Focus', value: 'Frontend & UI/UX' },
+                { Icon: ShieldCheck, label: 'Focus', value: 'Full-stack & LLM apps' },
                 { Icon: Code2, label: 'Style', value: 'Clean & Scalable' },
               ].map(({ Icon, label, value }) => (
                 <div key={label} className="p-6 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] space-y-3">

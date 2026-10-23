@@ -185,6 +185,14 @@ const INTENTS = [
     }),
   },
   {
+    test: (q) => has(q, 'open (to|for) work', 'available (for|to) work', 'is (he|brian) available', 'hiring', 'looking for (a )?(job|work|role)', 'job hunting'),
+    reply: () => ({
+      text: "Yes — Brian is open to work: full-time roles, internships and collabs. He's based in Manila, happy with hybrid, remote or onsite, and usually replies within 24 hours.",
+      attach: { type: 'contact' },
+      chips: ['What is your expected salary?', 'What projects have you built?'],
+    }),
+  },
+  {
     test: (q) => has(q, 'salary', 'compensation', 'expected pay', 'rate'),
     reply: () => ({
       text: 'His expected salary is ₱22,000 to ₱40,000 a month, depending on the scope of the role, the work setup and the full package.',
@@ -263,7 +271,7 @@ const INTENTS = [
     },
   },
   {
-    test: (q) => has(q, 'projects?', 'portfolio', 'built', 'apps?', 'websites?', 'gawa', 'ginawa', 'what can you (build|do|make)', 'work samples?'),
+    test: (q) => has(q, 'projects?', 'portfolio', 'built', 'shipped', 'ship', 'launched', 'live apps?', 'apps?', 'websites?', 'gawa', 'ginawa', 'what can you (build|do|make)', 'work samples?'),
     reply: () => ({
       text: `Here's what Brian has shipped. ${liveProjects().length} of them are live — tap a card to open the real site, or ask me about any one.`,
       attach: { type: 'projects' },
@@ -356,7 +364,7 @@ const INTENTS = [
   {
     test: (q) => has(q, 'who is brian', 'about brian', 'tell me about (him|yourself|brian)', 'introduce', 'sino si brian'),
     reply: () => ({
-      text: "Brian Paul Francisco is a fresh BSIT graduate from National Teachers College who finished with a 1.25 GWA. He's a full-stack developer and UI/UX designer who builds web and mobile apps with React, Next.js, Expo, Node and Supabase — and he's an IT intern at Grandline Maritime.",
+      text: "Brian Paul Francisco is a fresh BSIT graduate from National Teachers College who finished with a 1.25 GWA. He's an aspiring full-stack LLM developer (with a UI/UX eye) who builds web and mobile apps with React, Next.js, Expo, Node and Supabase — and he's an IT intern at Grandline Maritime.",
       attach: { type: 'profile' },
       actions: [{ label: 'Read the full story', nav: 'about' }],
       chips: ['What projects have you built?', 'Why should we hire you?'],
@@ -437,12 +445,21 @@ export async function getReply(raw) {
   const isQuestion =
     /\?\s*$/.test(q) ||
     /^(what|who|whom|where|when|why|how|which|define|explain|describe|tell me (about|what)|meaning of|search|look up|ano|sino|saan|kailan|bakit|paano)/.test(q);
-  const wiki = isQuestion ? await wikiLookup(raw) : null;
+  // questions about Brian never go to Wikipedia ("what has Brian shipped?" is not a band)
+  const aboutBrian = has(q, 'brian', 'he', 'his', 'him');
+  const wiki = isQuestion && !aboutBrian ? await wikiLookup(raw) : null;
   if (wiki) {
     return {
       text: firstSentences(wiki.extract),
       attach: { type: 'wiki', ...wiki },
       chips: ['What projects have you built?', 'Tell me a joke'],
+    };
+  }
+
+  if (aboutBrian) {
+    return {
+      text: "I don't have that one about Brian yet. I can tell you about his projects, stack, certificates, school, internship or how to reach him.",
+      chips: FALLBACK_CHIPS,
     };
   }
 

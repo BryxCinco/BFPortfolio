@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
-import { HandStyles, HandNote, Doodle, StickyNote, Sticker } from './HandTouch';
+import { HandStyles, HandNote, Doodle, Sticker } from './HandTouch';
 
 // ============================================================================
 // CERTIFICATE IMAGES
@@ -561,7 +561,7 @@ const VaultStyles = () => (
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6">
-    <h3 className="cv-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
+    <h3 className="cv-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.18em] sm:tracking-[0.24em] whitespace-nowrap">
       {label}
     </h3>
     <div className="h-px flex-1 bg-[color:var(--acc-line)]" />
@@ -1477,12 +1477,7 @@ export default function Certifications({ darkMode = true }) {
       {/* ================= HEADER ================= */}
       <header className="relative space-y-5 sm:space-y-6">
         <HandStyles />
-        <div className="hidden lg:block absolute right-2 top-0 w-60">
-          <StickyNote title="confession:" rot={-3} bg="#B8FFE4">
-            I collect certificates like trading cards. Gotta catch &apos;em all.
-          </StickyNote>
-        </div>
-        <motion.p {...reveal(0)} className="cv-acc font-mono text-[0.6875rem] uppercase tracking-[0.4em]">
+        <motion.p {...reveal(0)} className="cv-acc font-mono text-[0.6875rem] uppercase tracking-[0.25em]">
           ~/credentials
         </motion.p>
         <motion.h2 {...reveal(0.08)} className="cv-ink text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">

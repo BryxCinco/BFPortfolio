@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
-import { HandStyles, HandNote, Doodle, StickyNote } from './HandTouch';
+import { HandStyles, HandNote, Doodle } from './HandTouch';
 import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
 import neoChessSite from './assets/NeoChessXD.png';
@@ -238,7 +238,7 @@ const useInViewOnce = (threshold = 0.2) => {
 
 const SectionEyebrow = ({ label, icon }) => (
   <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-    <h3 className="pj-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] whitespace-nowrap">
+    <h3 className="pj-acc text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem] font-black uppercase tracking-[0.18em] sm:tracking-[0.24em] whitespace-nowrap">
       {label}
     </h3>
     <div className="h-px flex-1 bg-[color:var(--acc-line)] min-w-5" />
@@ -840,7 +840,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
         </div>
 
         <div className="space-y-2">
-          <p className="pj-acc font-mono text-[0.625rem] sm:text-[0.6875rem] uppercase tracking-[0.5em]">
+          <p className="pj-acc font-mono text-[0.625rem] sm:text-[0.6875rem] uppercase tracking-[0.3em]">
             {blocked ? 'Arrived — pop-up blocked' : 'Launching'}
           </p>
           <h2 className="pj-ink relative text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter leading-none">
@@ -1315,18 +1315,11 @@ const Project = ({ darkMode = true }) => {
         className="space-y-16 sm:space-y-24 text-[color:var(--ink)]"
       >
         {/* ================= HEADER ================= */}
-        <header ref={headerRef} className="relative space-y-5 sm:space-y-6 pt-4">
+        {/* intro on the left, the app dock beside it on wide screens */}
+        <header ref={headerRef} className="relative grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 items-center pt-4">
           <HandStyles />
-          <div className="hidden lg:block absolute right-0 top-0 w-64">
-            <StickyNote title="dev log:" rot={3}>
-              built ✓ broke it ✓
-              <br />
-              fixed it ✓ shipped ✓
-              <br />
-              <span className="text-lg opacity-70">(repeat forever)</span>
-            </StickyNote>
-          </div>
-          <p style={headerStep(0)} className="pj-acc font-mono text-[0.6875rem] uppercase tracking-[0.4em]">
+          <div className="space-y-5 sm:space-y-6">
+          <p style={headerStep(0)} className="pj-acc font-mono text-[0.6875rem] uppercase tracking-[0.25em]">
             ~/projects
           </p>
           <h2 style={headerStep(1)} className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
@@ -1357,7 +1350,8 @@ const Project = ({ darkMode = true }) => {
               </span>
             ))}
           </div>
-          <div style={headerStep(4)} className="pt-2 sm:pt-4">
+          </div>
+          <div style={headerStep(4)} className="pt-2 sm:pt-4 lg:pt-0">
             <AppDock sites={websites} reduced={reduced} shown={headerShown} onPick={jumpTo} />
           </div>
         </header>

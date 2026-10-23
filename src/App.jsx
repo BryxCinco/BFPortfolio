@@ -13,15 +13,18 @@ import {
   Layers,
   Volume2,
   VolumeX,
-  MonitorSmartphone
+  MonitorSmartphone,
+  Gamepad2,
+  ChevronDown,
+  Keyboard
 } from 'lucide-react';
 
 // Import ang Components
 import About from './About';
 import Contact from './Contact';
 import Chatbot from './Chatbot';
-import TypingTest, { TypingTestTrigger } from './TypingTest';
-import PlayGame, { PlayGameTrigger } from './PlayGame';
+import TypingTest from './TypingTest';
+import PlayGame from './PlayGame';
 import { useSoundEffects, useGlobalClickSounds } from './SoundEffects';
 import Certifications from './Certifications';
 import Project from './Project';
@@ -92,22 +95,97 @@ const ThemeTransitionStyles = () => <style>{themeTransitionStyles}</style>;
 // Does NOT touch or shift the surrounding layout: it's an inline flex item
 // sized to match the other nav-adjacent icon buttons, with no absolute
 // positioning or margin changes to neighboring elements.
-const SoundToggle = ({ darkMode, soundEnabled, onToggle }) => {
+// "Play" — the side quests (typing test, stack game, typing sounds) in one menu,
+// so the nav itself stays about the portfolio
+const FunMenu = ({ darkMode, onTypingTest, onPlayGame, soundEnabled, onToggleSound }) => {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (!rootRef.current?.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const acc = darkMode ? '#2EE6A8' : '#007A59';
+  const ink = darkMode ? '#FFFFFF' : '#1B1B2A';
+  const sub = darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(27,27,42,0.55)';
+  const row = `cursor-target w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
+    darkMode ? 'hover:bg-white/[0.06]' : 'hover:bg-black/[0.04]'
+  }`;
+  const tile = `shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${darkMode ? 'bg-[#2EE6A8]/10' : 'bg-[#007A59]/10'}`;
+  const pick = (fn) => () => {
+    setOpen(false);
+    fn();
+  };
+
   return (
-    <button
-      onClick={onToggle}
-      data-no-sound="true"
-      aria-label={soundEnabled ? 'Turn typing sound off' : 'Turn typing sound on'}
-      aria-pressed={soundEnabled}
-      title={soundEnabled ? 'Sound: On' : 'Sound: Off'}
-      className={`cursor-target shrink-0 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${
-        darkMode
-          ? 'bg-white/5 border-[#2EE6A8]/20 hover:border-[#2EE6A8]/60 text-[#2EE6A8]'
-          : 'bg-white/70 border-black/10 hover:border-[#007A59]/50 text-[#1B1B2A]'
-      }`}
-    >
-      {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} className="opacity-50" />}
-    </button>
+    <div ref={rootRef} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        title="Games and extras"
+        className={`cursor-target inline-flex items-center gap-2 h-9 px-3.5 rounded-full border text-[0.75rem] font-extrabold uppercase tracking-wider transition-colors ${
+          darkMode ? 'border-white/10 hover:border-[#2EE6A8]/50' : 'border-black/10 hover:border-[#007A59]/50'
+        }`}
+        style={{ color: acc }}
+      >
+        <Gamepad2 size={16} /> Play
+        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className={`nav-pop absolute right-0 top-full mt-3 w-64 p-2 rounded-2xl border backdrop-blur-xl shadow-2xl z-[120] ${
+            darkMode ? 'bg-[#14141F]/95 border-white/10' : 'bg-white/95 border-black/10'
+          }`}
+        >
+          <button role="menuitem" onClick={pick(onTypingTest)} className={row}>
+            <div className={tile} style={{ color: acc }}><Keyboard size={17} /></div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold" style={{ color: ink }}>Typing Test</div>
+              <div className="text-xs font-medium" style={{ color: sub }}>How fast can you type?</div>
+            </div>
+          </button>
+          <button role="menuitem" onClick={pick(onPlayGame)} className={row}>
+            <div className={tile} style={{ color: acc }}><Layers size={17} /></div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold" style={{ color: ink }}>Stack Game</div>
+              <div className="text-xs font-medium" style={{ color: sub }}>Stack the tech, climb the ladder</div>
+            </div>
+          </button>
+          <div className={`my-1.5 mx-3 h-px ${darkMode ? 'bg-white/10' : 'bg-black/[0.08]'}`} />
+          <button
+            role="menuitemcheckbox"
+            aria-checked={soundEnabled}
+            data-no-sound="true"
+            onClick={onToggleSound}
+            className={row}
+          >
+            <div className={tile} style={{ color: acc }}>{soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}</div>
+            <div className="flex-1 text-sm font-bold" style={{ color: ink }}>Typing sounds</div>
+            <div
+              className="px-2 py-0.5 rounded-full text-[0.6875rem] font-extrabold"
+              style={soundEnabled ? { background: acc, color: darkMode ? '#1B1B2A' : '#FFFFFF' } : { color: sub, boxShadow: `inset 0 0 0 1px ${sub}` }}
+            >
+              {soundEnabled ? 'On' : 'Off'}
+            </div>
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -280,12 +358,6 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           <span className="text-[#00FFB3]" style={{textShadow: "0 0 15px rgba(0,255,179,0.6)"}}>Brian Francisco</span>
         </button>
 
-        {/* Typing Speed Test — bare icon + label, no pill/container, desktop only (not shown on tablets, iPads, or mobile) */}
-        <TypingTestTrigger darkMode={darkMode} onClick={() => typingTestRef.current?.open()} />
-
-        {/* Sound On/Off — desktop only; on mobile/tablet the sound switch already
-            lives inside the slide-in sidebar drawer, so it isn't duplicated here */}
-        {isDesktop && <SoundToggle darkMode={darkMode} soundEnabled={soundEnabled} onToggle={onToggleSound} />}
       </div>
 
       {/* Center: Desktop Nav with Sliding Underline — true-centered via the grid, unaffected by the left/right column widths */}
@@ -312,7 +384,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
             key={item.name}
             data-nav={item.id}
             onClick={() => goToSection(item.id)}
-            className={`cursor-target relative flex items-center gap-2 px-3.5 py-2 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-all duration-300 ${
+            className={`cursor-target relative flex items-center gap-2 px-3.5 py-2 rounded-full text-[0.75rem] font-extrabold uppercase tracking-wider transition-all duration-300 ${
               activeSection === item.id ? '' : 'opacity-60 hover:opacity-100'
             } ${loaded ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'}`}
             style={{
@@ -346,7 +418,7 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
         <button
           onClick={() => chatbotRef.current?.open()}
           aria-label="Open chat assistant"
-          className={`cursor-target relative flex items-center gap-2 ml-1 px-4 py-2 rounded-full text-[0.6875rem] font-black uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 ${
+          className={`cursor-target relative flex items-center gap-2 ml-1 px-4 py-2 rounded-full text-[0.75rem] font-extrabold uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 ${
             loaded ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
           }`}
           style={{
@@ -378,12 +450,17 @@ const AnimatedNavBar = ({ darkMode, activeSection, navItems, goToSection, toggle
           <Menu size={20} className={darkMode ? 'text-[#2EE6A8]' : 'text-[#007A59]'} />
         </button>
 
-        {/* Play Game + Theme toggle — grouped together with a comfortable gap so
-            Play Game sits near the dark mode switch without crowding it.
-            Desktop-only, like the Typing Test trigger; doesn't shift the Menu button. */}
+        {/* Play menu (games + sounds) and the theme controls — desktop only; on smaller
+            screens these live in the slide-in drawer */}
         {isDesktop && (
           <div className="flex items-center gap-4 sm:gap-5">
-            <PlayGameTrigger darkMode={darkMode} onClick={() => playGameRef.current?.open()} />
+            <FunMenu
+              darkMode={darkMode}
+              onTypingTest={() => typingTestRef.current?.open()}
+              onPlayGame={() => playGameRef.current?.open()}
+              soundEnabled={soundEnabled}
+              onToggleSound={onToggleSound}
+            />
             <span className="inline-flex items-center gap-2">
               <AutoThemeButton darkMode={darkMode} active={followsSystem} onClick={onFollowSystem} />
               <ThemeSwitch darkMode={darkMode} toggleTheme={toggleTheme} />
@@ -433,7 +510,7 @@ const AutoThemeButton = ({ darkMode, active, onClick, label = false }) => (
     onClick={onClick}
     aria-pressed={active}
     title={active ? 'Following your device display' : 'Match my device display'}
-    className={`cursor-target inline-flex items-center gap-1.5 shrink-0 h-7 sm:h-8 px-2.5 rounded-full border text-[0.5625rem] font-black uppercase tracking-widest transition-colors duration-300 ${
+    className={`cursor-target inline-flex items-center gap-1.5 shrink-0 h-7 sm:h-8 px-2.5 rounded-full border text-[0.6875rem] font-extrabold uppercase tracking-wider transition-colors duration-300 ${
       active
         ? darkMode
           ? 'bg-[#2EE6A8]/15 border-[#2EE6A8] text-[#2EE6A8]'
@@ -501,13 +578,22 @@ function App() {
     return localStorage.getItem('activeSection') || 'home';
   });
 
-  const [showIntro, setShowIntro] = useState(() =>
-    !sessionStorage.getItem('hasAnimated') && activeSection === 'home'
-  );
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return !sessionStorage.getItem('hasAnimated') && !localStorage.getItem('bp_intro_seen') && activeSection === 'home';
+    } catch {
+      return false;
+    }
+  });
 
   const finishIntro = useCallback(() => {
     setShowIntro(false);
-    sessionStorage.setItem('hasAnimated', 'true');
+    try {
+      sessionStorage.setItem('hasAnimated', 'true');
+      localStorage.setItem('bp_intro_seen', '1');
+    } catch {
+      /* storage may be unavailable */
+    }
   }, []);
 
   useEffect(() => {
@@ -604,7 +690,12 @@ function App() {
         <div key={activeSection} className="w-full max-w-[112.5rem] mx-auto pt-24 sm:pt-32 px-4 sm:px-6 lg:px-12 space-y-6">
 
           {activeSection === 'home' ? (
-            <HomePage darkMode={darkMode} onNavigate={goToSection} onPreview={setSelectedImage} />
+            <HomePage
+              darkMode={darkMode}
+              onNavigate={goToSection}
+              onPreview={setSelectedImage}
+              onAsk={(q) => (q ? chatbotRef.current?.ask(q) : chatbotRef.current?.open())}
+            />
           ) : activeSection === 'about' ? (
             <div className="animate-fade-in">
                <About darkMode={darkMode} />
@@ -629,12 +720,12 @@ function App() {
 
           <RevealOnScroll>
             <footer className="pt-14 sm:pt-20 border-t border-[#2EE6A8]/10 text-center space-y-6 sm:space-y-8 pb-10 px-4">
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[0.625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] opacity-60">
+              <div className="flex flex-wrap justify-center gap-6 sm:gap-12 text-[0.75rem] font-extrabold uppercase tracking-[0.2em] opacity-70">
                  <a href="https://github.com/BryxCinco" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">Github</a>
                  <a href="https://www.linkedin.com/in/brianfrancisco10/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">LinkedIn</a>
                  <a href="https://www.facebook.com/Bryx.Francisco111/" target="_blank" rel="noopener noreferrer" className="cursor-target hover:text-[#2EE6A8] transition-colors">Facebook</a>
               </div>
-              <p className="text-[0.5625rem] sm:text-[0.6875rem] font-black uppercase tracking-[0.3em] sm:tracking-[1em] opacity-20 text-[#2EE6A8]">
+              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.25em] opacity-50">
                  © {new Date().getFullYear()} Brian Paul Francisco
               </p>
             </footer>

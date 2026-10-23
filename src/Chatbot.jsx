@@ -652,6 +652,11 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavig
 
   useImperativeHandle(ref, () => ({
     open: () => setIsOpen(true),
+    // open the chat and send a question right away (the Home hero uses this)
+    ask: (q) => {
+      setIsOpen(true);
+      setTimeout(() => sendRef.current?.(q), 350);
+    },
   }));
 
   // lock page scroll; Esc closes (or closes the image preview first)

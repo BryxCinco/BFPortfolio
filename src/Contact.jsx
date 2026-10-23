@@ -43,9 +43,9 @@ const ScrollReveal = ({ children, delay = 0 }) => {
 };
 
 // A single "line" in the terminal-style form
-const FieldLine = ({ prompt, children }) => (
-  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-    <span className="text-[var(--ct-acc)] font-mono text-sm shrink-0 select-none">{prompt}</span>
+const FieldLine = ({ prompt, children, top = false }) => (
+  <div className={`flex flex-col sm:flex-row gap-2 sm:gap-4 ${top ? 'sm:items-start' : 'sm:items-center'}`}>
+    <span className={`text-[var(--ct-acc)] font-mono text-sm shrink-0 select-none ${top ? 'sm:pt-2' : ''}`}>{prompt}</span>
     <div className="flex-1">{children}</div>
   </div>
 );
@@ -190,7 +190,7 @@ const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
       <ScrollReveal delay={0.1}>
         <div className="bg-white/5 backdrop-blur-md border border-[var(--ct-acc)]/10 rounded-md overflow-hidden shadow-xl">
           {/* title bar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-black/20 border-b border-[var(--ct-acc)]/10">
+          <div className={`flex items-center gap-2 px-4 py-3 border-b border-[var(--ct-acc)]/10 ${t('bg-black/[0.04]', 'bg-black/20')}`}>
             <span className="w-2.5 h-2.5 rounded-full bg-[#FF007A]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#FFEA00]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--ct-acc)]" />
@@ -227,7 +227,7 @@ const Contact = ({ darkMode, soundEnabled, onTypeTick }) => {
                 onKeyDown={handleTypingKeydown}
               />
             </FieldLine>
-            <FieldLine prompt="message &gt;">
+            <FieldLine prompt="message &gt;" top>
               <textarea
                 required
                 rows="4"

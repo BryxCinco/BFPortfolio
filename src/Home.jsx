@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, useReducedMotion, useMotionValue, useSpring, animate } from 'framer-motion';
-import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, MousePointer2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, ArrowRight, ArrowUpRight, MapPin, Sparkles, Coffee, Heart, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { getPalette, cssVars } from './theme';
 import { CertificationsPreview } from './Certifications';
@@ -24,6 +24,7 @@ import sweepLogo from './assets/logos/sweepxpress.svg';
 import AppIcon from './AppIcon';
 import { launchSite } from './WarpHost';
 import { websites, ProjectStyles, ProjectDetails } from './Project';
+import HeroInference from './HeroInference';
 import sweepImg from './assets/SweepXpress.png';
 
 // ============================================================================
@@ -73,13 +74,12 @@ const HeroSticker = ({ sticker: s, index, reduced, constraints }) => {
   );
 };
 
-const ROLES = ['Full-stack developer', 'UI/UX designer', 'Mobile app builder', 'Coffee-powered problem solver'];
+const ROLES = ['Full-stack LLM developer', 'AI app builder', 'UI/UX-minded engineer', 'Coffee-powered problem solver'];
 
 const STICKERS = [
   { label: '⭐ 1.25 GWA', bg: '#FFE873', rot: -8, pos: { left: '-8%', top: '8%' } },
   { label: '🎓 BSIT grad', bg: '#FFB8D9', rot: 6, pos: { right: '-10%', top: '22%' } },
-  { label: '💼 Intern @ Grandline', bg: '#B8FFE4', rot: -4, pos: { left: '-12%', bottom: '24%' } },
-  { label: '🚀 4 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-6%', bottom: '8%' } },
+  { label: '🚀 4 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-8%', bottom: '24%' } },
 ];
 
 const TOOLS = [
@@ -109,7 +109,7 @@ const FACTS = [
   { k: 'Status', v: 'Fresh BSIT graduate' },
   { k: 'School', v: 'National Teachers College' },
   { k: 'Based in', v: 'Sta. Cruz, Manila' },
-  { k: 'Focus', v: 'Full-stack & UI/UX' },
+  { k: 'Focus', v: 'Full-stack · LLM apps' },
 ];
 
 const NOW = [
@@ -306,7 +306,7 @@ const FanCard = ({ w, front, darkMode, onDetails }) => (
 
     <div className="mt-5 flex items-center gap-4 sm:gap-5">
       <AppIcon src={w.logo} name={w.name} size={72} className="sm:!w-[5.25rem] sm:!h-[5.25rem]" />
-      <h3 className="hm-ink font-mono text-xl sm:text-2xl leading-tight">
+      <h3 className="hm-ink text-xl sm:text-2xl font-extrabold tracking-tight leading-tight">
         {w.name} <span className="hm-inherit opacity-50">—</span> {w.title}
       </h3>
     </div>
@@ -447,7 +447,7 @@ const WorkFan = ({ reduced, darkMode, onDetails }) => {
 // MAIN
 // ============================================================================
 
-const Home = ({ darkMode = true, onNavigate, onPreview }) => {
+const Home = ({ darkMode = true, onNavigate, onPreview, onAsk }) => {
   const reduced = useReducedMotion();
   const vars = useMemo(() => cssVars(getPalette(darkMode)), [darkMode]);
   const time = useManilaTime();
@@ -533,10 +533,10 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
             </h1>
           </div>
 
-          <h2 className="hm-ink text-2xl sm:text-4xl xl:text-5xl font-black tracking-tight leading-[1.1] opacity-90">
-            <WordReveal text="I build things people" delay={0.35} reduced={reduced} />
+          <h2 className="hm-ink text-2xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.1] opacity-90">
+            <WordReveal text="I build AI-powered apps" delay={0.35} reduced={reduced} />
             <br className="hidden sm:block" />
-            <WordReveal text="actually" delay={0.6} reduced={reduced} />
+            <WordReveal text="people actually" delay={0.6} reduced={reduced} />
             <span className="relative inline-block">
               <WordReveal text="enjoy using." delay={0.7} reduced={reduced} className="hm-acc" />
               <Scribble
@@ -563,8 +563,8 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </div>
 
           <motion.p {...reveal(0.5)} className="hm-ink text-sm sm:text-lg leading-relaxed opacity-75 max-w-xl mx-auto lg:mx-0">
-            A fresh BSIT grad from Manila who loves turning messy ideas into apps that feel calm, fast and a little
-            bit delightful — from React and Next.js on the web to Expo on mobile.
+            A fresh BSIT grad from Manila building full-stack apps with LLMs inside: TIDE coaches your focus, Snapzy
+            sorts your screenshots. React and Next.js on the web, Expo on mobile.
           </motion.p>
 
           <motion.div {...reveal(0.6)} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
@@ -591,7 +591,8 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </motion.div>
         </div>
 
-        {/* polaroid + draggable stickers */}
+        {/* polaroid + draggable stickers, with the live inference card overlapping it */}
+        <div className="relative lg:pb-24">
         <div className="relative mx-auto w-[72%] sm:w-[60%] lg:w-[80%] max-w-[25rem]">
           <motion.div
             initial={reduced ? false : { opacity: 0, rotate: -14, y: 40, scale: 0.9 }}
@@ -613,9 +614,15 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
             <HeroSticker key={s.label} sticker={s} index={i} reduced={reduced} constraints={heroRef} />
           ))}
 
-          <span className="hm-hand hm-ink hidden sm:flex absolute -bottom-14 left-1/2 -translate-x-1/2 items-center gap-1.5 whitespace-nowrap text-xl opacity-60">
-            <MousePointer2 size={14} /> psst — drag the stickers
-          </span>
+        </div>
+        <motion.div
+          initial={reduced ? false : { opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 mt-10 mx-auto w-full max-w-[26rem] lg:absolute lg:mt-0 lg:bottom-0 lg:-left-[30%] lg:w-[23rem]"
+        >
+          <HeroInference darkMode={darkMode} reduced={reduced} onAsk={onAsk} />
+        </motion.div>
         </div>
       </section>
 
@@ -665,7 +672,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           </motion.div>
 
           <motion.div {...reveal(0.12)} className="p-7 sm:p-8 rounded-3xl border border-[color:var(--line)] bg-[color:var(--surface)] space-y-5">
-            <p className="hm-acc font-mono text-[0.625rem] uppercase tracking-[0.3em]">Quick facts</p>
+            <p className="hm-acc text-[0.6875rem] font-bold uppercase tracking-[0.2em]">Quick facts</p>
             {FACTS.map((f) => (
               <div key={f.k} className="flex items-baseline justify-between gap-4 border-b border-dashed border-[color:var(--line)] pb-3 last:border-0 last:pb-0">
                 <span className="hm-ink text-[0.6875rem] font-black uppercase tracking-widest opacity-50">{f.k}</span>
@@ -694,10 +701,14 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
           <motion.div
             {...reveal(0.14)}
             className="lg:col-span-2 relative p-7 sm:p-10 rounded-3xl overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #FF007A, #A700FF)' }}
+            style={{
+              background:
+                'radial-gradient(120% 140% at 100% 100%, rgba(255,0,122,0.38), transparent 55%), radial-gradient(90% 120% at 0% 0%, rgba(46,230,168,0.22), transparent 60%), #15151F',
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+            }}
           >
             <Heart className="absolute -right-6 -bottom-8 w-44 h-44 text-white opacity-10 -rotate-12" />
-            <p className="hm-white font-mono text-[0.625rem] uppercase tracking-[0.3em] opacity-80">How I think about it</p>
+            <p className="hm-white text-[0.6875rem] font-bold uppercase tracking-[0.2em] opacity-70">How I think about it</p>
             <p className="hm-white mt-4 text-2xl sm:text-4xl font-black tracking-tight leading-tight">
               &ldquo;Turning complex logic into seamless experiences.&rdquo;
             </p>
@@ -764,7 +775,7 @@ const Home = ({ darkMode = true, onNavigate, onPreview }) => {
 
       {/* ================= CLOSING CTA ================= */}
       <motion.section {...reveal(0)} className="relative text-center py-10 sm:py-16">
-        <p className="hm-acc font-mono text-[0.6875rem] uppercase tracking-[0.35em]">What&apos;s next?</p>
+        <p className="hm-acc text-[0.75rem] font-bold uppercase tracking-[0.22em]">What&apos;s next?</p>
         <h2 className="hm-ink mt-5 text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
           Got an idea?
           <br />
