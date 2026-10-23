@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // ============================================================================
-// INTROSPLASH.JSX — the first-visit "hello in many languages" opener, shot
-// like a film title: letterbox bars, a soft drifting glow and grain, each
-// greeting focusing in from a blur with its language underneath, then a
-// gradient "Kamusta." and the screen splits open onto the site. It matches the device's light or dark display. About 3.3s
-// in total; a click or any key skips straight to the reveal. No white
-// flashes or hard strobing, just quick fades, so it stays easy on the eyes.
+// INTROSPLASH.JSX — the "hello in many languages" opener, shot like a film
+// title: letterbox bars, a soft drifting glow and grain, each greeting
+// focusing in from a blur with its language underneath, then a gradient
+// "Kamusta." and the screen splits open onto the site. It matches the
+// device's light or dark display. The full cut runs about 3.3s on a first
+// visit; returning visitors get a short cut (about 1.6s). A click, tap or any
+// key skips straight to the reveal. It waits briefly for the web font so no
+// fallback face flashes, and tells App when the split starts so the page
+// mounts right then and its own entrance animations play in view.
 // ============================================================================
 
 const GREETINGS = [
@@ -24,10 +27,16 @@ const GREETINGS = [
   ['Привет', 'Русский'],
 ];
 
+// returning visitors see a few of them, faster
+const SHORT = ['Hello', '¡Hola!', 'Bonjour', 'こんにちは', 'Ciao'];
+
 const START_MS = 280; // letterbox settles first
-const WORD_MS = 150; // each greeting's screen time
-const HOLD_MS = 780; // how long "Kamusta." stays
 const EXIT_MS = 700; // the split-open reveal
+const FONT_WAIT_MS = 600; // longest we wait for Montserrat before starting
+const TIMING = {
+  full: { word: 150, hold: 780 },
+  short: { word: 120, hold: 560 },
+};
 
 // the intro follows the device's display mode, like the rest of the site
 const THEMES = {
@@ -38,7 +47,7 @@ const THEMES = {
     glowA: 'rgba(0,255,179,0.16)',
     glowB: 'rgba(255,0,122,0.14)',
     vignette: 'rgba(0,0,0,0.6)',
-    grain: { opacity: 0.07, blend: 'screen' },
+    grain: { opacity: 0.05 },
     grad: 'is-grad',
     rule: 'rgba(255,255,255,0.6)',
     wordGlow: '0 0 40px rgba(255,255,255,0.18)',
@@ -50,7 +59,7 @@ const THEMES = {
     glowA: 'rgba(0,200,140,0.16)',
     glowB: 'rgba(255,0,122,0.13)',
     vignette: 'rgba(150,110,80,0.16)',
-    grain: { opacity: 0.05, blend: 'multiply' },
+    grain: { opacity: 0.04 },
     grad: 'is-grad-light',
     rule: 'rgba(27,27,42,0.35)',
     wordGlow: '0 10px 40px rgba(255,0,122,0.12)',
@@ -67,7 +76,7 @@ const Styles = () => (
     @keyframes is-bar-top { from { transform: translateY(-100%); } to { transform: none; } }
     @keyframes is-bar-bot { from { transform: translateY(100%); } to { transform: none; } }
     @keyframes is-focus {
-      0%   { opacity: 0; filter: blur(6px); transform: translateY(10px) scale(1.03); letter-spacing: 0.06em; }
+      0%   { opacity: 0; filter: blur(4px); transform: translateY(10px) scale(1.03); letter-spacing: 0.06em; }
       100% { opacity: 1; filter: blur(0); transform: none; letter-spacing: -0.02em; }
     }
     @keyframes is-sub { from { opacity: 0; transform: translateY(6px); } to { opacity: 0.55; transform: none; } }
@@ -84,7 +93,7 @@ const Styles = () => (
 
     .is-bar-top { animation: is-bar-top 0.45s cubic-bezier(.22,1,.36,1) both; }
     .is-bar-bot { animation: is-bar-bot 0.45s cubic-bezier(.22,1,.36,1) both; }
-    .is-word { animation: is-focus 0.12s cubic-bezier(.22,1,.36,1) both; }
+    .is-word { animation: is-focus 0.12s cubic-bezier(.22,1,.36,1) both; will-change: transform, opacity; }
     .is-sub { animation: is-sub 0.14s ease-out both; }
     .is-final { animation: is-final 0.6s cubic-bezier(.22,1,.36,1) both; }
     .is-grad {
@@ -117,49 +126,71 @@ const Styles = () => (
   `}</style>
 );
 
-const IntroSplash = ({ onDone, dark = true }) => {
+const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
   const T = THEMES[dark ? 'dark' : 'light'];
   const ink = (a) => `rgba(${T.ink},${a})`;
   const reduced =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const [index, setIndex] = useState(reduced ? GREETINGS.length : -1); // -1 = bars only, length = Kamusta
+  const list = short ? GREETINGS.filter(([w]) => SHORT.includes(w)) : GREETINGS;
+  const { word: WORD_MS, hold: HOLD_MS } = TIMING[short ? 'short' : 'full'];
+  const [index, setIndex] = useState(reduced ? list.length : -1); // -1 = bars only, length = Kamusta
+  const [started, setStarted] = useState(reduced);
   const [leaving, setLeaving] = useState(false);
   const timers = useRef([]);
   const doneRef = useRef(false);
 
-  const total = START_MS + GREETINGS.length * WORD_MS + HOLD_MS;
+  const total = START_MS + list.length * WORD_MS + HOLD_MS;
 
   const leave = () => {
     if (doneRef.current) return;
     doneRef.current = true;
     timers.current.forEach(clearTimeout);
     setLeaving(true);
+    onLeave?.();
     timers.current = [setTimeout(() => onDone?.(), reduced ? 320 : EXIT_MS)];
   };
 
   useEffect(() => {
-    const t = [];
-    if (reduced) {
-      t.push(setTimeout(leave, 900));
-    } else {
-      GREETINGS.forEach((_, i) => t.push(setTimeout(() => setIndex(i), START_MS + i * WORD_MS)));
-      t.push(setTimeout(() => setIndex(GREETINGS.length), START_MS + GREETINGS.length * WORD_MS));
-      t.push(setTimeout(leave, total));
-    }
-    timers.current = t;
+    // the page behind stays still while the intro plays
+    const root = document.documentElement;
+    const prevOverflow = root.style.overflow;
+    root.style.overflow = 'hidden';
+
+    let cancelled = false;
+    const run = () => {
+      if (cancelled || doneRef.current) return;
+      const t = [];
+      if (reduced) {
+        t.push(setTimeout(leave, 900));
+      } else {
+        setStarted(true);
+        list.forEach((_, i) => t.push(setTimeout(() => setIndex(i), START_MS + i * WORD_MS)));
+        t.push(setTimeout(() => setIndex(list.length), START_MS + list.length * WORD_MS));
+        t.push(setTimeout(leave, total));
+      }
+      timers.current = t;
+    };
+
+    // start once Montserrat is in (or after a short cap), so no fallback face flashes
+    const fontsReady = document.fonts?.load
+      ? Promise.all([document.fonts.load('900 1em Montserrat'), document.fonts.load('700 1em Montserrat')])
+      : Promise.resolve();
+    Promise.race([fontsReady, new Promise((r) => setTimeout(r, FONT_WAIT_MS))]).then(run, run);
 
     const skip = () => leave();
     window.addEventListener('keydown', skip);
     return () => {
+      cancelled = true;
       timers.current.forEach(clearTimeout);
       window.removeEventListener('keydown', skip);
+      root.style.overflow = prevOverflow;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isFinal = index >= GREETINGS.length;
-  const [word, lang] = isFinal || index < 0 ? [null, null] : GREETINGS[index];
-  const count = Math.min(index + 1, GREETINGS.length);
+  const isFinal = index >= list.length;
+  const [word, lang] = isFinal || index < 0 ? [null, null] : list[index];
+  const count = Math.min(index + 1, list.length);
 
   return (
     <div
@@ -189,7 +220,7 @@ const IntroSplash = ({ onDone, dark = true }) => {
           style={{ background: `radial-gradient(closest-side, ${T.glowB}, transparent 70%)` }}
         />
         {/* grain + vignette */}
-        <div className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: T.grain.opacity, mixBlendMode: T.grain.blend }} />
+        <div className="absolute inset-0" style={{ backgroundImage: GRAIN, opacity: T.grain.opacity }} />
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, transparent 45%, ${T.vignette} 100%)` }} />
 
         {/* letterbox */}
@@ -203,13 +234,14 @@ const IntroSplash = ({ onDone, dark = true }) => {
               className="is-progress h-full"
               style={{
                 background: 'linear-gradient(90deg, #00FFB3, #FF007A)',
-                animation: reduced ? 'none' : `is-line ${total - START_MS}ms ${START_MS}ms linear both`,
+                animation: reduced || !started ? 'none' : `is-line ${total - START_MS}ms ${START_MS}ms linear both`,
+                transform: started ? undefined : 'scaleX(0)',
               }}
             />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[0.625rem] sm:text-xs font-black tabular-nums tracking-[0.3em]" style={{ color: ink(0.5) }}>
-              {String(isFinal ? GREETINGS.length + 1 : Math.max(count, 0)).padStart(2, '0')} / {GREETINGS.length + 1}
+              {String(isFinal ? list.length + 1 : Math.max(count, 0)).padStart(2, '0')} / {list.length + 1}
             </span>
             <span className="text-[0.625rem] sm:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: ink(0.35) }}>click to skip</span>
           </div>

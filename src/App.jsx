@@ -578,13 +578,24 @@ function App() {
     return localStorage.getItem('activeSection') || 'home';
   });
 
+  // the intro plays once per browser session; anyone who has seen it before gets the short cut
   const [showIntro, setShowIntro] = useState(() => {
     try {
-      return !sessionStorage.getItem('hasAnimated') && !localStorage.getItem('bp_intro_seen') && activeSection === 'home';
+      return !sessionStorage.getItem('hasAnimated') && activeSection === 'home';
     } catch {
       return false;
     }
   });
+  const [introShort] = useState(() => {
+    try {
+      return !!localStorage.getItem('bp_intro_seen');
+    } catch {
+      return false;
+    }
+  });
+  // the page mounts when the intro splits open, so its entrance animations play in view
+  const [introOpening, setIntroOpening] = useState(false);
+  const openIntro = useCallback(() => setIntroOpening(true), []);
 
   const finishIntro = useCallback(() => {
     setShowIntro(false);
@@ -621,7 +632,8 @@ function App() {
 
   return (
     <>
-      {showIntro && <IntroSplash dark={darkMode} onDone={finishIntro} />}
+      {showIntro && <IntroSplash dark={darkMode} short={introShort} onLeave={openIntro} onDone={finishIntro} />}
+      {(!showIntro || introOpening) && (
       <div className={darkMode ? 'dark bg-[#0E0E18] text-white' : 'light bg-[#FCFAF7] text-[#1B1B2A]'}>
       <ThemeTransitionStyles />
       <div className="min-h-screen relative transition-colors duration-700 selection:bg-[#2EE6A8] selection:text-[#1B1B2A] pb-20 overflow-x-hidden bg-inherit">
@@ -738,6 +750,7 @@ function App() {
         </div>
       </div>
       </div>
+      )}
     </>
   );
 }
