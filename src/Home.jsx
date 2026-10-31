@@ -25,7 +25,7 @@ import AppIcon from './AppIcon';
 import { launchSite } from './WarpHost';
 import { websites, ProjectStyles, ProjectDetails } from './Project';
 import HeroInference from './HeroInference';
-import sweepImg from './assets/shots/sweepxpress-d-home.jpg';
+import sweepImg from './assets/shots/sweepxpress-d-shop.jpg';
 
 // ============================================================================
 // HOME.JSX — modern layout with a hand-made feel: handwritten notes, doodles
