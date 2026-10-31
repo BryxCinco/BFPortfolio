@@ -51,13 +51,28 @@ const websites = [
     highlights: [
       'Gamified daily quests with XP, rarity tiers, and streaks',
       'Focus timer, journal, tasks, and activity insights in one place',
-      'Built-in AI Coach for reflection and quest generation',
+      'AI Coach that reads your real history and acts on it through 23 tools',
     ],
-    stack: ['React Native', 'Expo', 'AI Integration', 'Vercel'],
+    stack: ['Expo', 'React Native', 'TypeScript', 'Node.js', 'Supabase', 'Groq', 'Hugging Face'],
+    story: {
+      challenge:
+        'Time, mood and tasks usually live in three separate apps, and a generic AI chatbot has never seen any of them, so its advice stays vague.',
+      approach:
+        'One Supabase database holds sessions, journal entries and tasks. Entries are embedded with Hugging Face into pgvector, so the Groq coach retrieves your actual history (RAG) and can act through 23 tools: create or finish a task, log a mood, suggest a quest. Expo ships web and mobile from one codebase, with an Express API on Vercel.',
+      result:
+        'v1.0 is live: a coach that can answer "how did my week go?" from your own data, in 13 languages, with Google sign-in and a local-only guest mode.',
+      next: [
+        'Cut the 12 MB web bundle under 5 MB by loading only the 4 font weights it uses',
+        'Replace the last mock widget (Weekly Progress) with real data',
+        'Add base-schema migrations and re-audit row-level security',
+        'Automated tests for the coach\'s tools',
+      ],
+    },
     image: tideSite,
     logo: tideLogo,
     shots: shotsFor('tide', ['dashboard', 'timer', 'tasks', 'journal'], ['dashboard', 'timer']),
     url: 'https://tide-rust.vercel.app/',
+    repo: 'https://github.com/BryxCinco/tide',
     featured: true,
     note: 'my fave ♥',
   },
@@ -69,13 +84,27 @@ const websites = [
     highlights: [
       'Interactive map with search and one-tap “Near Me”',
       'Community-submitted restroom pins with map and list views',
-      'Mobile-first layout with an AI assistant shortcut',
+      'AI assistant in Tagalog or English that searches real restroom data',
     ],
-    stack: ['Next.js', 'React', 'OpenStreetMap', 'Vercel'],
+    stack: ['Next.js', 'TypeScript', 'Supabase', 'Leaflet', 'Groq', 'PWA'],
+    story: {
+      challenge:
+        'Finding a clean CR in Metro Manila is guesswork. Map apps cannot tell you if there is a bidet, tissue or PWD access, and any crowdsourced map attracts spam.',
+      approach:
+        'Seeded the map with public toilets from OpenStreetMap, then let the community add, review and verify them. Points, rate limits, bans and moderation thresholds are Postgres triggers with row-level security on every table, so the rules cannot be skipped from the browser. A Groq assistant answers through pgvector search and tool calling, and Groq also screens every new restroom.',
+      result:
+        'A live, installable PWA built for 375px screens, with voice turn-by-turn directions, levels and badges, and a moderator dashboard, running entirely on free tiers (no Google Maps).',
+      next: [
+        'Grow coverage past Metro Manila: the importer already supports Cebu, Davao, Iloilo and Bacolod',
+        'Restroom photos and opening hours',
+        'Automated tests for the database rules and the API routes',
+      ],
+    },
     image: poopipooSite,
     logo: poopipooLogo,
     shots: shotsFor('poopipoo', ['map', 'list', 'welcome'], ['map', 'list', 'welcome']),
     url: 'https://poopipoo.vercel.app/',
+    repo: 'https://github.com/BryxCinco/poopipoo',
     note: "yes, it's real 😂",
   },
   {
@@ -88,7 +117,20 @@ const websites = [
       'Six time-control presets, from 30-second blitz to no limit',
       'Saved-match data and toggleable chiptune audio',
     ],
-    stack: ['React', 'Vite', 'JavaScript', 'Vercel'],
+    stack: ['React', 'Vite', 'chess.js', 'Web Workers', 'Canvas', 'Web Audio'],
+    story: {
+      challenge:
+        'A chess CPU that thinks on the main thread freezes the animations, and the full rule set (en passant, threefold repetition, the 50-move rule) is easy to get subtly wrong.',
+      approach:
+        'chess.js handles the rules. The CPU is my own engine (negamax with alpha-beta pruning, iterative deepening, quiescence search and piece-square tables) running in a Web Worker on a 1.5 s budget. Pieces are 16x16 pixel grids drawn as SVG, the 17 capture effects run on Canvas, and the chiptune music is generated live with Web Audio, with no audio files.',
+      result:
+        'A live game that stays smooth on phones, tablets and desktop: three CPU levels, six clocks, undo and redo, autosave and named save slots.',
+      next: [
+        'Online play against a friend',
+        'Move hints and a post-game analysis',
+        'Tests for the engine with known chess puzzles',
+      ],
+    },
     image: neoChessSite,
     logo: neoChessLogo,
     shots: shotsFor('neochess', ['start', 'board', 'fx-gallery'], ['start', 'board', 'fx-gallery']),
@@ -106,7 +148,21 @@ const websites = [
       'AI sorts pictures into albums you can rename, recolor and create',
       'Search by what is inside a picture, not by its file name',
     ],
-    stack: ['Next.js', 'Tailwind', 'AI Integration', 'Vercel'],
+    stack: ['Next.js', 'TypeScript', 'Supabase', 'Gemini', 'Zod', 'Tailwind'],
+    story: {
+      challenge:
+        'Screenshots pile up in a timeline you cannot search, with amounts, reference numbers and WiFi passwords trapped in the pixels. On top of that, the free Gemini quota is small and serverless functions time out on long jobs.',
+      approach:
+        'Sorting starts only when you press Sort: up to 10 photos, 3 at a time, in a background worker. Gemini reads each image with your album list, and Zod validates the reply so the album must be one of yours. If a model is busy, the next one in a fallback chain takes over. jsQR decodes QR codes exactly, passwords are masked, and Cancel can never be overwritten by a late result.',
+      result:
+        'Live: captions, OCR text, albums, smart cards for payments, receipts and WiFi, ranked full-text search and album ZIP downloads, in English and Tagalog.',
+      next: [
+        'Thumbnails and infinite scroll for large libraries',
+        'A durable job queue and a clear message when the daily AI quota runs out',
+        'HEIC uploads, a forgot-password flow and duplicate detection',
+        'Automated tests',
+      ],
+    },
     image: snapzySite,
     logo: snapzyLogo,
     shots: shotsFor('snapzy', ['home', 'login'], ['home', 'features', 'login']),
@@ -125,6 +181,19 @@ const websites = [
       'Admin Copilot on Groq that can only call 10 read-only tools, admin-only and rate-limited',
     ],
     stack: ['PHP', 'MySQL', 'Bootstrap', 'Chart.js', 'Groq'],
+    story: {
+      challenge:
+        'Small supply stores reorder by feel: they run out before the supplier can deliver, or they overstock. And letting an LLM near business data risks bad queries and leaked customer details.',
+      approach:
+        'Every stock movement goes through one function. Reorder points come from plain statistics (daily sales x lead time + safety stock, about a 95% service level), and suppliers are scored on on-time delivery, fill rate and price steadiness. The Copilot never writes SQL: it can only call 10 read-only tools, sees no customer personal data, and is admin-only, CSRF-protected and rate-limited.',
+      result:
+        'What began as my 2025 capstone is now live, with the full loop from storefront to stock, reorder suggestions, restock orders, receiving and supplier scorecards, plus a Copilot that shows which tools each answer used.',
+      next: [
+        'Move to a host that allows outbound requests, so the Copilot runs online and not only locally',
+        'Online payments, delivery tracking with proof of delivery, and a supplier portal',
+        'Multiple warehouses',
+      ],
+    },
     image: SHOT_FILES['./assets/shots/sweepxpress-d-home.jpg'],
     logo: sweepXpressLogo,
     shots: shotsFor('sweepxpress', ['home', 'shop', 'product', 'about'], ['product', 'login']),
@@ -1015,6 +1084,47 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
 // browse), the story, features and stack. Esc closes the zoom, then the sheet.
 // ============================================================================
 
+// Case study in the details sheet: challenge → approach → result, then what comes next
+const CaseStudy = ({ story }) => (
+  <section className="px-6 sm:px-10 pb-10 sm:pb-12">
+    <div className="border-t border-[color:var(--line)] pt-8">
+      <p className="pj-acc text-[0.6875rem] font-black uppercase tracking-[0.22em]">Case study</p>
+      <h3 className="text-xl sm:text-2xl font-black tracking-tight mt-1 mb-5">How it was built</h3>
+      <ol className="grid md:grid-cols-3 gap-4">
+        {[
+          ['01', 'The challenge', story.challenge],
+          ['02', 'The approach', story.approach],
+          ['03', 'The result', story.result],
+        ].map(([n, title, text]) => (
+          <li key={n} className="relative rounded-2xl border border-[color:var(--line)] p-5 overflow-hidden" style={{ background: 'var(--surface)' }}>
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="pj-acc font-mono text-xs font-bold">{n}</span>
+              <h4 className="text-base font-black tracking-tight">{title}</h4>
+            </div>
+            <p className="text-sm sm:text-[0.9375rem] opacity-80 font-medium leading-relaxed">{text}</p>
+          </li>
+        ))}
+      </ol>
+      {story.next?.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--acc-line)] p-5" style={{ background: 'var(--acc-soft)' }}>
+          <div className="flex items-baseline gap-3 mb-3">
+            <span className="pj-acc font-mono text-xs font-bold">04</span>
+            <h4 className="text-base font-black tracking-tight">What I'd improve next</h4>
+          </div>
+          <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+            {story.next.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm font-semibold leading-snug">
+                <ArrowUpRight size={15} className="mt-0.5 shrink-0 text-[color:var(--acc)]" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </section>
+);
+
 const ProjectDetails = ({ site, darkMode, onClose, onLaunch }) => {
   const hasMobile = (site.shots?.mobile?.length ?? 0) > 0;
   const [tab, setTab] = useState('desktop');
@@ -1218,6 +1328,8 @@ const ProjectDetails = ({ site, darkMode, onClose, onLaunch }) => {
               </div>
             </aside>
           </div>
+
+          {site.story && <CaseStudy story={site.story} />}
         </div>
       </div>
 
