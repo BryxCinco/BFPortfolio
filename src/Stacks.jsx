@@ -86,7 +86,8 @@ const stackCategories = [
     items: [
       { name: 'Claude', logo: SIMPLE('claude', 'D97757') },
       { name: 'ChatGPT', logo: LOBE('openai') },
-      { name: 'Gemini', logo: SIMPLE('googlegemini', '8E75B2') },
+      { name: 'Gemini', logo: SIMPLE('googlegemini', '8E75B2'), usedIn: ['Snapzy'] },
+      { name: 'Groq', logo: LOBE('groq'), usedIn: ['SweepXpress'] },
       { name: 'Copilot', logo: SIMPLE('githubcopilot', '000000') },
       { name: 'Codex', logo: LOBE('codex-color') },
       { name: 'Perplexity', logo: SIMPLE('perplexity', '1FB8CD') },
@@ -138,14 +139,14 @@ const stackCategories = [
     items: [
       { name: 'React', logo: DEVICON('react'), usedIn: ['Poopipoo', 'Neo Chess XD', 'Snapzy', PORTFOLIO] },
       { name: 'Next.js', logo: SIMPLE('nextdotjs', '000000'), usedIn: ['Poopipoo', 'Snapzy'] },
-      { name: 'TypeScript', logo: DEVICON('typescript') },
+      { name: 'TypeScript', logo: DEVICON('typescript'), usedIn: ['Snapzy'] },
       { name: 'JavaScript', logo: DEVICON('javascript'), usedIn: ['Neo Chess XD', PORTFOLIO] },
       { name: 'Vite', logo: DEVICON('vitejs'), usedIn: ['Neo Chess XD', PORTFOLIO] },
-      { name: 'Tailwind', logo: DEVICON('tailwindcss'), usedIn: ['SweepXpress', 'Snapzy', PORTFOLIO] },
+      { name: 'Tailwind', logo: DEVICON('tailwindcss'), usedIn: ['Snapzy', PORTFOLIO] },
       { name: 'lucide-react', logo: SIMPLE('lucide', 'F56565'), usedIn: [PORTFOLIO] },
       { name: 'HTML', logo: DEVICON('html5') },
       { name: 'CSS', logo: DEVICON('css3') },
-      { name: 'Bootstrap', logo: DEVICON('bootstrap') },
+      { name: 'Bootstrap', logo: DEVICON('bootstrap'), usedIn: ['SweepXpress'] },
     ],
   },
 ];

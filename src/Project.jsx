@@ -11,6 +11,7 @@ import {
   Monitor,
   Smartphone,
   Info,
+  Code,
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
@@ -19,7 +20,6 @@ import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
 import neoChessSite from './assets/NeoChessXD.png';
 import snapzySite from './assets/Snapzy.png';
-import sweepXpressSite from './assets/SweepXpress.png';
 
 import tideLogo from './assets/logos/tide.png';
 import poopipooLogo from './assets/logos/poopipoo.png';
@@ -93,6 +93,7 @@ const websites = [
     logo: neoChessLogo,
     shots: shotsFor('neochess', ['start', 'board', 'fx-gallery'], ['start', 'board', 'fx-gallery']),
     url: 'https://neo-chess-xd.vercel.app/',
+    repo: 'https://github.com/BryxCinco/NeoChessXd',
     note: 'try beating the CPU',
   },
   {
@@ -110,25 +111,41 @@ const websites = [
     logo: snapzyLogo,
     shots: shotsFor('snapzy', ['home', 'login'], ['home', 'features', 'login']),
     url: 'https://snapzy-tau.vercel.app/',
+    repo: 'https://github.com/BryxCinco/snapzy',
     note: 'bye, messy camera roll ✿',
   },
   {
     name: 'SweepXpress',
-    subtitle: 'Logistics Admin Dashboard',
-    tag: 'Logistics System',
-    desc: 'A secured admin control panel for monitoring orders, inventory, and customers in real time, with audit-logged sign-ins for accountability.',
+    subtitle: 'Supply-Chain E-commerce Platform',
+    tag: 'Supply Chain · AI',
+    desc: 'A cleaning-supplies store that sells to households and to businesses on purchase orders, then runs the supply side too: sales reduce stock, low stock turns into reorder suggestions, deliveries go back into stock, and every supplier gets a score. An AI Admin Copilot answers questions from the store\'s own data.',
     highlights: [
-      'Real-time order, inventory, and customer monitoring',
-      'Audit-logged admin sign-ins',
+      'Storefront with cart, cash on delivery, and B2B purchase orders on Net 30 / 45 / 60 terms',
+      'Inventory, restock purchase orders and forecasted reorder points from sales history',
+      'Admin Copilot on Groq that can only call 10 read-only tools, admin-only and rate-limited',
     ],
-    stack: ['PHP', 'MySQL', 'Tailwind'],
-    image: sweepXpressSite,
+    stack: ['PHP', 'MySQL', 'Bootstrap', 'Chart.js', 'Groq'],
+    image: SHOT_FILES['./assets/shots/sweepxpress-d-home.jpg'],
     logo: sweepXpressLogo,
-    shots: { desktop: [{ src: sweepXpressSite, caption: 'Admin Sign-in' }], mobile: [] },
-    url: '#',
-    note: 'demo coming soon…',
+    shots: shotsFor('sweepxpress', ['home', 'shop', 'product', 'about'], ['product', 'login']),
+    url: 'https://sweepxpress.infinityfree.io/sweepxpress/',
+    repo: 'https://github.com/BryxCinco/sweepxpress',
+    note: 'capstone, now with AI ✦',
   },
 ];
+
+// "View code": the project's public GitHub repository
+const CodeLink = ({ href }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="cursor-target inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[color:var(--line)] font-black text-[0.75rem] uppercase tracking-[0.16em] transition-colors hover:border-[color:var(--acc-line)]"
+    style={{ color: 'var(--ink)' }}
+  >
+    <Code size={15} /> <span className="pj-inherit">View code</span>
+  </a>
+);
 
 const hostOf = (url) => {
   try {
@@ -456,6 +473,7 @@ const ProjectRow = ({ site, index, reduced, onDetails, onLaunch, flash }) => {
               <Info size={15} /> <span className="pj-inherit">View details</span>
             </button>
             <LaunchButton site={site} live={live} onLaunch={onLaunch} />
+            {site.repo && <CodeLink href={site.repo} />}
           </div>
         </div>
 
@@ -1087,6 +1105,7 @@ const ProjectDetails = ({ site, darkMode, onClose, onLaunch }) => {
                       <span className="pj-ink">Coming soon</span>
                     </span>
                   )}
+                  {site.repo && <CodeLink href={site.repo} />}
                   {host && <span className="text-xs font-mono opacity-55">{host}</span>}
                 </div>
               </div>
@@ -1188,6 +1207,7 @@ const ProjectDetails = ({ site, darkMode, onClose, onLaunch }) => {
                     ['Category', site.tag],
                     ['Screenshots', String((site.shots?.desktop?.length ?? 0) + (site.shots?.mobile?.length ?? 0))],
                     ['Website', host || 'Coming soon'],
+                    ...(site.repo ? [['Source', site.repo.replace('https://', '')]] : []),
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4 border-b border-[color:var(--line)] pb-2 last:border-0 last:pb-0">
                       <dt className="opacity-55 font-semibold">{k}</dt>

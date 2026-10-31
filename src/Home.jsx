@@ -25,7 +25,7 @@ import AppIcon from './AppIcon';
 import { launchSite } from './WarpHost';
 import { websites, ProjectStyles, ProjectDetails } from './Project';
 import HeroInference from './HeroInference';
-import sweepImg from './assets/SweepXpress.png';
+import sweepImg from './assets/shots/sweepxpress-d-home.jpg';
 
 // ============================================================================
 // HOME.JSX — modern layout with a hand-made feel: handwritten notes, doodles
@@ -79,7 +79,7 @@ const ROLES = ['Full-stack LLM developer', 'AI app builder', 'UI/UX-minded engin
 const STICKERS = [
   { label: '⭐ 1.25 GWA', bg: '#FFE873', rot: -8, pos: { left: '-8%', top: '8%' } },
   { label: '🎓 BSIT grad', bg: '#FFB8D9', rot: 6, pos: { right: '-10%', top: '22%' } },
-  { label: '🚀 4 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-8%', bottom: '24%' } },
+  { label: '🚀 5 apps shipped', bg: '#D4C2FF', rot: 7, pos: { right: '-8%', bottom: '24%' } },
 ];
 
 const TOOLS = [
@@ -102,7 +102,7 @@ const WORK = [
   { name: 'Poopipoo', badge: 'Community map app', title: 'Toilet Finder', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
   { name: 'Neo Chess XD', badge: '8-bit chess game', title: 'Retro Chess', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
   { name: 'Snapzy', badge: 'AI photo organizer', title: 'Screenshot Sorter', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
-  { name: 'SweepXpress', tag: 'Logistics dashboard', line: 'Real-time orders, inventory and audit-logged sign-ins.', img: sweepImg, logo: sweepLogo, rot: 1.6 },
+  { name: 'SweepXpress', badge: 'Supply chain · AI copilot', title: 'Supply-Chain Store', tag: 'Supply-chain e-commerce', line: 'B2B orders, reorder forecasts and a Groq-powered admin copilot.', img: sweepImg, logo: sweepLogo, url: 'https://sweepxpress.infinityfree.io/sweepxpress/', rot: 1.6 },
 ];
 
 const FACTS = [
@@ -114,7 +114,7 @@ const FACTS = [
 
 const NOW = [
   { emoji: '💼', text: 'Interning at Grandline Maritime' },
-  { emoji: '🚀', text: 'Shipping TIDE, Poopipoo, Neo Chess XD & Snapzy' },
+  { emoji: '🚀', text: 'Shipping TIDE, Snapzy, SweepXpress, Poopipoo & Neo Chess XD' },
   { emoji: '📜', text: 'Collecting certificates — 32 and counting' },
 ];
 
