@@ -175,7 +175,11 @@ const websites = [
     },
     image: snapzySite,
     logo: snapzyLogo,
-    shots: shotsFor('snapzy', ['home', 'login'], ['home', 'features', 'login']),
+    shots: shotsFor(
+      'snapzy',
+      ['home', 'login', 'gallery', 'football-wall', 'boarding-pass', 'sorting'],
+      ['home', 'features', 'login', 'gallery', 'albums', 'wifi-details']
+    ),
     url: 'https://snapzy-tau.vercel.app/',
     repo: 'https://github.com/BryxCinco/snapzy',
     note: 'bye, messy camera roll ✿',
