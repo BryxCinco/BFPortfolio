@@ -196,7 +196,7 @@ const websites = [
     },
     image: SHOT_FILES['./assets/shots/sweepxpress-d-shop.jpg'],
     logo: sweepXpressLogo,
-    shots: shotsFor('sweepxpress', ['shop', 'product', 'cart', 'checkout', 'invoice', 'admin-dashboard', 'admin-copilot'], ['shop', 'product', 'order']),
+    shots: shotsFor('sweepxpress', ['shop', 'product', 'cart', 'checkout', 'invoice', 'admin-dashboard', 'admin-copilot', 'home', 'about', 'storefront', 'product-page'], ['shop', 'product', 'order', 'login', 'product-page']),
     url: 'https://sweepxpress.infinityfree.io/sweepxpress/',
     repo: 'https://github.com/BryxCinco/sweepxpress',
     note: 'capstone, now with AI ✦',
