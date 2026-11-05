@@ -119,7 +119,6 @@ const builds = [
   { name: 'SweepXpress', kind: 'Supply-chain store', logo: sweepXpressLogo, url: 'https://sweepxpress.infinityfree.io/sweepxpress/', line: 'My capstone: B2C and B2B orders, reorder forecasts, supplier scorecards and an AI admin copilot.', stack: ['PHP', 'MySQL', 'Groq'] },
   { name: 'Poopipoo', kind: 'Crowdsourced toilet finder', logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', line: 'A community restroom map with voice directions, moderation and an AI assistant in Tagalog and English.', stack: ['Next.js', 'Supabase', 'Groq'] },
   { name: 'Neo Chess XD', kind: '8-bit chess game', logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', line: 'Browser chess with my own CPU engine in a Web Worker, three difficulty levels and 17 capture effects.', stack: ['React', 'Vite', 'Web Workers'] },
-  { name: 'Maritime Learning Portal', kind: 'Grandline internship', Icon: ShieldCheck, line: 'A secure portal for maritime students, with screenshot protection for paid course material.', stack: ['React', 'PHP', 'SQL'] },
 ];
 
 // every phone is a Silver iPhone 17 Pro in a clear MagSafe case
@@ -877,29 +876,21 @@ const About = ({ darkMode = true }) => {
             </HandNote>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {builds.map((b, i) => {
-              const Card = b.url ? 'a' : 'div';
-              return (
-                <motion.div key={b.name} {...reveal(i * 0.06)}>
-                  <Card
-                    {...(b.url ? { href: b.url, target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className={`group h-full flex flex-col gap-4 p-6 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] transition-all duration-300 ${
-                      b.url ? 'cursor-target hover:-translate-y-1 hover:border-[color:var(--acc-line)] hover:shadow-[0_18px_40px_-22px_var(--acc-glow)]' : ''
-                    }`}
-                  >
+            {builds.map((b, i) => (
+              <motion.div key={b.name} {...reveal(i * 0.06)}>
+                <a
+                  href={b.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-target group h-full flex flex-col gap-4 p-6 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--acc-line)] hover:shadow-[0_18px_40px_-22px_var(--acc-glow)]"
+                >
                     <div className="flex items-center gap-3.5">
-                      {b.logo ? (
-                        <img src={b.logo} alt="" loading="lazy" className="w-12 h-12 shrink-0 rounded-[0.8rem] object-cover shadow-md" />
-                      ) : (
-                        <span className="w-12 h-12 shrink-0 rounded-[0.8rem] flex items-center justify-center bg-[color:var(--acc-soft)] border border-[color:var(--acc-line)]">
-                          <b.Icon size={22} className="text-[color:var(--acc)]" />
-                        </span>
-                      )}
+                      <img src={b.logo} alt="" loading="lazy" className="w-12 h-12 shrink-0 rounded-[0.8rem] object-cover shadow-md" />
                       <div className="min-w-0 flex-1">
                         <h4 className="ab-ink text-base sm:text-lg font-black tracking-tight leading-tight">{b.name}</h4>
                         <p className="ab-acc mt-0.5 text-[0.6875rem] font-bold">{b.kind}</p>
                       </div>
-                      {b.url && <ArrowUpRight size={18} className="shrink-0 text-[color:var(--acc)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />}
+                      <ArrowUpRight size={18} className="shrink-0 text-[color:var(--acc)] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </div>
                     <p className="ab-ink flex-1 text-sm leading-relaxed opacity-80">{b.line}</p>
                     <div className="flex flex-wrap items-center gap-2">
@@ -909,14 +900,13 @@ const About = ({ darkMode = true }) => {
                         </span>
                       ))}
                       <span className="ab-ink ml-auto inline-flex items-center gap-1.5 text-[0.625rem] font-bold opacity-60">
-                        <span className={`w-1.5 h-1.5 rounded-full ${b.url ? 'bg-[#34C759]' : 'bg-[#8E8E93]'}`} />
-                        {b.url ? 'Live' : 'Private'}
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#34C759]" />
+                        Live
                       </span>
                     </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                </a>
+              </motion.div>
+            ))}
           </div>
         </section>
 
