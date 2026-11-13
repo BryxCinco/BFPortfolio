@@ -14,11 +14,11 @@ import brian5 from './assets/Brian5.png';
 import brian6 from './assets/Brian6.png';
 import tideImg from './assets/Tide.png';
 import poopipooImg from './assets/Poopipoo.png';
-import neoChessImg from './assets/NeoChessXD.png';
+import chessFantasyImg from './assets/ChessFantasy.png';
 import snapzyImg from './assets/Snapzy.png';
 import tideLogo from './assets/logos/tide.png';
 import poopipooLogo from './assets/logos/poopipoo.png';
-import neoChessLogo from './assets/logos/neochess.svg';
+import chessFantasyLogo from './assets/logos/chessfantasy.png';
 import snapzyLogo from './assets/logos/snapzy.png';
 import sweepLogo from './assets/logos/sweepxpress.svg';
 import AppIcon from './AppIcon';
@@ -100,7 +100,7 @@ const TOOLS = [
 const WORK = [
   { name: 'TIDE', badge: 'My fave · AI productivity', title: 'Productivity Coach', tag: 'AI productivity coach', line: 'Focus timers, journaling and gamified daily quests.', img: tideImg, logo: tideLogo, url: 'https://tide-rust.vercel.app/', note: 'my fave ♥', rot: -1.6 },
   { name: 'Poopipoo', badge: 'Community map app', title: 'Toilet Finder', tag: 'Crowdsourced toilet finder', line: 'Community-mapped restrooms around Metro Manila.', img: poopipooImg, logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', rot: 1.2 },
-  { name: 'Neo Chess XD', badge: '8-bit chess game', title: 'Retro Chess', tag: '8-bit chess game', line: 'Retro chess with PvP, a CPU rival and timed matches.', img: neoChessImg, logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
+  { name: 'Chess Fantasy', badge: '8-bit chess game', title: 'Retro Chess', tag: '8-bit chess game', line: 'Retro chess with PvP, a 4-level CPU rival and 24 capture finishers.', img: chessFantasyImg, logo: chessFantasyLogo, url: 'https://neo-chess-xd.vercel.app/', rot: -1 },
   { name: 'Snapzy', badge: 'AI photo organizer', title: 'Screenshot Sorter', tag: 'AI screenshot sorter', line: 'Reads, sorts and searches your screenshots for you.', img: snapzyImg, logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', rot: 1.4 },
   { name: 'SweepXpress', badge: 'Supply chain · AI copilot', title: 'Supply-Chain Store', tag: 'Supply-chain e-commerce', line: 'B2B orders, reorder forecasts and a Groq-powered admin copilot.', img: sweepImg, logo: sweepLogo, url: 'https://sweepxpress.infinityfree.io/sweepxpress/', rot: 1.6 },
 ];
@@ -114,7 +114,7 @@ const FACTS = [
 
 const NOW = [
   { emoji: '💼', text: 'Interning at Grandline Maritime' },
-  { emoji: '🚀', text: 'Shipping TIDE, Snapzy, SweepXpress, Poopipoo & Neo Chess XD' },
+  { emoji: '🚀', text: 'Shipping TIDE, Snapzy, SweepXpress, Poopipoo & Chess Fantasy' },
   { emoji: '📜', text: 'Collecting certificates — 32 and counting' },
 ];
 

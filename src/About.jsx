@@ -36,7 +36,7 @@ import tideLogo from './assets/logos/tide.png';
 import snapzyLogo from './assets/logos/snapzy.png';
 import sweepXpressLogo from './assets/logos/sweepxpress.svg';
 import poopipooLogo from './assets/logos/poopipoo.png';
-import neoChessLogo from './assets/logos/neochess.svg';
+import chessFantasyLogo from './assets/logos/chessfantasy.png';
 
 // ============================================================================
 // DATA
@@ -54,7 +54,7 @@ const experiences = [
     role: 'Full-Stack Developer (Solo Projects)',
     company: 'Personal & Academic Work',
     period: '2025 - 2026',
-    desc: 'Designed, built and shipped five live apps from idea to deployment: TIDE, Snapzy, SweepXpress, Poopipoo and Neo Chess XD. Four of them have LLM features inside.',
+    desc: 'Designed, built and shipped five live apps from idea to deployment: TIDE, Snapzy, SweepXpress, Poopipoo and Chess Fantasy. Four of them have LLM features inside.',
     skills: ['React', 'Next.js', 'Expo', 'Supabase', 'Groq', 'Gemini'],
   },
 ];
@@ -64,7 +64,7 @@ const academicTimeline = [
     year: '4th Year',
     title: 'Professional Mastery',
     period: '2025 - 2026',
-    project: 'Maritime LMS, Neo Chess XD, TIDE, Snapzy & Poopipoo',
+    project: 'Maritime LMS, Chess Fantasy, TIDE, Snapzy & Poopipoo',
     desc: 'Developed a secure, anti-screenshot learning portal for maritime students during my IT internship, then shipped my own AI apps with RAG, tool calling and structured output.',
     achievement: 'Completed introductory training in Python essentials and backend concepts through DICT programs.',
     Icon: ShieldCheck,
@@ -118,7 +118,7 @@ const builds = [
   { name: 'Snapzy', kind: 'AI screenshot sorter', logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', line: 'Reads every screenshot, writes a caption, files it in an album and pulls out receipts, WiFi and flight details.', stack: ['Next.js', 'Supabase', 'Gemini'] },
   { name: 'SweepXpress', kind: 'Supply-chain store', logo: sweepXpressLogo, url: 'https://sweepxpress.infinityfree.io/sweepxpress/', line: 'My capstone: B2C and B2B orders, reorder forecasts, supplier scorecards and an AI admin copilot.', stack: ['PHP', 'MySQL', 'Groq'] },
   { name: 'Poopipoo', kind: 'Crowdsourced toilet finder', logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', line: 'A community restroom map with voice directions, moderation and an AI assistant in Tagalog and English.', stack: ['Next.js', 'Supabase', 'Groq'] },
-  { name: 'Neo Chess XD', kind: '8-bit chess game', logo: neoChessLogo, url: 'https://neo-chess-xd.vercel.app/', line: 'Browser chess with my own CPU engine in a Web Worker, three difficulty levels and 17 capture effects.', stack: ['React', 'Vite', 'Web Workers'] },
+  { name: 'Chess Fantasy', kind: '8-bit chess game', logo: chessFantasyLogo, url: 'https://neo-chess-xd.vercel.app/', line: 'Browser chess with my own CPU engine in a Web Worker, four difficulty levels, 24 capture finishers, themes and skins.', stack: ['React', 'Vite', 'Web Workers'] },
 ];
 
 // every phone is a Silver iPhone 17 Pro in a clear MagSafe case

@@ -120,7 +120,7 @@ const stackCategories = [
     color: '#E0A800',
     Icon: Rocket,
     items: [
-      { name: 'Vercel', logo: SIMPLE('vercel', '000000'), usedIn: ['TIDE', 'Poopipoo', 'Neo Chess XD', 'Snapzy'] },
+      { name: 'Vercel', logo: SIMPLE('vercel', '000000'), usedIn: ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Snapzy'] },
       { name: 'GitHub', logo: SIMPLE('github', '181717'), usedIn: [PORTFOLIO] },
       { name: 'Git', logo: DEVICON('git'), usedIn: [PORTFOLIO] },
       { name: 'VS Code', logo: DEVICON('vscode') },
@@ -138,11 +138,11 @@ const stackCategories = [
     color: '#00B8D9',
     Icon: Code2,
     items: [
-      { name: 'React', logo: DEVICON('react'), usedIn: ['Poopipoo', 'Neo Chess XD', 'Snapzy', PORTFOLIO] },
+      { name: 'React', logo: DEVICON('react'), usedIn: ['Poopipoo', 'Chess Fantasy', 'Snapzy', PORTFOLIO] },
       { name: 'Next.js', logo: SIMPLE('nextdotjs', '000000'), usedIn: ['Poopipoo', 'Snapzy'] },
       { name: 'TypeScript', logo: DEVICON('typescript'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy'] },
-      { name: 'JavaScript', logo: DEVICON('javascript'), usedIn: ['Neo Chess XD', PORTFOLIO] },
-      { name: 'Vite', logo: DEVICON('vitejs'), usedIn: ['Neo Chess XD', PORTFOLIO] },
+      { name: 'JavaScript', logo: DEVICON('javascript'), usedIn: ['Chess Fantasy', PORTFOLIO] },
+      { name: 'Vite', logo: DEVICON('vitejs'), usedIn: ['Chess Fantasy', PORTFOLIO] },
       { name: 'Tailwind', logo: DEVICON('tailwindcss'), usedIn: ['Poopipoo', 'Snapzy', PORTFOLIO] },
       { name: 'lucide-react', logo: SIMPLE('lucide', 'F56565'), usedIn: [PORTFOLIO] },
       { name: 'HTML', logo: DEVICON('html5') },
@@ -342,7 +342,7 @@ const buildTree = (L) => {
 const TREES = { wide: buildTree(LAYOUTS.wide), tall: buildTree(LAYOUTS.tall) };
 const allTools = TREES.wide.groups.flatMap((g) => g.fruits);
 const TOOL_COUNT = allTools.length;
-const PROJECTS = ['TIDE', 'Poopipoo', 'Neo Chess XD', 'Snapzy', 'SweepXpress', PORTFOLIO];
+const PROJECTS = ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Snapzy', 'SweepXpress', PORTFOLIO];
 const pad2 = (n) => String(n).padStart(2, '0');
 const LEAF_PATH = 'M0,-7 C5,-5 6,3 0,8 C-6,3 -5,-5 0,-7 Z';
 

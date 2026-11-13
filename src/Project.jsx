@@ -18,12 +18,12 @@ import { rgba, getPalette, cssVars } from './theme';
 import { HandStyles, HandNote, Doodle } from './HandTouch';
 import tideSite from './assets/Tide.png';
 import poopipooSite from './assets/Poopipoo.png';
-import neoChessSite from './assets/NeoChessXD.png';
+import chessFantasySite from './assets/ChessFantasy.png';
 import snapzySite from './assets/Snapzy.png';
 
 import tideLogo from './assets/logos/tide.png';
 import poopipooLogo from './assets/logos/poopipoo.png';
-import neoChessLogo from './assets/logos/neochess.svg';
+import chessFantasyLogo from './assets/logos/chessfantasy.png';
 import snapzyLogo from './assets/logos/snapzy.png';
 import sweepXpressLogo from './assets/logos/sweepxpress.svg';
 import AppIcon from './AppIcon';
@@ -118,32 +118,37 @@ const websites = [
     note: "yes, it's real 😂",
   },
   {
-    name: 'Neo Chess XD',
+    name: 'Chess Fantasy',
     subtitle: '8-Bit Chess Game',
     tag: 'Retro Browser Game',
-    desc: 'Classic chess wrapped in a pixel-arcade shell. Pick your mode, set the clock, and hit “Push Start” — then pick up where you left off with saved matches.',
+    desc: 'Full chess in an 8-bit arcade shell: a red army against a blue army, a CPU rival with four difficulty levels, and 24 capture finishers that destroy the taken piece in style.',
     highlights: [
-      'Local 1v1 PvP or a match against the CPU',
-      'Six time-control presets, from 30-second blitz to no limit',
-      'Saved-match data and toggleable chiptune audio',
+      'Local 1v1 or vs the CPU (Easy to Hard Core), as red, blue or random',
+      'Nine clocks, including increments like 3+2 and 15+10',
+      '6 board themes, 3 piece skins and an FX Gallery of 26 effects',
+      'Resign, draw offers, move-by-move game review and PGN export',
     ],
-    stack: ['React', 'Vite', 'chess.js', 'Web Workers', 'Canvas', 'Web Audio'],
+    stack: ['React', 'Vite', 'chess.js', 'Web Workers', 'Canvas', 'Web Audio', 'Vitest'],
     story: {
       challenge:
-        'A chess CPU that thinks on the main thread freezes the animations, and the full rule set (en passant, threefold repetition, the 50-move rule) is easy to get subtly wrong.',
+        'A chess CPU that thinks on the main thread freezes the animations, and the full rule set (en passant, threefold repetition, the 50-move rule) is easy to get subtly wrong. Every new effect, theme and skin also had to plug in without touching the game logic.',
       approach:
-        'chess.js handles the rules. The CPU is my own engine (negamax with alpha-beta pruning, iterative deepening, quiescence search and piece-square tables) running in a Web Worker on a 1.5 s budget. Pieces are 16x16 pixel grids drawn as SVG, the 17 capture effects run on Canvas, and the chiptune music is generated live with Web Audio, with no audio files.',
+        'chess.js handles the rules. The CPU is my own engine (negamax with alpha-beta pruning, iterative deepening, quiescence search and piece-square tables) with a small opening book, running in a Web Worker so the board never freezes. Effects live in a registry: each one is a Canvas module, and the settings, FX Gallery and game all read from it. Pieces are 16x16 pixel grids drawn as SVG, and the chiptune music is generated live with Web Audio, with no audio files.',
       result:
-        'A live game that stays smooth on phones, tablets and desktop: three CPU levels, six clocks, undo and redo, autosave and named save slots.',
+        'A live game that stays smooth on phones, tablets and desktop, backed by 528 passing Vitest tests across the engine, hooks and components. Four CPU levels, nine clocks, autosave and named save slots, undo and redo, and a full settings panel for volume, animations, themes, skins and each effect.',
       next: [
         'Online play against a friend',
-        'Move hints and a post-game analysis',
-        'Tests for the engine with known chess puzzles',
+        'Move hints and an engine evaluation in game review',
+        'More piece skins and board themes',
       ],
     },
-    image: neoChessSite,
-    logo: neoChessLogo,
-    shots: shotsFor('neochess', ['start', 'board', 'fx-gallery'], ['start', 'board', 'fx-gallery']),
+    image: chessFantasySite,
+    logo: chessFantasyLogo,
+    shots: shotsFor(
+      'chessfantasy',
+      ['start', 'board', 'checkmate', 'game-over', 'neon-theme', 'bot-match', 'settings', 'fx-gallery', 'fx-ufo-abduction', 'fx-nuke'],
+      ['start', 'board', 'checkmate', 'game-over', 'neon-theme', 'bot-match', 'settings', 'fx-gallery', 'fx-ufo-abduction']
+    ),
     url: 'https://neo-chess-xd.vercel.app/',
     repo: 'https://github.com/BryxCinco/NeoChessXd',
     note: 'try beating the CPU',

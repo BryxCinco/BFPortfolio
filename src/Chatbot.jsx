@@ -51,7 +51,7 @@ const QUESTION_BANK = [
   'How can I contact Brian?',
   'Tell me about TIDE',
   'Tell me about Poopipoo',
-  'Tell me about Neo Chess XD',
+  'Tell me about Chess Fantasy',
   'Tell me about Snapzy',
   'Which AI tools do you use?',
   'What design tools do you use?',

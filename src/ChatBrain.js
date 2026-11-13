@@ -50,7 +50,7 @@ const has = (q, ...terms) => terms.some((t) => new RegExp(`(^|[^a-z])${t}([^a-z]
 const findProject = (q) =>
   websites.find((w) => {
     const n = w.name.toLowerCase();
-    return q.includes(n) || (n.includes('chess') && has(q, 'chess', 'neo chess')) || (n === 'sweepxpress' && has(q, 'sweep'));
+    return q.includes(n) || (n.includes('chess') && has(q, 'chess', 'fantasy', 'neo chess')) || (n === 'sweepxpress' && has(q, 'sweep'));
   });
 
 const liveProjects = () => websites.filter((w) => w.url && w.url !== '#');

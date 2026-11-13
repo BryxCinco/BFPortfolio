@@ -13,7 +13,7 @@ const SCRIPT = [
   {
     chip: 'Shipped',
     q: 'What has Brian shipped?',
-    a: 'Five live apps, four with AI inside: TIDE, an AI productivity coach; Snapzy, an AI screenshot sorter; SweepXpress, a supply-chain store with an AI copilot; Poopipoo, a toilet finder with an AI assistant; plus Neo Chess XD.',
+    a: 'Five live apps, four with AI inside: TIDE, an AI productivity coach; Snapzy, an AI screenshot sorter; SweepXpress, a supply-chain store with an AI copilot; Poopipoo, a toilet finder with an AI assistant; plus Chess Fantasy.',
   },
   {
     chip: 'Stack',
