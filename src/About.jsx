@@ -34,6 +34,8 @@ import FacebookLogo from './assets/FacebookLogo.png';
 import LinkedInLogo from './assets/LinkedInLogo.png';
 import tideLogo from './assets/logos/tide.png';
 import snapzyLogo from './assets/logos/snapzy.png';
+import kreaLogo from './assets/logos/krea.svg';
+import matchieLogo from './assets/logos/matchie.png';
 import sweepXpressLogo from './assets/logos/sweepxpress.svg';
 import poopipooLogo from './assets/logos/poopipoo.png';
 import chessFantasyLogo from './assets/logos/chessfantasy.png';
@@ -54,7 +56,7 @@ const experiences = [
     role: 'Full-Stack Developer (Solo Projects)',
     company: 'Personal & Academic Work',
     period: '2025 - 2026',
-    desc: 'Designed, built and shipped five live apps from idea to deployment: TIDE, Snapzy, SweepXpress, Poopipoo and Chess Fantasy. Four of them have LLM features inside.',
+    desc: 'Designed, built and shipped seven live apps from idea to deployment: TIDE, Krea, Matchie, Snapzy, SweepXpress, Poopipoo and Chess Fantasy. Five of them have LLM features inside.',
     skills: ['React', 'Next.js', 'Expo', 'Supabase', 'Groq', 'Gemini'],
   },
 ];
@@ -101,7 +103,7 @@ const academicTimeline = [
 const achievements = [
   { text: 'Bachelor of Science in Information Technology', Icon: GraduationCap },
   { text: 'Finished college with a 1.25 GWA', Icon: Star },
-  { text: 'Shipped five live apps, four with LLM features', Icon: Sparkles },
+  { text: 'Shipped seven live apps, five with LLM features', Icon: Sparkles },
   { text: 'Completed the Accenture Technology Academy', Icon: Award },
   { text: 'Verified certifications from DICT, Cisco & Coursera', Icon: ShieldCheck },
 ];
@@ -115,6 +117,8 @@ const quickFacts = [
 
 const builds = [
   { name: 'TIDE', kind: 'AI productivity coach', logo: tideLogo, url: 'https://tide-rust.vercel.app/', line: 'Focus timer, journal and tasks, with an AI coach that reads your real history and acts through 23 tools.', stack: ['Expo', 'Supabase', 'Groq'] },
+  { name: 'Krea', kind: 'Private file toolkit', logo: kreaLogo, url: 'https://krea-tau.vercel.app/', line: '35 image, PDF, document and video tools that run in the browser, so files never leave the device. Works offline.', stack: ['Next.js', 'Web Workers', 'WebAssembly'] },
+  { name: 'Matchie', kind: 'AI job search agent', logo: matchieLogo, url: 'https://matchie-one.vercel.app/', line: 'Finds PH tech jobs every morning, scores each against your resume, and moves your tracker from recruiter emails.', stack: ['Next.js', 'Supabase', 'Gemini'] },
   { name: 'Snapzy', kind: 'AI screenshot sorter', logo: snapzyLogo, url: 'https://snapzy-tau.vercel.app/', line: 'Reads every screenshot, writes a caption, files it in an album and pulls out receipts, WiFi and flight details.', stack: ['Next.js', 'Supabase', 'Gemini'] },
   { name: 'SweepXpress', kind: 'Supply-chain store', logo: sweepXpressLogo, url: 'https://sweepxpress.infinityfree.io/sweepxpress/', line: 'My capstone: B2C and B2B orders, reorder forecasts, supplier scorecards and an AI admin copilot.', stack: ['PHP', 'MySQL', 'Groq'] },
   { name: 'Poopipoo', kind: 'Crowdsourced toilet finder', logo: poopipooLogo, url: 'https://poopipoo.vercel.app/', line: 'A community restroom map with voice directions, moderation and an AI assistant in Tagalog and English.', stack: ['Next.js', 'Supabase', 'Groq'] },

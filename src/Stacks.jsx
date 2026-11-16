@@ -86,8 +86,8 @@ const stackCategories = [
     items: [
       { name: 'Claude', logo: SIMPLE('claude', 'D97757') },
       { name: 'ChatGPT', logo: LOBE('openai') },
-      { name: 'Gemini', logo: SIMPLE('googlegemini', '8E75B2'), usedIn: ['Snapzy'] },
-      { name: 'Groq', logo: LOBE('groq'), usedIn: ['TIDE', 'Poopipoo', 'SweepXpress'] },
+      { name: 'Gemini', logo: SIMPLE('googlegemini', '8E75B2'), usedIn: ['Snapzy', 'Matchie'] },
+      { name: 'Groq', logo: LOBE('groq'), usedIn: ['TIDE', 'Poopipoo', 'SweepXpress', 'Matchie'] },
       { name: 'Hugging Face', logo: LOBE('huggingface-color'), usedIn: ['TIDE', 'Poopipoo'] },
       { name: 'Copilot', logo: SIMPLE('githubcopilot', '000000') },
       { name: 'Codex', logo: LOBE('codex-color') },
@@ -105,8 +105,8 @@ const stackCategories = [
       { name: 'Node.js', logo: DEVICON('nodejs'), usedIn: ['TIDE', PORTFOLIO] },
       { name: 'Express', logo: SIMPLE('express', '000000'), usedIn: ['TIDE', PORTFOLIO] },
       { name: 'Socket.IO', logo: SIMPLE('socketdotio', '010101'), usedIn: [PORTFOLIO] },
-      { name: 'Supabase', logo: SIMPLE('supabase', '3FCF8E'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy'] },
-      { name: 'PostgreSQL', logo: DEVICON('postgresql'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy'] },
+      { name: 'Supabase', logo: SIMPLE('supabase', '3FCF8E'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy', 'Matchie'] },
+      { name: 'PostgreSQL', logo: DEVICON('postgresql'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy', 'Matchie'] },
       { name: 'MySQL', logo: DEVICON('mysql'), usedIn: ['SweepXpress'] },
       { name: 'PHP', logo: DEVICON('php'), usedIn: ['SweepXpress'] },
       { name: 'Python', logo: DEVICON('python') },
@@ -120,8 +120,8 @@ const stackCategories = [
     color: '#E0A800',
     Icon: Rocket,
     items: [
-      { name: 'Vercel', logo: SIMPLE('vercel', '000000'), usedIn: ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Snapzy'] },
-      { name: 'GitHub', logo: SIMPLE('github', '181717'), usedIn: [PORTFOLIO] },
+      { name: 'Vercel', logo: SIMPLE('vercel', '000000'), usedIn: ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Krea', 'Snapzy', 'Matchie'] },
+      { name: 'GitHub', logo: SIMPLE('github', '181717'), usedIn: ['Matchie', PORTFOLIO] },
       { name: 'Git', logo: DEVICON('git'), usedIn: [PORTFOLIO] },
       { name: 'VS Code', logo: DEVICON('vscode') },
       { name: 'Replit', logo: SIMPLE('replit', 'F26207') },
@@ -138,12 +138,12 @@ const stackCategories = [
     color: '#00B8D9',
     Icon: Code2,
     items: [
-      { name: 'React', logo: DEVICON('react'), usedIn: ['Poopipoo', 'Chess Fantasy', 'Snapzy', PORTFOLIO] },
-      { name: 'Next.js', logo: SIMPLE('nextdotjs', '000000'), usedIn: ['Poopipoo', 'Snapzy'] },
-      { name: 'TypeScript', logo: DEVICON('typescript'), usedIn: ['TIDE', 'Poopipoo', 'Snapzy'] },
+      { name: 'React', logo: DEVICON('react'), usedIn: ['Poopipoo', 'Chess Fantasy', 'Krea', 'Snapzy', 'Matchie', PORTFOLIO] },
+      { name: 'Next.js', logo: SIMPLE('nextdotjs', '000000'), usedIn: ['Poopipoo', 'Krea', 'Snapzy', 'Matchie'] },
+      { name: 'TypeScript', logo: DEVICON('typescript'), usedIn: ['TIDE', 'Poopipoo', 'Krea', 'Snapzy', 'Matchie'] },
       { name: 'JavaScript', logo: DEVICON('javascript'), usedIn: ['Chess Fantasy', PORTFOLIO] },
       { name: 'Vite', logo: DEVICON('vitejs'), usedIn: ['Chess Fantasy', PORTFOLIO] },
-      { name: 'Tailwind', logo: DEVICON('tailwindcss'), usedIn: ['Poopipoo', 'Snapzy', PORTFOLIO] },
+      { name: 'Tailwind', logo: DEVICON('tailwindcss'), usedIn: ['Poopipoo', 'Krea', 'Snapzy', 'Matchie', PORTFOLIO] },
       { name: 'lucide-react', logo: SIMPLE('lucide', 'F56565'), usedIn: [PORTFOLIO] },
       { name: 'HTML', logo: DEVICON('html5') },
       { name: 'CSS', logo: DEVICON('css3') },
@@ -342,7 +342,7 @@ const buildTree = (L) => {
 const TREES = { wide: buildTree(LAYOUTS.wide), tall: buildTree(LAYOUTS.tall) };
 const allTools = TREES.wide.groups.flatMap((g) => g.fruits);
 const TOOL_COUNT = allTools.length;
-const PROJECTS = ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Snapzy', 'SweepXpress', PORTFOLIO];
+const PROJECTS = ['TIDE', 'Poopipoo', 'Chess Fantasy', 'Krea', 'SweepXpress', 'Snapzy', 'Matchie', PORTFOLIO];
 const pad2 = (n) => String(n).padStart(2, '0');
 const LEAF_PATH = 'M0,-7 C5,-5 6,3 0,8 C-6,3 -5,-5 0,-7 Z';
 

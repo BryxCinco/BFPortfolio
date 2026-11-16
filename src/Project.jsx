@@ -12,6 +12,7 @@ import {
   Smartphone,
   Info,
   Code,
+  Layers,
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
@@ -26,6 +27,8 @@ import poopipooLogo from './assets/logos/poopipoo.png';
 import chessFantasyLogo from './assets/logos/chessfantasy.png';
 import snapzyLogo from './assets/logos/snapzy.png';
 import sweepXpressLogo from './assets/logos/sweepxpress.svg';
+import kreaLogo from './assets/logos/krea.svg';
+import matchieLogo from './assets/logos/matchie.png';
 import AppIcon from './AppIcon';
 import SHOT_RATIOS from './assets/shots/ratios.json';
 
@@ -154,7 +157,44 @@ const websites = [
     note: 'try beating the CPU',
   },
   {
+    name: 'Krea',
+    subtitle: 'Private File Toolkit',
+    tag: 'Local-First Toolkit',
+    desc: 'Kinetic Render Engine App: 35 tools for images, PDFs, documents and video that run entirely in your browser. Drop a file and Krea shows the moves that fit. No uploads, no account, no backend: your files never leave your device.',
+    highlights: [
+      '35 tools: compress, convert, remove backgrounds, ID photos, merge, sign and protect PDFs, OCR, resumes, invoices and QR codes',
+      'PH pay calculators for take-home pay, 13th month, overtime and loans',
+      'Render Chains run several tools in a row, like "2x2 ID Photo" or "Email-Safe PDF"',
+      'Works offline as an installable app, with a Ctrl+K command palette',
+    ],
+    stack: ['Next.js', 'TypeScript', 'Tailwind', 'Web Workers', 'WebAssembly', 'pdf.js', 'Tesseract'],
+    story: {
+      challenge:
+        'Free online file tools upload your IDs, payslips and contracts to someone else\'s server. Doing the same work in a browser means heavy engines (PDF, OCR, an AI background-removal model) that can freeze the page or blow up the download size.',
+      approach:
+        'Every tool runs locally. File jobs run in Web Workers so the page stays responsive and Cancel stops a job at once, and heavy libraries load only when a tool needs them. PDFs use pdf.js and qpdf compiled to WebAssembly, OCR uses Tesseract in English and Filipino, video uses the browser\'s own WebCodecs encoder, and iPhone HEIC photos convert on arrival. Each tool is one file in a registry, so the cards, command palette, chains, tool pages, sitemap and offline cache all pick it up.',
+      result:
+        'A live toolkit with 35 tools and no server doing work for users. A service worker caches the app, and "Make offline-ready" downloads the engines so it keeps working with no connection.',
+      next: [
+        'More Render Chain presets for government forms',
+        'Batch exports as one ZIP for every tool',
+        'Automated tests for each tool',
+      ],
+    },
+    image: SHOT_FILES['./assets/shots/krea-d-home.jpg'],
+    logo: kreaLogo,
+    shots: shotsFor(
+      'krea',
+      ['home', 'tools', 'ph-take-home-pay', 'qr-code', 'resume-builder', 'background-remover', 'privacy'],
+      ['home', 'tools', 'ph-take-home-pay', 'qr-code', 'resume-builder', 'privacy']
+    ),
+    url: 'https://krea-tau.vercel.app/',
+    repo: 'https://github.com/BryxCinco/krea',
+    note: 'your files stay yours ✦',
+  },
+  {
     name: 'Snapzy',
+    other: true,
     subtitle: 'AI Screenshot Sorter',
     tag: 'AI Photo Organizer',
     desc: 'Your camera roll, curated like art. Drop in your screenshots and Snapzy reads, summarizes and sorts every one — receipts, WiFi passwords, boarding passes and memes each land on their own wall.',
@@ -220,7 +260,48 @@ const websites = [
     repo: 'https://github.com/BryxCinco/sweepxpress',
     note: 'capstone, now with AI ✦',
   },
+  {
+    name: 'Matchie',
+    other: true,
+    subtitle: 'AI Job Search Agent',
+    tag: 'AI Job Hunt',
+    desc: 'An AI job search agent for the Philippine tech market. Every morning it finds jobs, scores each one against your resume and preferences, explains the score, and keeps your tracker up to date by reading your job-search email.',
+    highlights: [
+      'A 0-100 fit score per job, with matched and missing skills, red flags and the reason',
+      'Recruiter emails move the tracker: rejections, interview invites, assessments and offers',
+      'Polls 30+ Greenhouse and Lever boards daily and emails a digest of the best matches',
+      'Analytics from Applied to Offer, plus ghosting detection with a drafted follow-up',
+    ],
+    stack: ['Next.js', 'TypeScript', 'Supabase', 'Gemini', 'Groq', 'Tailwind', 'GitHub Actions'],
+    story: {
+      challenge:
+        'The free AI tiers allow about 50 scoring calls a day, but a daily job search pulls in far more postings than that. And a job agent handles resumes and email, which must never end up in an AI provider\'s training data.',
+      approach:
+        'Everything before scoring is free SQL: ingest, a hash that merges the same job from different sources, rule filters and Postgres full-text search build a shortlist, and only that reaches Gemini (with Groq as the fallback). One router is the only code that calls a model, and it scrubs names, emails, phones and addresses first. Resumes are read in the browser, so the file is never uploaded. Vercel serves only the UI; slow jobs run as GitHub Actions workers.',
+      result:
+        'Live, with a public demo account on sample data. 138 passing tests, and CI checks types, lint, tests and the build on every push.',
+      next: [
+        'More job sources beyond Greenhouse and Lever',
+        'Accounts for more than one user, with each person\'s own mailbox',
+        'Cover-letter drafts from the match explanation',
+      ],
+    },
+    image: SHOT_FILES['./assets/shots/matchie-d-home.jpg'],
+    logo: matchieLogo,
+    shots: shotsFor(
+      'matchie',
+      ['home', 'dashboard', 'discover', 'tracker', 'analytics', 'profile', 'login'],
+      ['home', 'dashboard', 'discover', 'tracker', 'analytics', 'profile']
+    ),
+    url: 'https://matchie-one.vercel.app/',
+    repo: 'https://github.com/BryxCinco/matchie',
+    note: 'job hunt on autopilot',
+  },
 ];
+
+// the top five get a full showcase row; the rest are compact cards under "Other projects"
+const featuredSites = websites.filter((s) => !s.other);
+const otherSites = websites.filter((s) => s.other);
 
 // "View code": the project's public GitHub repository
 const CodeLink = ({ href }) => (
@@ -591,6 +672,97 @@ const ProjectRow = ({ site, index, reduced, onDetails, onLaunch, flash }) => {
             </span>
           </span>
         </button>
+      </article>
+    </div>
+  );
+};
+
+// ============================================================================
+// OTHER PROJECT CARD — compact: icon, story and stack only. The screenshots
+// (browser and phone) live in the details sheet, not on the card.
+// ============================================================================
+
+const OtherCard = ({ site, index, reduced, onDetails, onLaunch, flash }) => {
+  const [ref, inView] = useInViewOnce(0.15);
+  const shown = inView || reduced;
+  const host = hostOf(site.url);
+  const live = !!host;
+  const shotCount = (site.shots?.desktop?.length ?? 0) + (site.shots?.mobile?.length ?? 0);
+
+  return (
+    <div ref={ref} id={`project-${slugOf(site.name)}`} className="relative scroll-mt-28 h-full">
+      {site.note && (
+        <span
+          className="absolute -top-3.5 right-6 z-10 px-2.5 py-0.5 shadow-md pointer-events-none"
+          style={{ background: '#FFE873', transform: `rotate(${index % 2 ? 3 : -3}deg)` }}
+        >
+          <span className="ht-hand ht-dark text-lg">{site.note}</span>
+        </span>
+      )}
+      <article
+        className={`${flash ? 'pj-flash ' : ''}group h-full flex flex-col gap-5 rounded-[1.75rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-md p-6 sm:p-8 shadow-lg transition-[border-color,box-shadow] duration-300 hover:border-[color:var(--acc-line)] hover:shadow-[0_24px_50px_-25px_var(--acc-glow)]`}
+        style={{
+          opacity: shown ? 1 : 0,
+          transform: shown ? 'none' : 'translateY(30px)',
+          transition: `opacity 700ms ease ${reduced ? 0 : index * 120}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${reduced ? 0 : index * 120}ms, border-color 300ms, box-shadow 300ms`,
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <AppIcon
+            src={site.logo}
+            name={site.name}
+            size={72}
+            className="shrink-0 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
+          />
+          <div className="min-w-0">
+            <p className="pj-acc text-[0.625rem] font-black uppercase tracking-[0.22em]">{site.tag}</p>
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none mt-1">{site.name}</h3>
+            <p className="text-xs sm:text-sm font-bold opacity-65 mt-1">{site.subtitle}</p>
+            {live && (
+              <p className="mt-1.5 flex items-center gap-2 text-[0.625rem] font-black uppercase tracking-[0.16em]">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34C759]" />
+                <span className="pj-ink opacity-70 truncate">Live · {host}</span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <p className="text-sm sm:text-base opacity-80 leading-relaxed">{site.desc}</p>
+
+        <ul className="grid gap-2">
+          {site.highlights.slice(0, 3).map((h) => (
+            <li key={h} className="flex items-start gap-2.5 text-[0.8125rem] sm:text-sm opacity-90 leading-snug">
+              <span className="mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center bg-[color:var(--acc-soft)]">
+                <Check size={10} strokeWidth={3} className="text-[color:var(--acc)]" />
+              </span>
+              <span>{h}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex flex-wrap gap-1.5">
+          {site.stack.map((s) => (
+            <span
+              key={s}
+              className="px-2.5 py-1 border rounded-full text-[0.5625rem] font-black uppercase tracking-widest bg-[color:var(--acc-soft)] border-[color:var(--acc-line)] pj-acc"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-auto flex flex-wrap items-center gap-2.5 pt-1">
+          <button
+            onClick={() => onDetails(site)}
+            className="cursor-target inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-[0.6875rem] uppercase tracking-[0.16em] transition-transform hover:-translate-y-0.5 active:scale-95 shadow-[0_14px_30px_-12px_var(--acc-glow)]"
+            style={{ background: 'var(--acc)', color: 'var(--acc-ink)' }}
+            title={`${shotCount} screenshots and the full story`}
+          >
+            <Info size={14} /> <span className="pj-inherit">View details</span>
+          </button>
+          <LaunchButton site={site} live={live} onLaunch={onLaunch} />
+          {site.repo && <CodeLink href={site.repo} />}
+        </div>
       </article>
     </div>
   );
@@ -1489,7 +1661,7 @@ const Project = ({ darkMode = true }) => {
             (all live — go click &apos;em!)
           </HandNote>
           <p style={headerStep(2)} className="text-sm sm:text-lg opacity-70 max-w-2xl leading-relaxed">
-            Live, deployed apps — from an AI productivity coach and an AI screenshot sorter to a community map and a
+            Live, deployed apps — from an AI productivity coach and a private file toolkit to a community map and a
             retro chess game. Tap an app to jump to it.
           </p>
           <div style={headerStep(3)} className="flex flex-wrap gap-3">
@@ -1508,7 +1680,7 @@ const Project = ({ darkMode = true }) => {
           </div>
           </div>
           <div style={headerStep(4)} className="pt-2 sm:pt-4 lg:pt-0">
-            <AppDock sites={websites} reduced={reduced} shown={headerShown} onPick={jumpTo} />
+            <AppDock sites={featuredSites} reduced={reduced} shown={headerShown} onPick={jumpTo} />
           </div>
         </header>
 
@@ -1520,7 +1692,7 @@ const Project = ({ darkMode = true }) => {
             <span className="pj-acc font-black">Launch Site</span> to warp straight into the live app.
           </p>
           <div className="space-y-12 sm:space-y-16">
-            {websites.map((site, idx) => (
+            {featuredSites.map((site, idx) => (
               <ProjectRow
                 key={site.name}
                 site={site}
@@ -1533,6 +1705,30 @@ const Project = ({ darkMode = true }) => {
             ))}
           </div>
         </section>
+
+        {/* ================= OTHER PROJECTS ================= */}
+        {otherSites.length > 0 && (
+          <section>
+            <SectionEyebrow label="Other projects" icon={<Layers size={16} />} />
+            <p className="text-sm sm:text-base opacity-65 max-w-2xl mb-8 sm:mb-10">
+              More live apps I&apos;ve built. Screenshots and the full story are in{' '}
+              <span className="pj-acc font-black">View details</span>.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10">
+              {otherSites.map((site, idx) => (
+                <OtherCard
+                  key={site.name}
+                  site={site}
+                  index={idx}
+                  reduced={reduced}
+                  onDetails={setDetails}
+                  onLaunch={start}
+                  flash={flashed === site.name}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
