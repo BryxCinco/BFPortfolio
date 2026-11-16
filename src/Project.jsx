@@ -13,6 +13,7 @@ import {
   Info,
   Code,
   Layers,
+  LayoutGrid,
 } from 'lucide-react';
 
 import { rgba, getPalette, cssVars } from './theme';
@@ -707,17 +708,17 @@ const OtherCard = ({ site, index, reduced, onDetails, onLaunch, flash }) => {
           transition: `opacity 700ms ease ${reduced ? 0 : index * 120}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${reduced ? 0 : index * 120}ms, border-color 300ms, box-shadow 300ms`,
         }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5 sm:gap-6">
           <AppIcon
             src={site.logo}
             name={site.name}
-            size={72}
-            className="shrink-0 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
+            size={96}
+            className="shrink-0 sm:!w-[7.5rem] sm:!h-[7.5rem] transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
           />
           <div className="min-w-0">
             <p className="pj-acc text-[0.625rem] font-black uppercase tracking-[0.22em]">{site.tag}</p>
-            <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none mt-1">{site.name}</h3>
-            <p className="text-xs sm:text-sm font-bold opacity-65 mt-1">{site.subtitle}</p>
+            <h3 className="text-3xl sm:text-4xl font-black tracking-tighter leading-none mt-1">{site.name}</h3>
+            <p className="text-sm sm:text-base font-bold opacity-65 mt-1">{site.subtitle}</p>
             {live && (
               <p className="mt-1.5 flex items-center gap-2 text-[0.625rem] font-black uppercase tracking-[0.16em]">
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34C759]" />
@@ -1235,7 +1236,101 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
 // APP DOCK — the projects as an iOS-style home screen; tap one to jump to it
 // ============================================================================
 
-const AppDock = ({ sites, reduced, shown, onPick }) => (
+const LiveBadge = () => (
+  <span
+    className="absolute -top-1.5 -right-1.5 min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full bg-[#34C759] border-2 flex items-center justify-center"
+    style={{ borderColor: 'var(--surface-strong)' }}
+    title="Live"
+  >
+    <span className="pj-white text-[0.5rem] font-black uppercase tracking-wider">live</span>
+  </span>
+);
+
+// ============================================================================
+// ALL APPS — "View all" on the dock: every app, the top five and the others,
+// as a home-screen grid. Tapping one opens its details sheet.
+// ============================================================================
+
+const AllAppsModal = ({ darkMode, onClose, onPick }) => {
+  const sheetRef = useRef(null);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    sheetRef.current?.focus({ preventScroll: true });
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+
+  const groups = [
+    ['Top projects', featuredSites],
+    ['Other projects', otherSites],
+  ].filter(([, list]) => list.length);
+
+  return (
+    <div
+      className="fixed inset-0 z-[950] overflow-y-auto overscroll-contain"
+      style={{ background: darkMode ? 'rgba(6,6,14,0.82)' : 'rgba(40,20,50,0.45)', backdropFilter: 'blur(10px)' }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="All web apps"
+    >
+      <div className="min-h-full flex items-center justify-center p-4 sm:p-8">
+        <div
+          ref={sheetRef}
+          tabIndex={-1}
+          onClick={(e) => e.stopPropagation()}
+          className="pj-sheet relative w-full max-w-3xl outline-none rounded-[2rem] border border-[color:var(--line)] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] p-6 sm:p-10"
+          style={{ background: darkMode ? '#13131F' : '#FFFDF7', color: 'var(--ink)' }}
+        >
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="cursor-target absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full border border-[color:var(--line)] flex items-center justify-center transition-transform hover:rotate-90"
+            style={{ background: 'var(--surface-strong)' }}
+          >
+            <X size={18} />
+          </button>
+          <p className="pj-acc font-mono text-[0.6875rem] uppercase tracking-[0.25em]">~/projects/all</p>
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tighter mt-1">All web apps</h3>
+          <p className="text-sm opacity-65 mt-1.5">
+            {websites.length} live apps. Tap one for screenshots and the full story.
+          </p>
+
+          {groups.map(([label, list]) => (
+            <section key={label} className="mt-8">
+              <p className="text-[0.6875rem] font-black uppercase tracking-[0.22em] opacity-60 mb-4">{label}</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-6">
+                {list.map((site, i) => (
+                  <button
+                    key={site.name}
+                    onClick={() => onPick(site)}
+                    aria-label={`${site.name} details`}
+                    className="pj-app cursor-target group flex flex-col items-center gap-2 outline-none"
+                    style={{ animation: `pj-pop 500ms cubic-bezier(.3,1.4,.5,1) ${80 + i * 60}ms both` }}
+                  >
+                    <span className="pj-app-icon relative block">
+                      <AppIcon src={site.logo} name={site.name} size={72} className="sm:!w-[5.75rem] sm:!h-[5.75rem]" />
+                      {hostOf(site.url) && <LiveBadge />}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold tracking-tight leading-tight text-center">{site.name}</span>
+                    <span className="text-[0.625rem] sm:text-[0.6875rem] opacity-55 leading-tight text-center line-clamp-2">{site.subtitle}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AppDock = ({ sites, reduced, shown, onPick, onViewAll, total }) => (
   <div
     className="pj-dock relative inline-flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-5 sm:gap-x-8 px-5 sm:px-9 pt-6 pb-5 sm:pt-8 sm:pb-6 rounded-[2rem] border border-[color:var(--line)] bg-[color:var(--surface)] backdrop-blur-xl shadow-[0_24px_50px_-28px_rgba(0,0,0,0.6)]"
     role="list"
@@ -1254,15 +1349,7 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
         >
           <span className="pj-app-icon relative block">
             <AppIcon src={site.logo} name={site.name} size={72} className="sm:!w-[5.75rem] sm:!h-[5.75rem]" />
-            {live && (
-              <span
-                className="absolute -top-1.5 -right-1.5 min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full bg-[#34C759] border-2 flex items-center justify-center"
-                style={{ borderColor: 'var(--surface-strong)' }}
-                title="Live"
-              >
-                <span className="pj-white text-[0.5rem] font-black uppercase tracking-wider">live</span>
-              </span>
-            )}
+            {live && <LiveBadge />}
           </span>
           <span className="text-[0.6875rem] sm:text-sm font-semibold tracking-tight leading-tight text-center w-full opacity-85 line-clamp-2">
             {site.name}
@@ -1270,6 +1357,29 @@ const AppDock = ({ sites, reduced, shown, onPick }) => (
         </button>
       );
     })}
+    {onViewAll && (
+      <button
+        role="listitem"
+        onClick={onViewAll}
+        aria-label={`View all ${total} apps`}
+        className="pj-app cursor-target group flex flex-col items-center gap-2.5 w-[5rem] sm:w-[6.5rem] outline-none"
+        style={reduced || !shown ? { opacity: shown ? 1 : 0 } : { animation: `pj-pop 600ms cubic-bezier(.3,1.4,.5,1) ${300 + sites.length * 90}ms both` }}
+      >
+        <span
+          className="pj-app-icon relative flex items-center justify-center w-[72px] h-[72px] sm:w-[5.75rem] sm:h-[5.75rem] border-2 border-dashed border-[color:var(--acc-line)] bg-[color:var(--acc-soft)] transition-colors group-hover:border-[color:var(--acc)]"
+          style={{ borderRadius: '22.5%' }}
+        >
+          <LayoutGrid size={30} className="text-[color:var(--acc)]" />
+          <span
+            className="absolute -top-1.5 -right-1.5 min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full border-2 flex items-center justify-center"
+            style={{ background: 'var(--acc)', borderColor: 'var(--surface-strong)' }}
+          >
+            <div className="text-[0.625rem] font-black leading-none" style={{ color: 'var(--acc-ink)' }}>{total}</div>
+          </span>
+        </span>
+        <span className="pj-acc text-[0.6875rem] sm:text-sm font-black tracking-tight leading-tight text-center w-full">View all</span>
+      </button>
+    )}
   </div>
 );
 
@@ -1605,6 +1715,12 @@ const Project = ({ darkMode = true }) => {
   };
 
   const closeDetails = useCallback(() => setDetails(null), []);
+  const [allOpen, setAllOpen] = useState(false);
+  const closeAll = useCallback(() => setAllOpen(false), []);
+  const pickFromAll = (site) => {
+    setAllOpen(false);
+    setDetails(site);
+  };
   const launchFromDetails = (site, e) => {
     setDetails(null);
     start(site, e);
@@ -1622,6 +1738,7 @@ const Project = ({ darkMode = true }) => {
     <div className="pj-scope relative" style={cssVars(palette)}>
       <ProjectStyles />
 
+      {allOpen && <AllAppsModal darkMode={darkMode} onClose={closeAll} onPick={pickFromAll} />}
       {details && <ProjectDetails site={details} darkMode={darkMode} onClose={closeDetails} onLaunch={launchFromDetails} />}
       {launch && (
         <WarpLaunch
@@ -1680,7 +1797,14 @@ const Project = ({ darkMode = true }) => {
           </div>
           </div>
           <div style={headerStep(4)} className="pt-2 sm:pt-4 lg:pt-0">
-            <AppDock sites={featuredSites} reduced={reduced} shown={headerShown} onPick={jumpTo} />
+            <AppDock
+              sites={featuredSites}
+              reduced={reduced}
+              shown={headerShown}
+              onPick={jumpTo}
+              onViewAll={() => setAllOpen(true)}
+              total={websites.length}
+            />
           </div>
         </header>
 
