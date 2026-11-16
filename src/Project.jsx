@@ -1265,10 +1265,8 @@ const AllAppsModal = ({ darkMode, onClose, onPick }) => {
     };
   }, [onClose]);
 
-  const groups = [
-    ['Top projects', featuredSites],
-    ['Other projects', otherSites],
-  ].filter(([, list]) => list.length);
+  // one continuous grid: the top five first, then the others
+  const all = [...featuredSites, ...otherSites];
 
   return (
     <div
@@ -1301,29 +1299,25 @@ const AllAppsModal = ({ darkMode, onClose, onPick }) => {
             {websites.length} live apps. Tap one for screenshots and the full story.
           </p>
 
-          {groups.map(([label, list]) => (
-            <section key={label} className="mt-8">
-              <p className="text-[0.6875rem] font-black uppercase tracking-[0.22em] opacity-60 mb-4">{label}</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-6">
-                {list.map((site, i) => (
+          {/* centred rows of four, so the last row never leaves one app on its own */}
+          <div className="mt-8 flex flex-wrap justify-center gap-x-2 gap-y-7 sm:gap-x-6">
+                {all.map((site, i) => (
                   <button
                     key={site.name}
                     onClick={() => onPick(site)}
                     aria-label={`${site.name} details`}
-                    className="pj-app cursor-target group flex flex-col items-center gap-2 outline-none"
+                    className="pj-app cursor-target group flex flex-col items-center gap-2 outline-none w-[4.4rem] sm:w-[8.5rem]"
                     style={{ animation: `pj-pop 500ms cubic-bezier(.3,1.4,.5,1) ${80 + i * 60}ms both` }}
                   >
                     <span className="pj-app-icon relative block">
-                      <AppIcon src={site.logo} name={site.name} size={72} className="sm:!w-[5.75rem] sm:!h-[5.75rem]" />
+                      <AppIcon src={site.logo} name={site.name} size={60} className="sm:!w-[5.75rem] sm:!h-[5.75rem]" />
                       {hostOf(site.url) && <LiveBadge />}
                     </span>
                     <span className="text-xs sm:text-sm font-bold tracking-tight leading-tight text-center">{site.name}</span>
                     <span className="text-[0.625rem] sm:text-[0.6875rem] opacity-55 leading-tight text-center line-clamp-2">{site.subtitle}</span>
                   </button>
                 ))}
-              </div>
-            </section>
-          ))}
+          </div>
         </div>
       </div>
     </div>
