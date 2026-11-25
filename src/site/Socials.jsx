@@ -21,7 +21,7 @@ const ART = {
 // GitHub has no profile screenshot, so it gets a small hand-built profile card instead
 const GitHubCard = () => (
   <div className="gh-card">
-    <img src={ghAvatar} alt="" className="gh-ava" loading="lazy" />
+    <img src={ghAvatar} alt="" className="gh-ava" loading="lazy" decoding="async" width="80" height="80" />
     <strong>Brian Francisco</strong>
     <span className="mono">BryxCinco</span>
     <div className="gh-grid" aria-hidden="true">
@@ -60,11 +60,11 @@ export default function Socials() {
                 <ArrowUpRight size={16} className="social-arrow" />
               </div>
               <div className="phone">
-                {art.shot ? <img src={art.shot} alt={`${s.name} profile of Brian Francisco`} loading="lazy" draggable={false} /> : <GitHubCard />}
+                {art.shot ? <img src={art.shot} alt={`${s.name} profile of Brian Francisco`} loading="lazy" decoding="async" width="300" height="640" draggable={false} /> : <GitHubCard />}
               </div>
               <div className="social-foot">
                 <span className="social-logo">
-                  <img src={art.logo} alt="" loading="lazy" />
+                  <img src={art.logo} alt="" loading="lazy" decoding="async" width="40" height="40" />
                 </span>
                 <span>
                   <strong>{s.handle}</strong>

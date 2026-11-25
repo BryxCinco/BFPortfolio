@@ -38,7 +38,7 @@ const WorkTile = ({ w, site, i, onDetails }) => {
 
       <div className="work-body">
         <div className="work-head">
-          {site.logo && <img src={site.logo} alt="" loading="lazy" />}
+          {site.logo && <img src={site.logo} alt="" loading="lazy" decoding="async" width="48" height="48" />}
           <div>
             <h3 className="work-name">
               <Chars text={site.name} delay={0.25} />

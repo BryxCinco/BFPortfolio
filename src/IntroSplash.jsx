@@ -30,12 +30,13 @@ const GREETINGS = [
 // returning visitors see a few of them, faster
 const SHORT = ['Hello', '¡Hola!', 'Bonjour', 'こんにちは', 'Ciao'];
 
-const START_MS = 280; // letterbox settles first
-const EXIT_MS = 700; // the split-open reveal
-const FONT_WAIT_MS = 600; // longest we wait for Montserrat before starting
+const START_MS = 180; // letterbox settles first
+const EXIT_MS = 600; // the split-open reveal
+const FONT_WAIT_MS = 300; // longest we wait for Montserrat before starting
 const TIMING = {
-  full: { word: 150, hold: 780 },
-  short: { word: 120, hold: 560 },
+  // capped so the site is on screen ~1.4s after load (any click or key skips sooner)
+  full: { word: 65, hold: 420 },
+  short: { word: 70, hold: 300 },
 };
 
 // the intro follows the device's display mode, like the rest of the site

@@ -22,11 +22,15 @@ const Portrait = () => {
   const [prev, setPrev] = useState(-1);
   const [tick, setTick] = useState(0);
 
+  // warm the other photos only after the page has settled, so they never compete with first paint
   useEffect(() => {
-    PHOTOS.forEach((src) => {
-      const im = new Image();
-      im.src = src;
-    });
+    const t = setTimeout(() => {
+      PHOTOS.slice(1).forEach((src) => {
+        const im = new Image();
+        im.src = src;
+      });
+    }, 2000);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -54,6 +58,10 @@ const Portrait = () => {
           aria-hidden={k !== i}
           className={`slide ${k === i ? 'on' : k === prev ? 'was' : ''}`}
           draggable={false}
+          width={k === 5 ? 1000 : 750}
+          height={k === 5 ? 750 : 1000}
+          decoding={k === 0 ? 'sync' : 'async'}
+          fetchpriority={k === 0 ? 'high' : 'low'}
           loading={k === 0 ? 'eager' : 'lazy'}
         />
       ))}

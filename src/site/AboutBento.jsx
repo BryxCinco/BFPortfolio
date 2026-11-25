@@ -8,7 +8,15 @@ import brian4 from '../assets/Brian4.png';
 import brian5 from '../assets/Brian5.png';
 import brian6 from '../assets/Brian6.png';
 
+import t2 from '../assets/hero/brian-2.webp';
+import t3 from '../assets/hero/brian-3.webp';
+import t4 from '../assets/hero/brian-4.webp';
+import t5 from '../assets/hero/brian-5.webp';
+import t6 from '../assets/hero/brian-6.webp';
+
 const PHOTOS = [brian2, brian3, brian4, brian5, brian6];
+// small webp copies for the strip; the lightbox still opens the full photo
+const THUMBS = [t2, t3, t4, t5, t6];
 
 export default function AboutBento({ onPreview }) {
   return (
@@ -186,7 +194,7 @@ export default function AboutBento({ onPreview }) {
           <div className="film">
             {PHOTOS.map((p, i) => (
               <button type="button" key={p} onClick={() => onPreview({ src: p, title: `Snapshot ${String(i + 1).padStart(2, '0')}` })} aria-label={`Open snapshot ${i + 1}`}>
-                <img src={p} alt="" loading="lazy" />
+                <img src={THUMBS[i]} alt="" loading="lazy" decoding="async" width="750" height="1000" />
                 <span className="mono">IMG_{String(i + 1).padStart(3, '0')}</span>
               </button>
             ))}
