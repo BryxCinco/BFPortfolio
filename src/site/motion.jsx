@@ -57,6 +57,12 @@ export function useReveal(ref, onIn) {
       onIn?.();
       return undefined;
     }
+    // already on screen at mount (the hero): start now, don't wait a frame or more for the observer
+    if (el.getBoundingClientRect().top < window.innerHeight) {
+      el.classList.add('in');
+      onIn?.();
+      return undefined;
+    }
     if (onIn) watchers.set(el, onIn);
     io.observe(el);
     return () => io.unobserve(el);
