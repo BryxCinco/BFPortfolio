@@ -12,6 +12,7 @@ import { X, Keyboard, RotateCcw, MousePointerClick, ArrowBigUpDash, Crown, Quote
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getPalette, cssVars } from './theme';
+import { impact } from './site/impact';
 
 // ============================================================================
 // TYPINGTEST.JSX — a Monkeytype-style speed test. Three lines of text with a
@@ -458,6 +459,8 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
         }
         setPbs(next);
         setNewPb(true);
+        // beating an earlier personal best (not the very first run) gets an impact frame
+        if (prev[key]) impact({ tone: 'win' });
       }
     },
     [duration, mode]

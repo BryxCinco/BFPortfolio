@@ -5,6 +5,7 @@ import { Tile, SectionHead, Chars } from './motion';
 import { WORK_LAYOUT } from './data';
 import { websites, ProjectStyles, ProjectDetails } from '../Project';
 import { launchSite } from '../WarpHost';
+import { impactAt } from './impact';
 import { getPalette, cssVars } from '../theme';
 
 const TONE = {
@@ -23,7 +24,9 @@ const WorkTile = ({ w, site, i, onDetails }) => {
   const open = (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
-    launchSite(site.name, e);
+    // impact frame first, then the warp takes off from the same button
+    const el = e.currentTarget;
+    impactAt(el, { shake: document.querySelector('main') }).then(() => launchSite(site.name, { currentTarget: el }));
   };
 
   return (

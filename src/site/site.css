@@ -1393,3 +1393,47 @@ html.dark .hud-cursor { --c: #DDBCEB; --c-ink: #0B0B0C; --halo: rgba(5, 7, 12, 0
 .hud-tag[data-below="true"] { bottom: auto; top: calc(100% + 4px); }
 @keyframes hud-tag-in { from { opacity: 0; transform: translateY(3px); } }
 @media (prefers-reduced-motion: reduce) { .hud-tag { animation: none; } }
+
+/* ==========================================================================
+   IMPACT FRAME (site/impact.js) — appended to <body>, so keyed off html.dark.
+   ========================================================================== */
+.impact { position: fixed; inset: 0; z-index: 2147482000; pointer-events: none; --line1: #F4F4F2; }
+html.dark .impact { --line1: #0B0B0C; }
+.impact-panel { position: absolute; inset: 0; }
+.impact-lines { position: absolute; inset: 0; transform-origin: var(--ix) var(--iy); }
+.impact-ring {
+  position: absolute;
+  left: var(--ix);
+  top: var(--iy);
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.2);
+}
+
+/* frame 1: inverted, high-contrast panel; light lines rush in */
+.impact[data-frame="1"] .impact-panel { backdrop-filter: grayscale(1) invert(1) contrast(2.4); -webkit-backdrop-filter: grayscale(1) invert(1) contrast(2.4); }
+.impact[data-frame="1"] .impact-lines { fill: var(--line1); transform: scale(1.12); }
+/* frame 2: snaps back to a monochrome panel; lines flip to the accent */
+.impact[data-frame="2"] .impact-panel { backdrop-filter: grayscale(1) contrast(1.8); -webkit-backdrop-filter: grayscale(1) contrast(1.8); }
+.impact[data-frame="2"] .impact-lines { fill: var(--accent); transform: scale(1); }
+.impact--win[data-frame="2"] .impact-panel { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+/* frame 3: lines and panel fall away, a ring bursts from the point */
+.impact[data-frame="3"] .impact-lines { fill: var(--accent); opacity: 0; transform: scale(0.94); transition: opacity 0.11s ease-out, transform 0.11s ease-out; }
+.impact[data-frame="3"] .impact-ring { opacity: 0; transform: scale(7); transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.2s ease-out; animation: impact-ring-in 0.2s ease-out; }
+@keyframes impact-ring-in { 0% { opacity: 1; transform: scale(0.3); } 100% { opacity: 0; transform: scale(7); } }
+
+.impact-shake { animation: impact-shake 0.3s steps(1, end); }
+@keyframes impact-shake {
+  0% { transform: translate(4px, -3px); }
+  15% { transform: translate(-4px, 2px); }
+  30% { transform: translate(3px, 3px); }
+  45% { transform: translate(-3px, -2px); }
+  60% { transform: translate(2px, 1px); }
+  75% { transform: translate(-1px, -1px); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .impact { display: none; } .impact-shake { animation: none; } }

@@ -10,6 +10,7 @@ import { X, Layers, RotateCcw, Sparkles, Trophy, Flame, Crown } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getPalette, cssVars } from './theme';
+import { impactAt } from './site/impact';
 
 // ============================================================================
 // PLAYGAME.JSX — "Stack Game": a 3D tower of tech blocks. Each block slides
@@ -397,6 +398,14 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
         field.classList.add('pg-shake');
       }
       play('error');
+      // a new high score gets an impact frame (from the second game on, so a first game doesn't count)
+      let saved = 0;
+      try {
+        saved = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0;
+      } catch {
+        /* storage may be unavailable */
+      }
+      if (saved > 0 && finalScore > saved) impactAt(fieldRef.current, { tone: 'win' });
       setBest((prevBest) => {
         if (finalScore > prevBest) setNewBest(true);
         const next = Math.max(prevBest, finalScore);
@@ -450,6 +459,8 @@ const PlayGame = forwardRef(({ darkMode, soundEnabled = true, onAction }, ref) =
       sub: r.grew ? 'block grows' : TECH_STACK[r.techIdx].name,
       perfect: r.perfect,
     });
+    // a perfect streak that grows the block back is worth an impact frame
+    if (r.grew) impactAt(fieldRef.current, { tone: 'win' });
 
     const prevScore = scoreRef.current;
     const newScore = prevScore + pointsGained;
