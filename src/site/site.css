@@ -1158,3 +1158,113 @@ p.body { margin: 0; line-height: 1.6; color: var(--mute); font-size: 1rem; }
 .site.is-dark .work-act .btn.solid { background: var(--lav); border-color: var(--lav); color: #0B0B0C; }
 .work-act .btn.solid::before { background: var(--ink); }
 .work-act .btn.solid:hover { color: var(--bg); border-color: var(--ink); }
+
+/* ==========================================================================
+   POLISH PASS — rhythm for the middle of the page
+   Stack: open index rows (no tiles). Certificates: stat strip + featured
+   set. Soft skills: a full-bleed navy band. Three different shapes in a row.
+   ========================================================================== */
+
+/* stack index */
+.stack-rows { border-bottom: 1px solid var(--line-2); }
+.stack-row {
+  display: grid;
+  grid-template-columns: minmax(15rem, 4fr) 8fr;
+  gap: clamp(1.25rem, 3vw, 3rem);
+  align-items: start;
+  padding: clamp(1.75rem, 3vw, 2.75rem) 0;
+  border-top: 1px solid var(--line-2);
+}
+.stack-row:first-child { border-top: 0; padding-top: 0.5rem; }
+.stack-row h4 { margin: 0.6rem 0 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(1.8rem, 2.6vw, 2.6rem); letter-spacing: -0.035em; line-height: 1; }
+.stack-row .sub { margin: 0.6rem 0 0; color: var(--mute); font-size: 1rem; line-height: 1.5; max-width: 22rem; }
+.stack-row.is-hi {
+  margin: clamp(0.5rem, 1vw, 1rem) 0;
+  padding: clamp(1.75rem, 3vw, 2.75rem);
+  border: 0;
+  border-radius: var(--r);
+  background: var(--yale);
+  color: #fff;
+  --mute: rgba(255, 255, 255, 0.78);
+  --mark: var(--lav);
+  --line-2: rgba(255, 255, 255, 0.3);
+}
+.site.is-dark .stack-row.is-hi { background: #0B2A57; }
+.stack-row.is-hi + .stack-row { border-top: 0; }
+.sr-tools, .sr-methods { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.lchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3rem;
+  padding: 0 0.9rem 0 0.4rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: border-color 0.25s ease, transform 0.35s var(--ease);
+}
+.lchip:hover { border-color: var(--ink); transform: translateY(-2px); }
+.stack-row.is-hi .lchip:hover { border-color: #fff; }
+.lchip .lg { width: 2.2rem; height: 2.2rem; flex: none; display: grid; place-items: center; background: #fff; border-radius: 3px; padding: 0.3rem; }
+.lchip .lg img { width: 100%; height: 100%; object-fit: contain; }
+.lchip .lg b { font-family: var(--f-mono); font-size: 0.75rem; color: #0B0B0C; }
+.lchip .used { font-family: var(--f-mono); font-size: 0.75rem; color: var(--mute); margin-left: 0.1rem; }
+.sr-methods li { display: inline-flex; align-items: center; gap: 0.6rem; height: 3rem; padding: 0 1.1rem; border: 1px solid var(--line-2); border-radius: 999px; font-size: 1rem; font-weight: 500; }
+.sr-methods li .mono { color: var(--mark); }
+@media (max-width: 900px) {
+  .stack-row { grid-template-columns: 1fr; gap: 1.25rem; }
+  .stack-row .sub { max-width: none; }
+}
+@media (max-width: 639px) {
+  .lchip { height: 2.75rem; font-size: 0.875rem; }
+  .stack-row.is-hi { margin-inline: calc(-1 * clamp(1rem, 3.6vw, 3.75rem)); border-radius: 0; padding-inline: clamp(1rem, 3.6vw, 3.75rem); }
+}
+
+/* certificates */
+.cert-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: calc(var(--gap) * 2);
+  border-block: 1px solid var(--line-2);
+}
+.cert-stats > div { display: flex; flex-direction: column; gap: 0.75rem; padding: clamp(1.25rem, 2.4vw, 2rem) clamp(1rem, 2vw, 1.75rem); border-left: 1px solid var(--line-2); }
+.cert-stats > div:first-child { border-left: 0; padding-left: 0; }
+.cert-stats .stat-num { font-size: clamp(2.8rem, 4.6vw, 4.6rem); }
+.cert-stats .mono { color: var(--mute); }
+.cert-stats .is-poly .stat-num { color: var(--mark); }
+.cert-featured { grid-auto-rows: auto; }
+.cert-lead .cert-img { flex: 1; aspect-ratio: auto; min-height: 16rem; }
+.cert-lead .cert-body h5 { font-family: var(--f-display); font-weight: 800; font-size: clamp(1.4rem, 2vw, 1.9rem); letter-spacing: -0.025em; line-height: 1.1; }
+.cert-body h5 { font-size: 1rem; }
+.cert-toggle { display: flex; justify-content: center; margin-top: calc(var(--gap) * 1.5); }
+.cert-toggle .btn { height: 3rem; }
+.cert-all { margin-top: calc(var(--gap) * 2); padding-top: calc(var(--gap) * 2); border-top: 1px dashed var(--line-2); }
+.cert-filters .chip { height: 2.75rem; padding: 0 0.9rem; font-size: 0.8125rem; border-radius: 999px; }
+@media (max-width: 767px) {
+  .cert-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cert-stats > div:nth-child(3) { border-left: 0; padding-left: 0; }
+  .cert-stats > div:nth-child(n + 3) { border-top: 1px solid var(--line-2); }
+}
+@media (max-width: 1100px) { .cert-lead .cert-img { aspect-ratio: 1.414 / 1; flex: none; min-height: 0; } }
+
+/* soft skills band: navy, full width, open list instead of boxes */
+.tile.soft {
+  margin-block: calc(var(--gap) * 2.5);
+  margin-inline: calc(50% - 50vw);
+  border-radius: 0;
+  padding-block: clamp(3rem, 6vw, 5.5rem);
+  padding-inline: max(clamp(1rem, 3.6vw, 3.75rem), calc((100vw - 108rem) / 2 + clamp(1rem, 3.6vw, 3.75rem)));
+}
+.tile.soft .tile-label { font-size: 0.8125rem; }
+.soft .soft-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 clamp(1.25rem, 2.4vw, 2.5rem); border: 0; }
+.soft .soft-grid li { min-height: 0; padding: 1.4rem 0 1.6rem; border: 0; border-top: 1px solid var(--line-2); overflow: visible; }
+.soft .soft-grid li::before { display: none; }
+.soft .soft-grid li:hover { color: inherit; }
+.soft .soft-grid li:hover strong { color: var(--lav); }
+.soft .soft-grid strong { margin-top: 0.4rem; font-size: clamp(1.5rem, 2.1vw, 2.1rem); transition: color 0.3s ease; }
+.soft .soft-grid small { color: var(--mute); }
+.soft .soft-grid li:hover .mono, .soft .soft-grid li:hover small { opacity: 1; }
+@media (max-width: 1100px) { .soft .soft-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .soft .soft-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .soft .soft-grid { grid-template-columns: 1fr; } .soft .soft-grid li { padding: 1rem 0 1.1rem; } }

@@ -1,25 +1,21 @@
 import React from 'react';
 
-import { Tile, SectionHead, Chars } from './motion';
+import { Reveal, SectionHead, Chars } from './motion';
 import { METHODS } from './data';
 import { stackCategories } from '../Stacks';
 
-const SHAPE = {
-  frontend: { cls: 't-7', tone: null },
-  backend: { cls: 't-5', tone: null },
-  ai: { cls: 't-6', tone: 'yale' },
-  ship: { cls: 't-6', tone: null },
-  design: { cls: 't-5 tb-3', tone: null },
-  mobile: { cls: 't-3 tb-3', tone: 'lav' },
-};
+// Stack reads as an open index, not as more bento tiles: one row per area,
+// title on the left, tools flowing on the right. AI is the highlighted row.
 const ORDER = ['frontend', 'backend', 'ai', 'ship', 'design', 'mobile'];
 
-const LogoCell = ({ item }) => (
-  <div className="logo-cell" title={item.usedIn?.length ? `Used in ${item.usedIn.join(', ')}` : item.name}>
-    {item.usedIn?.length > 0 && <span className="used">×{item.usedIn.length}</span>}
-    <span className="lg">{item.logo ? <img src={item.logo} alt="" loading="lazy" /> : <b>{item.glyph ?? item.name.slice(0, 2)}</b>}</span>
+const ToolChip = ({ item }) => (
+  <li className="lchip" title={item.usedIn?.length ? `Used in ${item.usedIn.join(', ')}` : item.name}>
+    <span className="lg">
+      {item.logo ? <img src={item.logo} alt="" loading="lazy" decoding="async" width="24" height="24" /> : <b>{item.glyph ?? item.name.slice(0, 2)}</b>}
+    </span>
     <span>{item.name}</span>
-  </div>
+    {item.usedIn?.length > 0 && <span className="used">×{item.usedIn.length}</span>}
+  </li>
 );
 
 export default function StackBento() {
@@ -35,50 +31,43 @@ export default function StackBento() {
         aside={`${total} tools across six areas. The small ×n is how many of my shipped apps use it.`}
       />
 
-      <div className="bento">
-        {cats.map((c, i) => {
-          const s = SHAPE[c.id];
-          return (
-            <Tile key={c.id} className={`${s.cls} stack-cat`} tone={s.tone} delay={(i % 2) * 0.08}>
-              <div className="tile-label mono">
-                <span>
-                  <span className="dot" />
-                  {String(i + 1).padStart(2, '0')} / {c.items.length} tools
-                </span>
-              </div>
+      <div className="stack-rows">
+        {cats.map((c, i) => (
+          <Reveal as="article" key={c.id} rv="fade" className={`stack-row ${c.id === 'ai' ? 'is-hi' : ''}`} delay={0.04}>
+            <div className="sr-head">
+              <span className="mono mark">
+                {String(i + 1).padStart(2, '0')} / {c.items.length} tools
+              </span>
               <h4>
-                <Chars text={c.title} delay={0.15} />
+                <Chars text={c.title} delay={0.1} />
               </h4>
               <p className="sub">{c.subtitle}</p>
-              <div className="logos">
-                {c.items.map((it) => (
-                  <LogoCell key={it.name} item={it} />
-                ))}
-              </div>
-            </Tile>
-          );
-        })}
+            </div>
+            <ul className="sr-tools">
+              {c.items.map((it) => (
+                <ToolChip key={it.name} item={it} />
+              ))}
+            </ul>
+          </Reveal>
+        ))}
 
-        <Tile className="t-4 stack-cat" tone="air" delay={0.1}>
-          <div className="tile-label mono">
-            <span>
-              <span className="dot" />
-              How I work
-            </span>
+        <Reveal as="article" rv="fade" className="stack-row is-methods">
+          <div className="sr-head">
+            <span className="mono mark">How I work</span>
+            <h4>
+              <Chars text="Methods" delay={0.1} />
+            </h4>
+            <p className="sub">Process I&apos;ve practiced on team and solo projects.</p>
           </div>
-          <h4>
-            <Chars text="Methods" delay={0.15} />
-          </h4>
-          <p className="sub">Process I&apos;ve practiced on team and solo projects.</p>
-          <ul className="list-plain">
+          <ol className="sr-methods">
             {METHODS.map((m, i) => (
               <li key={m}>
                 <span className="mono">{String(i + 1).padStart(2, '0')}</span>
                 {m}
               </li>
             ))}
-          </ul>
-        </Tile>
+          </ol>
+        </Reveal>
       </div>
     </section>
   );

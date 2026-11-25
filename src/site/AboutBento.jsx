@@ -156,7 +156,7 @@ export default function AboutBento({ onPreview }) {
           </ul>
         </Tile>
 
-        <Tile className="t-12 soft" delay={0}>
+        <Tile className="t-12 soft" tone="yale" ticks={false} delay={0}>
           <div className="tile-label mono">
             <span>
               <span className="dot" />
