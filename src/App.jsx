@@ -267,7 +267,7 @@ function App() {
           <header className="bar">
             <div className="wrap bar-in">
               <a className="brand" href="#home" onClick={go('home')} aria-label="Brian Francisco, back to top">
-                <BrandMark className="brand-mark" size={40} />
+                <BrandMark className="brand-mark" height={34} />
                 <span className="brand-name">
                   Brian Francisco
                   <small>Full-stack · LLM</small>

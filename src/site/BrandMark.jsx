@@ -1,27 +1,26 @@
-import React, { useId } from 'react';
+import React from 'react';
 
 // ============================================================================
-// BRANDMARK — the BF monogram. Heavy italic letters with chamfered corners and
-// a speed cut through both, on a chamfered shield. Colours come from CSS:
-// --bm-bg (shield) and --bm-ink (letters), so it follows light / dark mode.
+// BRANDMARK — the BP monogram. Heavy italic B and P with chamfered corners,
+// led by four speed stripes. Colours come from CSS: --bm-ink (letters,
+// stripes) and --bm-acc (top stripe), so it follows light / dark mode.
+// `stripes={false}` gives the letters alone for square spaces (favicons).
 // ============================================================================
 
-export default function BrandMark({ size = 36, badge = true, className = '', title = 'BF' }) {
-  const id = useId().replace(/:/g, '');
+const B = 'M39 10 H57 L62 15 V25 L59.5 28 L62 31 V45 L57 50 H39 Z M45.5 15.5 H55 L56.5 17 V23.5 L55 25 H45.5 Z M45.5 31 H55 L56.5 32.5 V43 L55 44.5 H45.5 Z';
+const P = 'M65 10 H83 L88 15 V27 L83 32 H71.5 V50 H65 Z M71.5 15.5 H81 L82.5 17 V25 L81 26.5 H71.5 Z';
+const STRIPES = ['M18 18 H36 V22 H18 Z', 'M8 26 H36 V30.5 H8 Z', 'M14 34.5 H36 V39 H14 Z', 'M24 43 H36 V47 H24 Z'];
+
+export default function BrandMark({ height = 36, stripes = true, className = '', title = 'BP' }) {
+  const vb = stripes ? '2 6 92 48' : '32 6 62 48';
+  const [, , w, h] = vb.split(' ').map(Number);
   return (
-    <svg className={`bmark ${className}`} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title}>
-      <defs>
-        <mask id={`bm-cut-${id}`}>
-          <rect width="64" height="64" fill="#fff" />
-          <path className="bmark-cut" d="M0 57.6 L64 21.2 L64 23.2 L0 59.6 Z" fill="#000" />
-        </mask>
-      </defs>
-      {badge && <path className="bmark-bg" d="M9 2 H55 L62 9 V41 L32 62 L2 41 V9 Z" />}
-      <g mask={`url(#bm-cut-${id})`}>
-        <g className="bmark-ink" transform="translate(32 31) skewX(-11) translate(-32 -31)" fillRule="evenodd">
-          <path d="M9 12 H26 L31 17 V27 L28.5 29.5 L31 32 V44 L26 49 H9 Z M15 17.6 H23.8 L25.2 19 V25.8 L23.8 27.2 H15 Z M15 32.4 H23.8 L25.2 33.8 V42 L23.8 43.4 H15 Z" />
-          <path d="M34 12 H57 L53.4 17.8 H40 V27.2 H51 L47.6 32.6 H40 V49 H34 Z" />
-        </g>
+    <svg className={`bmark ${className}`} height={height} width={(height * w) / h} viewBox={vb} role="img" aria-label={title}>
+      <g transform="translate(50 30) skewX(-18) translate(-50 -30)" fillRule="evenodd">
+        {stripes &&
+          STRIPES.map((d, i) => <path key={d} d={d} className={i === 0 ? 'bmark-acc bmark-stripe' : 'bmark-ink bmark-stripe'} style={{ '--i': i }} />)}
+        <path className="bmark-ink" d={B} />
+        <path className="bmark-ink" d={P} />
       </g>
     </svg>
   );
