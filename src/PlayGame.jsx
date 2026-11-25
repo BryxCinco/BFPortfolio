@@ -70,7 +70,7 @@ const SIMPLE = (name) => `https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icon
 const TECH_STACK = [
   { name: 'HTML', bg: '#E44D26', fg: '#ffffff', logo: DEVICON('html5') },
   { name: 'CSS', bg: '#2965F1', fg: '#ffffff', logo: DEVICON('css3') },
-  { name: 'JavaScript', bg: '#F0DB4F', fg: '#1B1B2A', logo: DEVICON('javascript') },
+  { name: 'JavaScript', bg: '#F0DB4F', fg: '#0B0B0C', logo: DEVICON('javascript') },
   { name: 'TypeScript', bg: '#3178C6', fg: '#ffffff', logo: DEVICON('typescript') },
   { name: 'React', bg: '#149ECA', fg: '#ffffff', logo: DEVICON('react') },
   { name: 'Next.js', bg: '#111111', fg: '#ffffff', logo: DEVICON('nextjs') },
@@ -86,7 +86,7 @@ const TECH_STACK = [
   { name: 'Claude Code', bg: '#D97757', fg: '#ffffff', logo: LOBE('claudecode-color') },
   { name: 'Codex', bg: '#1E1E24', fg: '#ffffff', logo: LOBE('codex-color') },
   { name: 'Groq', bg: '#F55036', fg: '#ffffff', logo: LOBE('groq') },
-  { name: 'Hugging Face', bg: '#FFB000', fg: '#1B1B2A', logo: LOBE('huggingface-color') },
+  { name: 'Hugging Face', bg: '#FFB000', fg: '#0B0B0C', logo: LOBE('huggingface-color') },
   { name: 'LangChain', bg: '#1C3C3C', fg: '#ffffff', logo: LOBE('langchain-color') },
   { name: 'CrewAI', bg: '#FF5A50', fg: '#ffffff', logo: LOBE('crewai-color') },
   { name: 'MySQL', bg: '#00618A', fg: '#ffffff', logo: DEVICON('mysql') },
@@ -94,13 +94,13 @@ const TECH_STACK = [
   { name: 'MongoDB', bg: '#13AA52', fg: '#ffffff', logo: DEVICON('mongodb') },
   { name: 'Oracle', bg: '#C74634', fg: '#ffffff', logo: DEVICON('oracle') },
   { name: 'Supabase', bg: '#1F9D6B', fg: '#ffffff', logo: DEVICON('supabase') },
-  { name: 'Firebase', bg: '#FFA611', fg: '#1B1B2A', logo: DEVICON('firebase') },
+  { name: 'Firebase', bg: '#FFA611', fg: '#0B0B0C', logo: DEVICON('firebase') },
   { name: 'Figma', bg: '#A259FF', fg: '#ffffff', logo: DEVICON('figma') },
   { name: 'Git', bg: '#F1502F', fg: '#ffffff', logo: DEVICON('git') },
   { name: 'GitHub', bg: '#24292F', fg: '#ffffff', logo: DEVICON('github') },
   { name: 'Docker', bg: '#2496ED', fg: '#ffffff', logo: DEVICON('docker') },
   { name: 'Google Cloud', bg: '#4285F4', fg: '#ffffff', logo: DEVICON('googlecloud') },
-  { name: 'AWS', bg: '#FF9900', fg: '#1B1B2A', logo: DEVICON('amazonwebservices', 'original-wordmark') },
+  { name: 'AWS', bg: '#FF9900', fg: '#0B0B0C', logo: DEVICON('amazonwebservices', 'original-wordmark') },
   { name: 'Azure', bg: '#0078D4', fg: '#ffffff', logo: DEVICON('azure') },
   { name: 'Hostinger', bg: '#673DE6', fg: '#ffffff', logo: SIMPLE('hostinger') },
   { name: 'Postman', bg: '#FF6C37', fg: '#ffffff', logo: DEVICON('postman') },
@@ -146,7 +146,7 @@ export const PlayGameTrigger = ({ darkMode, onClick, className = '' }) => {
   const isDesktop = useIsDesktopOnly();
   if (!isDesktop) return null;
 
-  const accent = darkMode ? '#00FFB3' : '#007A59';
+  const accent = darkMode ? '#DDBCEB' : '#0F499A';
 
   return (
     <button

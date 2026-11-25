@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-montserrat: "Montserrat", sans-serif;
-  /* Montserrat's 900 is very heavy; font-black tops out at 800 */
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-montserrat: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-weight-black: 800;
   --animate-infinite-scroll: infinite-scroll 40s linear infinite;
 
@@ -13,78 +14,46 @@
 }
 
 @layer base {
-  /* Fit-to-screen on desktop: the root font-size tracks the window width
-     (16px at an 1800px-wide window, clamped to 10.9px–24px), so every
-     rem-based size scales together on any monitor or browser zoom.
-     See src/useFitScale.js. */
+  /* Fit-to-screen on desktop: root font-size follows the window width
+     (16px at 1800px, clamped 13px–20px), so rem-based sizes keep their
+     proportions on any monitor. Phones and tablets stay at 16px. */
   @media (min-width: 1024px) and (pointer: fine) {
-    html { font-size: clamp(10.88px, calc(100vw / 112.5), 24px); }
+    html { font-size: clamp(13px, calc(100vw / 112.5), 20px); }
   }
+
+  html { color-scheme: light; background: #EEEFF3; color: #0B0B0C; }
+  html.dark { color-scheme: dark; background: #05070C; color: #F4F4F2; }
 
   body {
-    @apply transition-colors duration-700 antialiased overflow-x-hidden m-0 p-0;
-    font-family: var(--font-montserrat);
+    margin: 0;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-
-  /* Body copy reads at medium weight; headings and labels set their own
-     (font-bold / font-black) so the page keeps a clear hierarchy. */
-  p { font-weight: 500; }
-}
-
-/* THEME — same tokens as src/theme.js: navy-ink + mint in the dark,
-   cream + deep teal in the light, pink as the second accent in both. */
-.dark {
-  background-color: #0E0E18;
-  color: #ffffff;
-}
-
-.light {
-  background-color: #FCFAF7;
-  color: #1B1B2A;
 }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { border-radius: 9999px; }
-.light ::-webkit-scrollbar-thumb { background: rgba(0, 122, 89, 0.45); }
-.light ::-webkit-scrollbar-thumb:hover { background: #007A59; }
-.dark ::-webkit-scrollbar-thumb { background: rgba(46, 230, 168, 0.35); }
-.dark ::-webkit-scrollbar-thumb:hover { background: #2EE6A8; }
+::-webkit-scrollbar-thumb { background: rgba(15, 73, 154, 0.4); }
+::-webkit-scrollbar-thumb:hover { background: #0F499A; }
+html.dark ::-webkit-scrollbar-thumb { background: rgba(221, 188, 235, 0.28); }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #DDBCEB; }
 
-/* Text color per mode (pages scope their own accent colors on top of this) */
-.light h1, .light h2, .light h3, .light h4, .light p, .light span {
-  color: #1B1B2A !important;
-}
-
-.dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span {
-  color: #ffffff !important;
-}
-
-/* Hide the archive text when hovering to keep images clean */
-.group:hover .archive-text {
-  display: none;
-}
-
-/* Animation para sa smooth expansion */
-@keyframes expand {
-  0% { clip-path: circle(0% at var(--x) var(--y)); }
-  100% { clip-path: circle(150% at var(--x) var(--y)); }
-}
-
-.theme-transition {
-  animation: expand 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-}
-
-/* small drop-down pop (nav "Play" menu) */
+/* small drop-down pop (menus) */
 @keyframes nav-pop {
-  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
 .nav-pop { animation: nav-pop 0.18s ease-out both; transform-origin: top right; }
+
+/* theme switch — the new page grows out of the click point (see site/useThemeTransition.js) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 9999; }

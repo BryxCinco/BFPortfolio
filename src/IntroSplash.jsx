@@ -41,11 +41,11 @@ const TIMING = {
 // the intro follows the device's display mode, like the rest of the site
 const THEMES = {
   dark: {
-    bg: '#0C0C16',
+    bg: '#05070C',
     bar: '#000000',
     ink: '255,255,255',
-    glowA: 'rgba(0,255,179,0.16)',
-    glowB: 'rgba(255,0,122,0.14)',
+    glowA: 'rgba(15,73,154,0.22)',
+    glowB: 'rgba(141,111,160,0.14)',
     vignette: 'rgba(0,0,0,0.6)',
     grain: { opacity: 0.05 },
     grad: 'is-grad',
@@ -53,16 +53,16 @@ const THEMES = {
     wordGlow: '0 0 40px rgba(255,255,255,0.18)',
   },
   light: {
-    bg: '#FFFBF3',
-    bar: '#F1E9DC',
-    ink: '27,27,42',
-    glowA: 'rgba(0,200,140,0.16)',
-    glowB: 'rgba(255,0,122,0.13)',
-    vignette: 'rgba(150,110,80,0.16)',
+    bg: '#EEEFF3',
+    bar: '#E2E4EB',
+    ink: '11,11,12',
+    glowA: 'rgba(118,164,194,0.22)',
+    glowB: 'rgba(141,111,160,0.13)',
+    vignette: 'rgba(14,53,108,0.12)',
     grain: { opacity: 0.04 },
     grad: 'is-grad-light',
-    rule: 'rgba(27,27,42,0.35)',
-    wordGlow: '0 10px 40px rgba(255,0,122,0.12)',
+    rule: 'rgba(11,11,12,0.35)',
+    wordGlow: '0 10px 40px rgba(141,111,160,0.12)',
   },
 };
 
@@ -97,12 +97,12 @@ const Styles = () => (
     .is-sub { animation: is-sub 0.14s ease-out both; }
     .is-final { animation: is-final 0.6s cubic-bezier(.22,1,.36,1) both; }
     .is-grad {
-      background-image: linear-gradient(100deg, #00FFB3 0%, #7DFFE0 22%, #FFFFFF 40%, #FF7AB8 60%, #FF007A 78%, #A700FF 100%);
+      background-image: linear-gradient(100deg, #DDBCEB 0%, #DDBCEB 22%, #FFFFFF 40%, #76A4C2 60%, #8D6FA0 78%, #8D6FA0 100%);
       background-size: 100% 100%;
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     .is-grad-light {
-      background-image: linear-gradient(100deg, #00A877 0%, #0E7C66 22%, #1B1B2A 42%, #C2006A 62%, #FF007A 78%, #7A00D9 100%);
+      background-image: linear-gradient(100deg, #0E356C 0%, #0F499A 22%, #0B0B0C 42%, #8D6FA0 62%, #0F499A 78%, #0E356C 100%);
       background-size: 100% 100%;
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
@@ -233,7 +233,7 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
             <div
               className="is-progress h-full"
               style={{
-                background: 'linear-gradient(90deg, #00FFB3, #FF007A)',
+                background: 'linear-gradient(90deg, #DDBCEB, #8D6FA0)',
                 animation: reduced || !started ? 'none' : `is-line ${total - START_MS}ms ${START_MS}ms linear both`,
                 transform: started ? undefined : 'scaleX(0)',
               }}

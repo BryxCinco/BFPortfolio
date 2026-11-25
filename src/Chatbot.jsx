@@ -272,7 +272,7 @@ const ChatStyles = () => (
     #claude-chat-overlay :is(h1,h2,h3,h4,p,span) { color: inherit !important; font-weight: inherit !important; }
     #claude-chat-overlay .cb-acc { color: var(--acc) !important; }
     #claude-chat-overlay .cb-on { color: var(--acc-ink) !important; }
-    #claude-chat-overlay .cb-dark { color: #1B1B2A !important; }
+    #claude-chat-overlay .cb-dark { color: #0B0B0C !important; }
     #claude-chat-overlay .cb-white { color: #fff !important; }
     #claude-chat-overlay .font-medium { font-weight: 500 !important; }
     #claude-chat-overlay .font-semibold { font-weight: 600 !important; }
@@ -304,7 +304,7 @@ const Orb = ({ state = 'idle', size = 40 }) => (
     )}
     <span
       className={`absolute inset-0 rounded-full ${state === 'thinking' ? 'cb-orb-fast' : 'cb-orb-spin'}`}
-      style={{ background: 'conic-gradient(from 0deg, var(--acc), var(--acc2), #FF007A, var(--acc))' }}
+      style={{ background: 'conic-gradient(from 0deg, var(--acc), var(--acc2), #8D6FA0, var(--acc))' }}
     />
     <span
       className={`absolute inset-[3px] rounded-full flex items-center justify-center ${state === 'thinking' ? 'cb-breathe' : ''}`}
@@ -844,7 +844,7 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavig
           {/* soft backdrop glow */}
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: `radial-gradient(60% 50% at 50% 0%, ${darkMode ? 'rgba(0,255,179,0.08)' : 'rgba(0,122,89,0.07)'}, transparent 70%)` }}
+            style={{ background: `radial-gradient(60% 50% at 50% 0%, ${darkMode ? 'rgba(221,188,235,0.08)' : 'rgba(15,73,154,0.07)'}, transparent 70%)` }}
           />
 
           {/* header */}

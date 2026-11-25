@@ -205,7 +205,7 @@ export function createStack3D(host, { techs, dark = true } = {}) {
   }
 
   function pedestalColors() {
-    return dark ? { side: '#22223A', top: '#2EE6A8' } : { side: '#E6E1D6', top: '#007A59' };
+    return dark ? { side: '#22223A', top: '#A9C9E0' } : { side: '#E6E1D6', top: '#0F499A' };
   }
 
   // a block wearing `tech`; geometry is rebuilt per size so textures stay crisp

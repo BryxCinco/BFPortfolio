@@ -1073,7 +1073,7 @@ const WarpLaunch = ({ launch, palette, darkMode, setStage, close }) => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `repeating-linear-gradient(0deg, ${rgba(darkMode ? '#000000' : '#1B1B2A', darkMode ? 0.18 : 0.04)} 0 1px, transparent 1px 3px)`,
+          backgroundImage: `repeating-linear-gradient(0deg, ${rgba(darkMode ? '#000000' : '#0B0B0C', darkMode ? 0.18 : 0.04)} 0 1px, transparent 1px 3px)`,
         }}
       />
       <div

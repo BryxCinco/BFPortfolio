@@ -66,7 +66,7 @@ const stackCategories = [
     id: 'design',
     title: 'Design & Motion',
     subtitle: 'Visual, video & prototyping tools',
-    color: '#FF007A',
+    color: '#8D6FA0',
     Icon: Palette,
     items: [
       { name: 'Canva', logo: DEVICON('canva') },
@@ -81,7 +81,7 @@ const stackCategories = [
     id: 'ai',
     title: 'AI Collaborators',
     subtitle: 'Models & assistants in the daily loop',
-    color: '#A700FF',
+    color: '#8D6FA0',
     Icon: Sparkles,
     items: [
       { name: 'Claude', logo: SIMPLE('claude', 'D97757') },
@@ -99,7 +99,7 @@ const stackCategories = [
     id: 'backend',
     title: 'Backend & Data',
     subtitle: 'Servers, APIs, databases & realtime',
-    color: '#00C48C',
+    color: '#76A4C2',
     Icon: Server,
     items: [
       { name: 'Node.js', logo: DEVICON('nodejs'), usedIn: ['TIDE', PORTFOLIO] },
@@ -369,7 +369,7 @@ const StackStyles = () => (
   <style>{`
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-acc { color: var(--acc) !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-ink { color: var(--ink) !important; }
-    .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-dark { color: #1B1B2A !important; }
+    .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-dark { color: #0B0B0C !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-white { color: #FFFFFF !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-cat { color: var(--c) !important; }
     .sc-scope :is(h1,h2,h3,h4,p,span,li).sc-tc { color: var(--tc) !important; }
@@ -711,8 +711,8 @@ const TechTree = ({ darkMode, reduced }) => {
               <stop offset="100%" stopColor={bark[1]} />
             </linearGradient>
             <radialGradient id={`sc-ground-${layoutKey}`} cx="50%" cy="0%" r="60%">
-              <stop offset="0%" stopColor={darkMode ? '#00FFB3' : '#5fc285'} stopOpacity={darkMode ? 0.35 : 0.7} />
-              <stop offset="100%" stopColor={darkMode ? '#00FFB3' : '#5fc285'} stopOpacity="0" />
+              <stop offset="0%" stopColor={darkMode ? '#DDBCEB' : '#5fc285'} stopOpacity={darkMode ? 0.35 : 0.7} />
+              <stop offset="100%" stopColor={darkMode ? '#DDBCEB' : '#5fc285'} stopOpacity="0" />
             </radialGradient>
           </defs>
           <ellipse cx={L.trunkX} cy={L.groundY + 10} rx={L.w * 0.32} ry="34" fill={`url(#sc-ground-${layoutKey})`} />

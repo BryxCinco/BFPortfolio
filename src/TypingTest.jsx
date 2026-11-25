@@ -162,7 +162,7 @@ export const TypingTestTrigger = ({ darkMode, onClick, className = '' }) => {
   const isDesktop = useIsDesktopOnly();
   if (!isDesktop) return null;
 
-  const accent = darkMode ? '#00FFB3' : '#007A59';
+  const accent = darkMode ? '#DDBCEB' : '#0F499A';
 
   return (
     <button
@@ -191,7 +191,7 @@ const TypingStyles = ({ darkMode }) => (
     #claude-typing-test-overlay :is(h2,h3,p,span,div).tt-on { color: var(--acc-ink) !important; }
     #claude-typing-test-overlay :is(p,span).tt-red { color: #F43F5E !important; }
     #claude-typing-test-overlay .tt-pending { color: ${darkMode ? 'rgba(255,255,255,0.28)' : 'rgba(27,27,42,0.32)'} !important; }
-    #claude-typing-test-overlay .tt-correct { color: ${darkMode ? '#F5F5FA' : '#1B1B2A'} !important; }
+    #claude-typing-test-overlay .tt-correct { color: ${darkMode ? '#F5F5FA' : '#0B0B0C'} !important; }
     #claude-typing-test-overlay .tt-incorrect { color: #F43F5E !important; }
     #claude-typing-test-overlay .tt-incorrect.tt-space { background: rgba(244,63,94,0.28); border-radius: 3px; }
     #claude-typing-test-overlay .tt-word-err { text-decoration: underline wavy rgba(244,63,94,0.75); text-underline-offset: 6px; text-decoration-thickness: 1.5px; }
@@ -710,8 +710,8 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                           exit={{ opacity: 0, y: -6 }}
                           className="absolute left-1/2 -translate-x-1/2 -top-12 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg bg-amber-400"
                         >
-                          <ArrowBigUpDash size={15} className="text-[#1B1B2A]" />
-                          <span className="tt-on" style={{ color: '#1B1B2A' }}>Caps Lock is on</span>
+                          <ArrowBigUpDash size={15} className="text-[#0B0B0C]" />
+                          <span className="tt-on" style={{ color: '#0B0B0C' }}>Caps Lock is on</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -763,8 +763,8 @@ const TypingTest = forwardRef(({ darkMode, soundEnabled = true, onKeyPress }, re
                       transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.3 }}
                       className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400 shadow-lg"
                     >
-                      <Crown size={14} className="text-[#1B1B2A]" />
-                      <span className="tt-on text-xs font-black uppercase tracking-widest" style={{ color: '#1B1B2A' }}>
+                      <Crown size={14} className="text-[#0B0B0C]" />
+                      <span className="tt-on text-xs font-black uppercase tracking-widest" style={{ color: '#0B0B0C' }}>
                         New personal best!
                       </span>
                     </motion.span>

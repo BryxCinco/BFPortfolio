@@ -101,7 +101,7 @@ const certCategories = [
     id: 'ai',
     label: 'Artificial Intelligence',
     Icon: Cpu,
-    color: '#A700FF',
+    color: '#8D6FA0',
     short: 'AI',
     certs: [
       {
@@ -200,7 +200,7 @@ const certCategories = [
     id: 'uxui',
     label: 'UX/UI and Design',
     Icon: Palette,
-    color: '#FF007A',
+    color: '#8D6FA0',
     short: 'UX/UI',
     certs: [
       {
@@ -344,7 +344,7 @@ const certCategories = [
     id: 'softwareEngineering',
     label: 'Software Engineering',
     Icon: ShieldCheck,
-    color: '#00C48C',
+    color: '#76A4C2',
     short: 'Software Eng.',
     certs: [
       {
@@ -521,14 +521,14 @@ const VaultStyles = () => (
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-hi { color: var(--acc-hi) !important; }
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-ink { color: var(--ink) !important; }
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-white { color: #ffffff !important; }
-    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-dark { color: #1B1B2A !important; }
+    .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-dark { color: #0B0B0C !important; }
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-inherit { color: inherit !important; }
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-cat { color: var(--c) !important; }
     .cv-scope :is(h1,h2,h3,h4,p,span,li).cv-tc { color: var(--tc) !important; }
 
     .cv-foil {
-      background: linear-gradient(115deg, transparent 18%, rgba(255,0,122,0.4) 30%, rgba(0,255,179,0.4) 40%,
-        rgba(167,0,255,0.4) 50%, rgba(0,240,255,0.4) 60%, rgba(255,234,0,0.35) 68%, transparent 80%);
+      background: linear-gradient(115deg, transparent 18%, rgba(141,111,160,0.4) 30%, rgba(221,188,235,0.4) 40%,
+        rgba(141,111,160,0.4) 50%, rgba(0,240,255,0.4) 60%, rgba(255,234,0,0.35) 68%, transparent 80%);
       background-size: 260% 260%;
       background-position: var(--px, 50%) var(--py, 50%);
       mix-blend-mode: var(--foil-blend);
@@ -701,7 +701,7 @@ const HoloCard = ({ cert, index = 0, reduced, onOpen }) => {
               #{pad2(cert.n)}/{TOTAL}
             </span>
             {cert.verified ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#00C48C] text-[0.5625rem] font-black uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#76A4C2] text-[0.5625rem] font-black uppercase tracking-widest">
                 <BadgeCheck size={11} className="text-white" />
                 <span className="cv-white">Verifiable</span>
               </span>
