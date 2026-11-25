@@ -14,6 +14,7 @@ import PlayBento from './site/PlayBento';
 import ContactBento from './site/ContactBento';
 import Socials from './site/Socials';
 import BrandMark from './site/BrandMark';
+import Cursor from './site/Cursor';
 
 import Chatbot from './Chatbot';
 import TypingTest from './TypingTest';
@@ -399,6 +400,7 @@ function App() {
             </div>
           )}
 
+          <Cursor />
           <WarpHost darkMode={darkMode} />
           <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} onNavigate={navigate} />
           <TypingTest ref={typingRef} darkMode={darkMode} soundEnabled={soundEnabled} onKeyPress={playClick} />

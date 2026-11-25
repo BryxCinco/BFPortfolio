@@ -1315,3 +1315,81 @@ html { -webkit-text-size-adjust: 100%; }
 @media (min-width: 1101px) { .hero-name { font-size: clamp(4.25rem, min(8vw, 14svh), 9.5rem); } }
 @media (min-width: 1280px) and (max-width: 1499px) { .nav a { padding-inline: 0.55rem; } }
 @media (max-width: 639px) { .portrait .tag-v { display: none; } }
+
+/* ==========================================================================
+   HUD CURSOR (site/Cursor.jsx) — mouse / trackpad only.
+   Lives in a portal on <body>, so its colours key off html.dark, not .site.
+   ========================================================================== */
+html.cursor-on, html.cursor-on * { cursor: none !important; }
+html.cursor-on :is(input, textarea, [contenteditable="true"]) { cursor: text !important; }
+
+.hud-cursor { --c: #0F499A; --c-ink: #fff; --halo: rgba(255, 255, 255, 0.9); position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; }
+html.dark .hud-cursor { --c: #DDBCEB; --c-ink: #0B0B0C; --halo: rgba(5, 7, 12, 0.9); }
+
+.hud-dot { position: fixed; left: 0; top: 0; width: 0; height: 0; will-change: transform; transition: opacity 0.2s ease; }
+.hud-dot::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--c);
+  box-shadow: 0 0 0 1.5px var(--halo);
+  transform: rotate(45deg);
+  transition: transform 0.25s var(--ease, ease), opacity 0.2s ease;
+}
+.hud-dot[data-mode="target"]::before { transform: rotate(45deg) scale(0.6); }
+.hud-dot[data-mode="text"]::before { opacity: 0; }
+
+.hud-frame {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  transform-origin: 50% 50%;
+  will-change: transform, width, height;
+  transition: background-color 0.25s ease, opacity 0.2s ease;
+}
+.hud-frame[data-mode="target"] { background: color-mix(in srgb, var(--c) 10%, transparent); }
+.hud-frame[data-mode="info"] { background: color-mix(in srgb, var(--c) 6%, transparent); }
+.hud-frame > i {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 0 solid var(--c);
+  filter: drop-shadow(0 0 1px var(--halo));
+  transition: width 0.25s ease, height 0.25s ease, opacity 0.25s ease;
+}
+.hud-frame > i:nth-of-type(1) { left: 0; top: 0; border-top-width: 2px; border-left-width: 2px; }
+.hud-frame > i:nth-of-type(2) { right: 0; top: 0; border-top-width: 2px; border-right-width: 2px; }
+.hud-frame > i:nth-of-type(3) { left: 0; bottom: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.hud-frame > i:nth-of-type(4) { right: 0; bottom: 0; border-bottom-width: 2px; border-right-width: 2px; }
+.hud-frame[data-mode="idle"] > i { width: 7px; height: 7px; opacity: 0.75; }
+.hud-frame[data-mode="target"] > i { width: 14px; height: 14px; }
+.hud-frame[data-mode="text"] > i { opacity: 0.55; }
+.hud-frame[data-pressed="true"] > i { border-color: var(--c); opacity: 1; }
+
+.hud-tag {
+  position: absolute;
+  left: -2px;
+  bottom: calc(100% + 4px);
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--c);
+  color: var(--c-ink);
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-radius: 2px;
+  animation: hud-tag-in 0.22s ease both;
+}
+.hud-tag[data-below="true"] { bottom: auto; top: calc(100% + 4px); }
+@keyframes hud-tag-in { from { opacity: 0; transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .hud-tag { animation: none; } }
