@@ -248,7 +248,7 @@
 }
 
 .chars { display: inline; }
-.chars .w { display: inline-block; white-space: nowrap; }
+.chars .w { display: inline-block; white-space: nowrap; vertical-align: top; }
 .chars .cm { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.12em; margin-bottom: -0.12em; }
 /* resting state is visible; the offset only applies under html.rv-on */
 .chars .c {
