@@ -46,6 +46,33 @@ const getIO = () => {
   return sharedIO;
 };
 
+// Tiles already on screen at mount (the hero) start revealing right away
+// instead of waiting for the observer's first callback. All mounting tiles are
+// batched: one pass reads every position, then one pass writes the classes,
+// so the page lays out once rather than once per tile.
+const pending = [];
+let flushing = false;
+const flush = () => {
+  flushing = false;
+  const batch = pending.splice(0);
+  const vh = window.innerHeight;
+  const tops = batch.map(([el]) => el.getBoundingClientRect().top);
+  batch.forEach(([el, io], i) => {
+    if (!el.isConnected) return;
+    if (tops[i] < vh) {
+      el.classList.add('in');
+      watchers.get(el)?.();
+    } else io.observe(el);
+  });
+};
+const queueReveal = (el, io) => {
+  pending.push([el, io]);
+  if (!flushing) {
+    flushing = true;
+    queueMicrotask(flush);
+  }
+};
+
 /** Mark a node to reveal on scroll; `onIn` fires once when it does. */
 export function useReveal(ref, onIn) {
   useEffect(() => {
@@ -57,14 +84,8 @@ export function useReveal(ref, onIn) {
       onIn?.();
       return undefined;
     }
-    // already on screen at mount (the hero): start now, don't wait a frame or more for the observer
-    if (el.getBoundingClientRect().top < window.innerHeight) {
-      el.classList.add('in');
-      onIn?.();
-      return undefined;
-    }
     if (onIn) watchers.set(el, onIn);
-    io.observe(el);
+    queueReveal(el, io);
     return () => io.unobserve(el);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
