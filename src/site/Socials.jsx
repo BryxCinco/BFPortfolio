@@ -47,7 +47,7 @@ export default function Socials() {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="t-3 m-3 social"
+              className="t-3 tb-3 social"
               tone={art.tone}
               delay={i * 0.07}
               aria-label={`${s.name}: ${s.handle}`}

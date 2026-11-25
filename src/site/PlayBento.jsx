@@ -96,7 +96,7 @@ export default function PlayBento({ darkMode, onTyping, onStack, onChat, soundEn
           </div>
         </Tile>
 
-        <Tile as="button" type="button" className="t-4 m-2 play" tone="lav" onClick={onChat} aria-label="Open the chat assistant" style={{ minHeight: '13rem' }}>
+        <Tile as="button" type="button" className="t-4 tb-2 play" tone="lav" onClick={onChat} aria-label="Open the chat assistant" style={{ minHeight: '13rem' }}>
           <div className="tile-label mono">
             <span>
               <span className="dot" />
@@ -112,7 +112,7 @@ export default function PlayBento({ darkMode, onTyping, onStack, onChat, soundEn
           </span>
         </Tile>
 
-        <Tile as="button" type="button" className="t-4 m-2 play" delay={0.06} onClick={onToggleSound} aria-pressed={soundEnabled} style={{ minHeight: '13rem' }} data-no-sound="true">
+        <Tile as="button" type="button" className="t-4 tb-2 play" delay={0.06} onClick={onToggleSound} aria-pressed={soundEnabled} style={{ minHeight: '13rem' }} data-no-sound="true">
           <div className="tile-label mono">
             <span>
               <span className="dot" />
@@ -126,7 +126,7 @@ export default function PlayBento({ darkMode, onTyping, onStack, onChat, soundEn
           </span>
         </Tile>
 
-        <Tile as="button" type="button" className="t-4 m-2 play" tone="air" delay={0.12} onClick={onToggleTheme} style={{ minHeight: '13rem' }}>
+        <Tile as="button" type="button" className="t-4 tb-2 play" tone="air" delay={0.12} onClick={onToggleTheme} style={{ minHeight: '13rem' }}>
           <div className="tile-label mono">
             <span>
               <span className="dot" />

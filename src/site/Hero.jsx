@@ -108,7 +108,7 @@ export default function Hero({ darkMode, go, onAsk }) {
     <section id="home" className="hero wrap" aria-label="Introduction">
       <div className="bento">
         {/* ---- name + pitch ---- */}
-        <Tile className="t-8 m-4 hero-main" delay={0.05}>
+        <Tile className="t-8 tb-4 hero-main" delay={0.05}>
           <div className="hero-top">
             <span className="status-pill">
               <span className="live-dot" aria-hidden="true" />
@@ -157,13 +157,13 @@ export default function Hero({ darkMode, go, onAsk }) {
         </Tile>
 
         {/* ---- portrait ---- */}
-        <Tile className="t-4 m-2 portrait" ticks={false} delay={0.2}>
+        <Tile className="t-4 tb-2 portrait" ticks={false} delay={0.2}>
           <Portrait />
           <span className="tag-v mono">Fig. 01 — the developer</span>
         </Tile>
 
         {/* ---- status + clock ---- */}
-        <Tile className="t-3 m-3" delay={0.28}>
+        <Tile className="t-3 tb-3" delay={0.28}>
           <div className="stack-v">
             <div className="tile-label mono" style={{ marginBottom: 0 }}>
               <span>
@@ -184,7 +184,7 @@ export default function Hero({ darkMode, go, onAsk }) {
         </Tile>
 
         {/* ---- numbers ---- */}
-        <Tile className="t-2 m-3 x-1" tone="lav" delay={0.34}>
+        <Tile className="t-2 tb-3 x-1" tone="lav" delay={0.34}>
           <div className="stack-v">
             <span className="mono mute">GWA</span>
             <div className="stat-num">
@@ -193,7 +193,7 @@ export default function Hero({ darkMode, go, onAsk }) {
             <span className="mono mute">Graduated BSIT</span>
           </div>
         </Tile>
-        <Tile className="t-2 m-3 x-1" tone="yale" delay={0.4}>
+        <Tile className="t-2 tb-3 x-1" tone="yale" delay={0.4}>
           <div className="stack-v">
             <span className="mono mute">Apps live</span>
             <div className="stat-num">

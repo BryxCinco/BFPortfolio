@@ -111,7 +111,7 @@ export default function AboutBento({ onPreview }) {
           </ol>
         </Tile>
 
-        <Tile className="t-4 m-3" tone="yale" delay={0}>
+        <Tile className="t-4 tb-3" tone="yale" delay={0}>
           <div className="stack-v">
             <span className="mono mute">How I think about it</span>
             <p className="quote">
@@ -121,7 +121,7 @@ export default function AboutBento({ onPreview }) {
           </div>
         </Tile>
 
-        <Tile className="t-4 m-3" delay={0.06}>
+        <Tile className="t-4 tb-3" delay={0.06}>
           <div className="tile-label mono">
             <span>
               <span className="dot" />

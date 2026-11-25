@@ -9,8 +9,8 @@ const SHAPE = {
   backend: { cls: 't-5', tone: null },
   ai: { cls: 't-6', tone: 'yale' },
   ship: { cls: 't-6', tone: null },
-  design: { cls: 't-5 m-3', tone: null },
-  mobile: { cls: 't-3 m-3', tone: 'lav' },
+  design: { cls: 't-5 tb-3', tone: null },
+  mobile: { cls: 't-3 tb-3', tone: 'lav' },
 };
 const ORDER = ['frontend', 'backend', 'ai', 'ship', 'design', 'mobile'];
 

@@ -146,15 +146,15 @@
 @media (max-width: 1100px) {
   .bento { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .bento > * { grid-column: span 6; }
-  .bento > .m-2 { grid-column: span 2; }
-  .bento > .m-3 { grid-column: span 3; }
-  .bento > .m-4 { grid-column: span 4; }
+  .bento > .tb-2 { grid-column: span 2; }
+  .bento > .tb-3 { grid-column: span 3; }
+  .bento > .tb-4 { grid-column: span 4; }
   .r-2 { grid-row: auto; }
 }
 /* phone: 2 columns, most tiles full width */
 @media (max-width: 639px) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bento > *, .bento > .m-2, .bento > .m-3, .bento > .m-4 { grid-column: span 2; }
+  .bento > *, .bento > .tb-2, .bento > .tb-3, .bento > .tb-4 { grid-column: span 2; }
   .bento > .x-1 { grid-column: span 1; }
 }
 
@@ -1131,3 +1131,30 @@ p.body { margin: 0; line-height: 1.6; color: var(--mute); font-size: 1rem; }
   .hero .portrait { aspect-ratio: auto; height: clamp(15rem, calc(100svh - 36rem), 28rem); }
   .status-pill { font-size: 0.8125rem; height: 2rem; }
 }
+
+/* ==========================================================================
+   POLISH PASS — project cards
+   Same skeleton in every card: screenshot, name, quote, tags, actions.
+   Cards in a row share a height; actions always sit on the bottom edge.
+   ========================================================================== */
+.work { height: 100%; }
+.work-shot, .work.big .work-shot { aspect-ratio: 16 / 10; flex: none; min-height: 0; }
+.work.big .work-shot { aspect-ratio: 16 / 9.5; }
+.work-shot img { left: 6%; right: 6%; top: 11%; width: 88%; box-shadow: 0 -0.25rem 2rem -0.75rem rgba(0, 0, 0, 0.5); }
+.work:hover .work-shot img { transform: translateY(-0.75rem); }
+.work-num { top: 0.85rem; left: 1.1rem; right: 1.1rem; font-size: 0.75rem; }
+.work-body { flex: 1; gap: 1rem; }
+.work-head { gap: 1rem; }
+.work-head img { width: 3rem; height: 3rem; border-radius: 8px; }
+.work-name { font-size: clamp(1.9rem, 2.4vw, 2.5rem); }
+.work.big .work-name { font-size: clamp(2.3rem, 3.2vw, 3.4rem); }
+.work-tag { margin-top: 0.35rem; }
+.work-tl { font-size: clamp(1.2rem, 1.45vw, 1.45rem); line-height: 1.3; }
+.work-desc { line-height: 1.6; }
+.work .chips { gap: 0.4rem; }
+.work-act { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; }
+.work-act .btn { flex: 1 1 auto; justify-content: center; height: 3rem; padding: 0 1rem; font-size: 0.8125rem; white-space: nowrap; }
+.work-act .btn.solid { background: var(--yale); border-color: var(--yale); color: #fff; }
+.site.is-dark .work-act .btn.solid { background: var(--lav); border-color: var(--lav); color: #0B0B0C; }
+.work-act .btn.solid::before { background: var(--ink); }
+.work-act .btn.solid:hover { color: var(--bg); border-color: var(--ink); }

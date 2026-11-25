@@ -48,7 +48,7 @@ export default function CertsBento({ onPreview }) {
 
       <div className="bento" style={{ marginBottom: 'var(--gap)' }}>
         {stats.map((s, i) => (
-          <Tile key={s.label} className="t-3 m-3 x-1" tone={s.tone} delay={i * 0.06}>
+          <Tile key={s.label} className="t-3 tb-3 x-1" tone={s.tone} delay={i * 0.06}>
             <div className="stack-v">
               <span className="mono mute">{s.label}</span>
               <div className="stat-num">
@@ -79,7 +79,7 @@ export default function CertsBento({ onPreview }) {
             as="button"
             type="button"
             key={c.id}
-            className="t-3 m-2 x-1 cert"
+            className="t-3 tb-2 x-1 cert"
             ticks={false}
             delay={(i % 4) * 0.06}
             onClick={() =>

@@ -20,7 +20,6 @@ const pad = (n) => String(n).padStart(2, '0');
 const WorkTile = ({ w, site, i, onDetails }) => {
   const tone = TONE[w.tone];
   const big = w.cls.includes('big');
-  const tall = w.cls.includes('r-2');
   const open = (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
@@ -34,7 +33,7 @@ const WorkTile = ({ w, site, i, onDetails }) => {
           <span>P/{pad(i + 1)}</span>
           <span>{site.tag}</span>
         </div>
-        <img src={site.image} alt={`${site.name} screenshot`} loading="lazy" draggable={false} />
+        <img src={site.image} alt={`${site.name} screenshot`} loading="lazy" decoding="async" width="1600" height="900" draggable={false} />
       </div>
 
       <div className="work-body">
@@ -51,7 +50,7 @@ const WorkTile = ({ w, site, i, onDetails }) => {
         <p className="work-tl" lang="tl">
           {w.tl}
         </p>
-        {(big || tall) && <p className="work-desc">{site.desc}</p>}
+        {big && <p className="work-desc">{site.desc}</p>}
 
         <div className="chips">
           {site.stack.slice(0, big ? 7 : 4).map((s) => (
