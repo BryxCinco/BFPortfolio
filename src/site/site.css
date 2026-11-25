@@ -30,8 +30,10 @@
   --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --r: 4px;
-  --gap: clamp(0.875rem, 1.3vw, 1.4rem);
-  --pad: clamp(1.3rem, 2.3vw, 2.4rem);
+  /* 8px spacing scale */
+  --s1: 0.5rem; --s2: 1rem; --s3: 1.5rem; --s4: 2rem; --s5: 2.5rem; --s6: 3rem; --s8: 4rem; --s10: 5rem; --s14: 7rem;
+  --gap: clamp(var(--s2), 1.5vw, var(--s3));
+  --pad: clamp(var(--s3), 2.2vw, var(--s5));
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-io: cubic-bezier(0.83, 0, 0.17, 1);
 
@@ -102,14 +104,14 @@
 
 /* ---------- section head ---------- */
 
-.sec { padding-top: clamp(5.5rem, 11vw, 11rem); scroll-margin-top: 4.5rem; }
+.sec { padding-top: clamp(var(--s8), 8vw, var(--s14)); scroll-margin-top: var(--s6); }
 .sec-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: end;
   gap: 1.25rem;
-  padding-bottom: clamp(1.25rem, 2.4vw, 2.25rem);
-  margin-bottom: calc(var(--gap) * 1.75);
+  padding-bottom: var(--s3);
+  margin-bottom: clamp(var(--s3), 3vw, var(--s5));
   border-bottom: 1px solid var(--line-2);
 }
 .sec-num { color: var(--mark); padding-bottom: 0.4rem; }
@@ -213,7 +215,7 @@
   justify-content: space-between;
   gap: 1rem;
   color: var(--mute);
-  margin-bottom: clamp(1.1rem, 1.8vw, 1.75rem);
+  margin-bottom: clamp(var(--s2), 1.8vw, var(--s3));
 }
 .tile-label .dot { display: inline-block; width: 6px; height: 6px; background: var(--mark); margin-right: 0.55rem; vertical-align: 1px; }
 
@@ -231,7 +233,8 @@
    [data-rv] gets .in when it scrolls into view (see motion.jsx).
    Children typeset with <Chars>/<Words> animate off the same switch. */
 
-[data-rv] { opacity: 0; }
+/* hidden states only apply once motion.jsx has confirmed it can reveal them (html.rv-on) */
+.rv-on [data-rv]:not(.in) { opacity: 0; }
 [data-rv].in { animation: rv-clip 1.05s var(--ease-io) var(--d, 0s) both; }
 [data-rv="fade"].in { animation: rv-fade 0.9s var(--ease) var(--d, 0s) both; }
 @keyframes rv-clip {
@@ -247,24 +250,26 @@
 .chars { display: inline; }
 .chars .w { display: inline-block; white-space: nowrap; }
 .chars .cm { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+/* resting state is visible; the offset only applies under html.rv-on */
 .chars .c {
   display: inline-block;
-  transform: translateY(105%) rotate(6deg);
+  transform: none;
   transform-origin: 0 100%;
   transition: transform 0.9s var(--ease);
   transition-delay: calc(var(--d, 0s) + var(--i) * 22ms);
 }
 .in .chars .c, .chars.in .c { transform: none; }
 
+/* resting state is visible; the blur only applies under html.rv-on */
 .words .w {
   display: inline-block;
-  opacity: 0;
-  filter: blur(8px);
-  transform: translateY(0.35em);
   transition: opacity 0.7s ease, filter 0.8s ease, transform 0.8s var(--ease);
   transition-delay: calc(var(--d, 0s) + var(--i) * 26ms);
 }
-.in .words .w, .words.in .w { opacity: 1; filter: blur(0); transform: none; }
+.rv-on .chars:not(.in) .c { transform: translateY(105%) rotate(6deg); }
+.rv-on .in .chars .c { transform: none; }
+.rv-on .words:not(.in) .w { opacity: 0; filter: blur(8px); transform: translateY(0.35em); }
+.rv-on .in .words .w { opacity: 1; filter: blur(0); transform: none; }
 
 /* underline that draws itself */
 .draw {
@@ -932,12 +937,11 @@ p.body { margin: 0; line-height: 1.6; color: var(--mute); font-size: 1rem; }
   border-bottom: 1px solid var(--line-2);
   isolation: isolate;
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(0.8rem);
   transition: opacity 0.6s ease, transform 0.8s var(--ease), color 0.35s ease;
   transition-delay: calc(0.15s + var(--i) * 45ms), calc(0.15s + var(--i) * 45ms), 0s;
 }
-.in .soft-grid li { opacity: 1; transform: none; }
+.rv-on .soft-grid li { opacity: 0; transform: translateY(0.8rem); }
+.rv-on .in .soft-grid li { opacity: 1; transform: none; }
 .soft-grid li::before {
   content: "";
   position: absolute;
@@ -1268,3 +1272,50 @@ p.body { margin: 0; line-height: 1.6; color: var(--mute); font-size: 1rem; }
 @media (max-width: 1100px) { .soft .soft-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 767px) { .soft .soft-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .soft .soft-grid { grid-template-columns: 1fr; } .soft .soft-grid li { padding: 1rem 0 1.1rem; } }
+
+/* ==========================================================================
+   POLISH PASS — touch targets and mobile
+   Every control is at least 44px in its smaller dimension.
+   ========================================================================== */
+.icon-btn, .tswitch, .auto-btn { height: 2.75rem; }
+.icon-btn { width: 2.75rem; }
+.tswitch { width: 4.25rem; }
+.tswitch .knob { width: calc(2.1rem - 6px); height: calc(2.75rem - 8px); }
+.site.is-dark .tswitch .knob { transform: translateX(2.1rem); }
+.brand { min-height: 2.75rem; }
+.nav a { padding-block: 0.85rem; }
+.nav-ind { bottom: 0.45rem; }
+.portrait .bars { top: 0.4rem; }
+.portrait .bars button { height: 2.75rem; }
+.portrait .tag-v { top: 3.2rem; }
+.hi-card button { min-height: 2.75rem; }
+.hero .tile-label button { min-height: 2.75rem; }
+.field input { min-height: 2.75rem; }
+.field textarea { min-height: 6rem; }
+.foot-row nav a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.contact-row { min-height: 2.75rem; }
+.sheet nav a { min-height: 3.5rem; align-items: center; }
+.sheet-tools .btn { height: 3rem; }
+.chip { min-height: 1.9rem; }
+.cert-filters .chip { min-height: 2.75rem; }
+html { -webkit-text-size-adjust: 100%; }
+.site { overflow-x: clip; }
+
+@media (max-width: 639px) {
+  .bar-in { height: 3.75rem; }
+  .brand-name { font-size: 1rem; }
+  .sec-title { font-size: clamp(2.6rem, 12vw, 3.4rem); }
+  .tile { padding: var(--s3); }
+  .foot-row { flex-direction: column; align-items: flex-start; }
+  .foot-row nav { gap: 0.25rem 1.25rem; }
+}
+.portrait .tag-v { padding: 0.5rem 0.3rem; background: rgba(5, 7, 12, 0.6); }
+.foot-row nav a { min-width: 2.75rem; justify-content: center; }
+@media (max-width: 639px) {
+  .hero .portrait { height: clamp(12rem, calc(100svh - 39.5rem), 28rem); }
+}
+.auto-btn { white-space: nowrap; }
+.hero-name .serif { white-space: nowrap; }
+@media (min-width: 1101px) { .hero-name { font-size: clamp(4.25rem, min(8vw, 14svh), 9.5rem); } }
+@media (min-width: 1280px) and (max-width: 1499px) { .nav a { padding-inline: 0.55rem; } }
+@media (max-width: 639px) { .portrait .tag-v { display: none; } }

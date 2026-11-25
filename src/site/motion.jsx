@@ -9,6 +9,25 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 const reducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+// Content is visible by default. Only when the browser can actually reveal
+// things (IntersectionObserver, motion allowed) does <html> get .rv-on, which
+// switches on the hidden "before" states in site.css.
+const canReveal = typeof window !== 'undefined' && 'IntersectionObserver' in window && !reducedMotion();
+if (canReveal) {
+  document.documentElement.classList.add('rv-on');
+  // failsafe: anything on screen that still has not revealed itself shortly
+  // after load (throttled tab, odd observer timing) is shown anyway
+  const sweep = () =>
+    document.querySelectorAll('[data-rv]:not(.in)').forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('in');
+    });
+  window.addEventListener('load', () => setTimeout(sweep, 2500));
+  window.addEventListener('scroll', () => {
+    clearTimeout(sweep.t);
+    sweep.t = setTimeout(sweep, 900);
+  }, { passive: true });
+}
+
 let sharedIO = null;
 const watchers = new WeakMap();
 const getIO = () => {
@@ -219,7 +238,7 @@ export const Scramble = ({ text, className = '', delay = 0, as: Tag = 'span', tr
 export const Count = ({ to, decimals = 0, duration = 1400, className = '' }) => {
   const ref = useRef(null);
   const seen = useSeen(ref);
-  const [v, setV] = useState(reducedMotion() ? to : 0);
+  const [v, setV] = useState(canReveal ? 0 : to);
   useEffect(() => {
     if (!seen || reducedMotion()) {
       if (seen) setV(to);
