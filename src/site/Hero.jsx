@@ -108,13 +108,13 @@ export default function Hero({ darkMode, go, onAsk }) {
     <section id="home" className="hero wrap" aria-label="Introduction">
       <div className="bento">
         {/* ---- name + pitch ---- */}
-        <Tile className="t-8 hero-main" delay={0.05}>
-          <div className="tile-label mono">
-            <span>
-              <span className="dot" />
-              <Scramble text="Portfolio / Ed. 2026" delay={0.3} trigger="mount" />
+        <Tile className="t-8 m-4 hero-main" delay={0.05}>
+          <div className="hero-top">
+            <span className="status-pill">
+              <span className="live-dot" aria-hidden="true" />
+              Available for work · Manila
             </span>
-            <Scramble text="Manila, PH — 14.6°N 120.98°E" delay={0.45} trigger="mount" className="hide-s" />
+            <Scramble className="mono mute hide-s" text="Portfolio / Ed. 2026" delay={0.3} trigger="mount" />
           </div>
 
           <h1 className="hero-name display">
@@ -137,7 +137,7 @@ export default function Hero({ darkMode, go, onAsk }) {
               </div>
               <p className="hero-lede">
                 <Words
-                  delay={0.9}
+                  delay={0.35}
                   text="A fresh BSIT grad from Manila who builds full-stack apps with LLMs inside, and cares as much about how they feel as how they work."
                 />
               </p>
@@ -146,9 +146,9 @@ export default function Hero({ darkMode, go, onAsk }) {
                   <Download /> Download CV
                 </a>
                 <a className="btn" href="#projects" onClick={go('projects')}>
-                  See the work <ArrowDown />
+                  See my work <ArrowDown />
                 </a>
-                <button type="button" className="btn" onClick={() => onAsk()}>
+                <button type="button" className="text-link mono" onClick={() => onAsk()}>
                   <MessageSquare /> Ask me anything
                 </button>
               </div>
@@ -157,7 +157,7 @@ export default function Hero({ darkMode, go, onAsk }) {
         </Tile>
 
         {/* ---- portrait ---- */}
-        <Tile className="t-4 portrait" ticks={false} delay={0.2}>
+        <Tile className="t-4 m-2 portrait" ticks={false} delay={0.2}>
           <Portrait />
           <span className="tag-v mono">Fig. 01 — the developer</span>
         </Tile>

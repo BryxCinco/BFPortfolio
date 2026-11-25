@@ -1066,3 +1066,68 @@ p.body { margin: 0; line-height: 1.6; color: var(--mute); font-size: 0.9375rem; 
   @keyframes phone-scroll { 0%, 15% { transform: translateY(0); } 85%, 100% { transform: translateY(calc(-100% + 100cqh)); } }
 }
 @media (hover: none) and (prefers-reduced-motion: reduce) { .phone > img { animation: none; } }
+
+/* ==========================================================================
+   POLISH PASS — hero
+   Name, photo, status and both CTAs fit in the first screen on every size.
+   ========================================================================== */
+.hero { padding-top: calc(3.75rem + clamp(1rem, 2vw, 1.5rem)); }
+.hero-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.25rem;
+  padding: 0 0.95rem 0 0.8rem;
+  border-radius: 999px;
+  background: var(--lav);
+  color: var(--yale);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+.status-pill .live-dot { margin-right: 0; background: #1F8A52; }
+.hero-main { min-height: 0; gap: clamp(1.25rem, 3vh, 2.5rem); }
+.hero-actions { gap: 0.75rem; }
+.hero-actions .btn { height: 3.25rem; padding: 0 1.5rem; font-size: 0.8125rem; }
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 0.3s ease;
+}
+.text-link:hover { text-decoration-color: currentColor; }
+.text-link svg { width: 1rem; height: 1rem; }
+
+/* desktop: the first row is exactly one screen tall (minus the bar) */
+@media (min-width: 1101px) {
+  .hero .hero-main { min-height: clamp(30rem, calc(100svh - 3.75rem - 3rem), 50rem); }
+  .hero .portrait { min-height: 0; }
+  .hero-name { font-size: clamp(4.5rem, min(9.4vw, 15svh), 10rem); }
+}
+/* tablet: name beside the photo */
+@media (min-width: 640px) and (max-width: 1100px) {
+  .hero .portrait { aspect-ratio: auto; min-height: 100%; }
+  .hero-name { font-size: clamp(3rem, 8.2vw, 5.5rem); }
+  .hero-name .serif { display: block; margin-left: 0; }
+}
+/* phone: name, CTAs, then a photo sized to whatever is left of the screen */
+@media (max-width: 639px) {
+  .hero-name { font-size: clamp(2.7rem, 12.4vw, 3.6rem); }
+  .hero-main { gap: 1.1rem; padding: 1.25rem; }
+  .hero-lede { font-size: 1rem; }
+  .hero-actions .btn { flex: 1 1 0; min-width: 0; padding: 0 0.75rem; justify-content: center; }
+  .hero-actions .text-link { flex: 1 1 100%; justify-content: center; }
+  .hero .portrait { aspect-ratio: auto; height: clamp(15rem, calc(100svh - 36rem), 28rem); }
+  .status-pill { font-size: 0.8125rem; height: 2rem; }
+}
