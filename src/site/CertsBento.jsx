@@ -100,7 +100,7 @@ export default function CertsBento({ onPreview }) {
                 {c.category.short || c.category.label} · №{String(c.n).padStart(2, '0')}
               </span>
               <h5>{c.title}</h5>
-              <span className="mono mute" style={{ fontSize: '0.625rem' }}>
+              <span className="mono mute">
                 {c.provider} · {c.date}
               </span>
             </div>

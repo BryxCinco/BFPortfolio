@@ -14,11 +14,11 @@
 }
 
 @layer base {
-  /* Fit-to-screen on desktop: root font-size follows the window width
-     (16px at 1800px, clamped 13px–20px), so rem-based sizes keep their
-     proportions on any monitor. Phones and tablets stay at 16px. */
+  /* Large desktops: the root font-size grows past 16px above an 1800px
+     window (up to 19px) so the layout keeps its proportions on big
+     monitors. It never drops below 16px, so text stays readable on laptops. */
   @media (min-width: 1024px) and (pointer: fine) {
-    html { font-size: clamp(13px, calc(100vw / 112.5), 20px); }
+    html { font-size: clamp(16px, calc(100vw / 112.5), 19px); }
   }
 
   html { color-scheme: light; background: #EEEFF3; color: #0B0B0C; }

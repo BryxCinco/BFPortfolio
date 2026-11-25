@@ -124,7 +124,7 @@ const HeroInference = ({ darkMode, reduced, onAsk, className = '' }) => {
 
   const live = phase === 'thinking' || phase === 'streaming';
   const status = phase === 'typing' ? 'listening' : phase === 'thinking' ? 'thinking' : phase === 'streaming' ? 'streaming' : 'done';
-  const ink = (a) => (darkMode ? `rgba(255,255,255,${a})` : `rgba(27,27,42,${a})`);
+  const ink = (a) => (darkMode ? `rgba(255,255,255,${a})` : `rgba(11,11,12,${a})`);
 
   return (
     <div
@@ -149,13 +149,13 @@ const HeroInference = ({ darkMode, reduced, onAsk, className = '' }) => {
           />
           <div className="min-w-0 leading-tight">
             <div className="text-sm font-extrabold" style={{ color: 'var(--ink)' }}>brian.ai</div>
-            <div className="text-[0.6875rem] font-semibold" style={{ color: ink(0.5) }}>Ask about my work</div>
+            <div className="text-[0.75rem] font-semibold" style={{ color: ink(0.7) }}>Ask about my work</div>
           </div>
           <div className="ml-auto flex items-center gap-2" aria-live="off">
             <div className="hi-bars flex items-end gap-[3px] h-3" data-live={live} aria-hidden="true">
               {[0, 1, 2, 3].map((i) => <i key={i} style={{ animationDelay: `${i * 0.12}s` }} />)}
             </div>
-            <div className="text-[0.6875rem] font-bold tabular-nums" style={{ color: live ? 'var(--acc)' : ink(0.45) }}>{status}</div>
+            <div className="text-[0.75rem] font-bold tabular-nums" style={{ color: live ? 'var(--acc)' : ink(0.7) }}>{status}</div>
           </div>
         </div>
 
@@ -202,11 +202,11 @@ const HeroInference = ({ darkMode, reduced, onAsk, className = '' }) => {
               type="button"
               onClick={() => show(i)}
               aria-pressed={i === idx}
-              className="cursor-target px-3 py-1.5 rounded-full text-[0.6875rem] font-bold border transition-colors"
+              className="cursor-target px-3 py-1.5 rounded-full text-[0.75rem] font-bold border transition-colors"
               style={
                 i === idx
                   ? { background: 'var(--acc-soft)', borderColor: 'var(--acc-line)', color: 'var(--acc)' }
-                  : { borderColor: ink(0.12), color: ink(0.6) }
+                  : { borderColor: ink(0.2), color: ink(0.74) }
               }
             >
               {s.chip}

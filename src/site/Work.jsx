@@ -10,7 +10,7 @@ import { getPalette, cssVars } from '../theme';
 const TONE = {
   yale: { bg: 'var(--yale)', ink: '#fff' },
   poly: { bg: 'var(--poly)', ink: '#fff' },
-  pomp: { bg: 'var(--pomp)', ink: '#fff' },
+  pomp: { bg: 'var(--pomp)', ink: '#0B0B0C' },
   air: { bg: 'var(--air)', ink: '#0B0B0C' },
   lav: { bg: 'var(--lav)', ink: '#0B0B0C' },
 };
