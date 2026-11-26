@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Volume2 } from 'lucide-react';
+import { useMusic, play as playMusic } from './site/music';
 
 // ============================================================================
 // INTROSPLASH.JSX — the "hello in many languages" opener, shot like a film
@@ -90,6 +92,9 @@ const Styles = () => (
     @keyframes is-drift-a { 0%,100% { transform: translate(-12%, -8%) scale(1); } 50% { transform: translate(6%, 4%) scale(1.15); } }
     @keyframes is-drift-b { 0%,100% { transform: translate(10%, 10%) scale(1.1); } 50% { transform: translate(-6%, -2%) scale(0.95); } }
     @keyframes is-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes is-sound-ring { 0% { box-shadow: 0 0 0 0 rgba(221,188,235,.55); } 100% { box-shadow: 0 0 0 18px rgba(221,188,235,0); } }
+    .is-sound { animation: is-sound-ring 1.6s ease-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .is-sound { animation: none; } }
     @keyframes is-rule { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
     .is-bar-top { animation: is-bar-top 0.45s cubic-bezier(.22,1,.36,1) both; }
@@ -128,6 +133,8 @@ const Styles = () => (
 );
 
 const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
+  const { status: musicStatus } = useMusic();
+  const musicIdle = musicStatus === 'idle';
   const T = THEMES[dark ? 'dark' : 'light'];
   const ink = (a) => `rgba(${T.ink},${a})`;
   const reduced =
@@ -246,7 +253,6 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
               {String(isFinal ? list.length + 1 : Math.max(count, 0)).padStart(2, '0')} / {list.length + 1}
             </span>
             <span className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: ink(0.6) }}>
-              <span>tap for sound</span>
               <button
                 type="button"
                 onClick={leave}
@@ -258,6 +264,19 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
             </span>
           </div>
         </div>
+
+        {/* big sound button: browsers only allow audio after a tap or click */}
+        {musicIdle && !leaving && (
+          <button
+            type="button"
+            data-music-control
+            onClick={playMusic}
+            className="is-sound absolute left-1/2 bottom-[22%] z-10 -translate-x-1/2 inline-flex items-center gap-3 min-h-14 px-7 rounded-full text-sm sm:text-base font-bold uppercase tracking-[0.2em]"
+            style={{ background: dark ? '#DDBCEB' : '#0E356C', color: dark ? '#0E356C' : '#FFFFFF' }}
+          >
+            <Volume2 size={20} /> Tap for sound
+          </button>
+        )}
 
         {/* the words */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">

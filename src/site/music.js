@@ -143,7 +143,12 @@ export function pause() {
 
 export const toggle = () => (state.status === 'playing' ? pause() : play());
 
-/** Start on the first interaction anywhere, unless the visitor paused it before. */
+/**
+ * Start on the first real tap, click or key press, unless the visitor paused it
+ * before. Swipes and wheel scrolls don't count as permission for sound in any
+ * browser, so this keeps listening until playback has actually started, rather
+ * than giving up after a first touch that turned out to be a scroll.
+ */
 export function armAutostart() {
   let off = false;
   try {
@@ -153,17 +158,30 @@ export function armAutostart() {
   }
   if (off) return () => {};
   const go = (e) => {
-    if (e.type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
-    // a press on the player's own controls already handles itself
-    if (e.target?.closest?.('[data-music-control]')) return cleanup();
-    cleanup();
-    if (state.status === 'idle') play();
+    if (e.type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'Escape'].includes(e.key)) return;
+    // the player's own controls handle themselves
+    if (e.target?.closest?.('[data-music-control]')) return;
+    if (state.status !== 'playing') play();
   };
   const cleanup = () => {
-    window.removeEventListener('pointerdown', go, true);
+    window.removeEventListener('click', go, true);
     window.removeEventListener('keydown', go, true);
+    unsub();
   };
-  window.addEventListener('pointerdown', go, true);
+  // stop listening once it plays, or once the visitor pauses it
+  const unsub = subscribe(() => {
+    if (state.status === 'playing' || !pendingPlayWanted()) cleanup();
+  });
+  window.addEventListener('click', go, true);
   window.addEventListener('keydown', go, true);
   return cleanup;
 }
+
+// false once the visitor has paused (pause() stores the preference)
+const pendingPlayWanted = () => {
+  try {
+    return localStorage.getItem(PREF) !== 'off';
+  } catch {
+    return true;
+  }
+};
