@@ -1563,3 +1563,37 @@ html.dark .impact { --line1: #0B0B0C; }
 .np-timer { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--mark); transform-origin: 0 50%; }
 .now-playing.is-on .np-timer { animation: np-time 4s linear forwards; }
 @keyframes np-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ==========================================================================
+   PROJECT STATUS (data.js STATUS / WORK_LAYOUT.status)
+   ========================================================================== */
+.work-num { gap: 0.75rem; }
+.work-num-l { display: inline-flex; align-items: center; gap: 0.6rem; flex: none; }
+.work-num-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.status-pill-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.65rem;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #0B0B0C;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.35);
+}
+.status-pill-sm i, .status-legend i { position: relative; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.is-completed i { background: #1F8A52; }
+.is-updating i { background: #0F499A; }
+.is-in-progress i { background: transparent; box-shadow: inset 0 0 0 2px #8D6FA0; }
+.site.is-dark .status-legend .is-updating i { background: #76A4C2; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .is-updating i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit; animation: ping 1.8s ease-out infinite; }
+}
+.status-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: calc(var(--gap) * -0.5) 0 calc(var(--gap) * 1.25); padding: 0; color: var(--ink); }
+.status-legend li { display: inline-flex; align-items: center; gap: 0.5rem; }
+.status-legend .faint { text-transform: none; }
+@media (max-width: 639px) { .status-legend .faint { display: none; } }
+/* phones: the generic tile padding must not apply to edge-to-edge cards */
+@media (max-width: 639px) { .tile.work, .tile.cert, .tile.portrait { padding: 0; } }

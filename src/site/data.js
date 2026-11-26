@@ -18,46 +18,60 @@ export const ROLES = ['Full-stack LLM developer', 'AI app builder', 'UI/UX-minde
 
 export const TOOLS = ['React', 'Next.js', 'TypeScript', 'Expo', 'Node.js', 'Supabase', 'PostgreSQL', 'Groq', 'Gemini', 'PHP', 'MySQL', 'Tailwind', 'Figma', 'Vercel'];
 
+// project status shown on each card: change a project's `status` below to one of these
+export const STATUS = {
+  completed: { label: 'Completed', note: 'Done and live' },
+  updating: { label: 'Updating', note: 'Live, still getting improvements' },
+  'in-progress': { label: 'In progress', note: 'Not finished yet' },
+};
+
 // order + bento shape of the work grid; `tl` is the Taglish one-liner
 export const WORK_LAYOUT = [
   {
     name: 'TIDE',
+    status: 'updating',
     cls: 't-7 big',
     tone: 'yale',
     tl: 'Coach na talagang naaalala ang linggo mo. Focus, journal at tasks, iisang lugar lang.',
   },
   {
     name: 'Matchie',
+    status: 'updating',
     cls: 't-5 tb-3 big',
     tone: 'lav',
     tl: 'Pagkagising mo, may shortlist ka na ng trabahong swak sa resume mo.',
   },
   {
     name: 'Poopipoo',
+    status: 'completed',
     cls: 't-4 tb-3',
     tone: 'air',
     tl: 'Para sa mga emergency na hindi makapaghintay. Pinakamalapit na CR, may bidet info pa.',
   },
   {
     name: 'Snapzy',
+    status: 'updating',
     cls: 't-4 tb-3',
     tone: 'pomp',
     tl: 'Yung libo-libong screenshot mo? Siya na ang bahalang mag-ayos.',
   },
   {
     name: 'Krea',
+    status: 'updating',
     cls: 't-4 tb-3',
     tone: 'poly',
     tl: '35 tools para sa files mo, pero ni isa, hindi lalabas ng device mo.',
   },
   {
     name: 'Chess Fantasy',
+    status: 'completed',
     cls: 't-6 tb-3',
     tone: 'yale',
     tl: 'Chess na parang arcade noong 90s. Subukan mong talunin yung CPU sa Hard Core.',
   },
   {
     name: 'SweepXpress',
+    status: 'completed',
     cls: 't-6 tb-3',
     tone: 'lav',
     tl: 'Capstone na naging totoong supply-chain system, may AI copilot pa si admin.',

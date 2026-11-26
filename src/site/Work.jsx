@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ArrowUpRight, Code2, Plus } from 'lucide-react';
 
 import { Tile, SectionHead, Chars } from './motion';
-import { WORK_LAYOUT } from './data';
+import { WORK_LAYOUT, STATUS } from './data';
 import { websites, ProjectStyles, ProjectDetails } from '../Project';
 import { launchSite } from '../WarpHost';
 import { impactAt } from './impact';
@@ -35,8 +35,16 @@ const WorkTile = ({ w, site, i, onDetails }) => {
     <Tile as="article" className={`${w.cls} work`} delay={(i % 3) * 0.08} ticks={false}>
       <div className="work-shot" style={{ '--shot-bg': tone.bg, '--shot-ink': tone.ink }}>
         <div className="work-num mono">
-          <span>P/{pad(i + 1)}</span>
-          <span>{site.tag}</span>
+          <span className="work-num-l">
+            P/{pad(i + 1)}
+            {STATUS[w.status] && (
+              <span className={`status-pill-sm is-${w.status}`} title={STATUS[w.status].note}>
+                <i aria-hidden="true" />
+                {STATUS[w.status].label}
+              </span>
+            )}
+          </span>
+          <span className="work-num-tag">{site.tag}</span>
         </div>
         <img src={thumb(site.image)} alt={`${site.name} screenshot`} loading="lazy" decoding="async" width="1600" height="900" draggable={false} />
       </div>
@@ -101,6 +109,15 @@ export default function Work({ darkMode }) {
         serif="creations."
         aside="Seven live apps, five with LLMs doing real work inside. Click Live to open one, or read the case study."
       />
+      <ul className="status-legend mono" aria-label="Project status">
+        {Object.entries(STATUS).map(([key, st]) => (
+          <li key={key} className={`is-${key}`}>
+            <i aria-hidden="true" />
+            {st.label}
+            <span className="faint"> · {st.note}</span>
+          </li>
+        ))}
+      </ul>
       <span id="work-title" className="sr-only">
         My creations
       </span>
