@@ -1465,3 +1465,63 @@ html.dark .impact { --line1: #0B0B0C; }
   .sec { content-visibility: auto; contain-intrinsic-size: auto 1600px; }
 }
 @media (hover: none) { .live-dot::after { animation: none; } }
+
+/* ==========================================================================
+   MUSIC DOCK (site/MusicDock.jsx) — official Spotify embed, loaded on demand
+   ========================================================================== */
+.music-dock { position: fixed; left: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem); z-index: 95; }
+.music-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  height: 3.25rem;
+  padding: 0.375rem 1rem 0.375rem 0.375rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--tile);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.music-btn:hover { border-color: var(--ink); }
+.music-btn:active { transform: translateY(1px); }
+.music-icon { position: relative; width: 2.5rem; height: 2.5rem; flex: none; display: grid; place-items: center; border-radius: 3px; background: var(--yale); color: #fff; }
+.site.is-dark .music-icon { background: var(--lav); color: var(--yale); }
+.music-icon svg { width: 1.15rem; height: 1.15rem; }
+.music-icon .eq { position: absolute; right: -4px; bottom: -4px; display: flex; align-items: flex-end; gap: 2px; height: 14px; padding: 2px 3px; border-radius: 2px; background: var(--ink); }
+.music-icon .eq b { width: 2px; height: 100%; background: var(--bg); transform-origin: 50% 100%; animation: eq 0.9s ease-in-out infinite alternate; }
+.music-icon .eq b:nth-child(2) { animation-delay: -0.3s; }
+.music-icon .eq b:nth-child(3) { animation-delay: -0.6s; }
+@keyframes eq { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
+.music-txt b { display: block; font-size: 0.875rem; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.music-txt small { display: block; font-size: 0.75rem; color: var(--mute); white-space: nowrap; }
+.music-panel {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.6rem);
+  width: min(23rem, calc(100vw - 1.5rem));
+  padding: 0.6rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--tile);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.75rem);
+  transition: opacity 0.25s ease, transform 0.35s var(--ease), visibility 0s linear 0.35s;
+}
+.music-dock.is-open .music-panel { opacity: 1; visibility: visible; transform: none; transition: opacity 0.25s ease, transform 0.35s var(--ease), visibility 0s; }
+.music-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0 0.5rem 0.25rem; color: var(--mute); }
+.music-head .dot { display: inline-block; width: 6px; height: 6px; background: var(--mark); margin-right: 0.5rem; vertical-align: 1px; }
+.music-panel iframe { display: block; border: 0; border-radius: 12px; background: var(--tile-2); }
+/* phones: icon-only button so it never covers content */
+@media (max-width: 639px) {
+  .music-txt { display: none; }
+  .music-btn { padding: 0.375rem; width: 3.25rem; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { .music-icon .eq b { animation: none; } }
+.music-dock { transform: translateY(calc(100% + 2rem)); transition: transform 0.5s var(--ease); }
+.music-dock.is-shown { transform: none; }
