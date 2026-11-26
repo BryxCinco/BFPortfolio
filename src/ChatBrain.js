@@ -1,5 +1,7 @@
 // ============================================================================
-// CHATBRAIN.JS — what the "Ask Me" assistant knows and how it answers.
+// CHATBRAIN.JS — what the "Ask Me" assistant (brian.ai) knows and how it answers.
+// Personality: friendly, short, a little playful. It answers in Taglish when
+// the visitor writes in Tagalog or Taglish, and in English otherwise.
 // getReply(text, ctx) returns { text, attach?, chips?, actions?, topic? }:
 //   text     the spoken/streamed answer
 //   attach   a rich card for the UI: projects, project, stack, certs,
@@ -12,6 +14,9 @@
 // ============================================================================
 
 import { websites } from './Project';
+import { WORK_LAYOUT, STATUS, SOFT_SKILLS, NOW } from './site/data';
+import { TRACK } from './site/music';
+import { CERT_TOTAL as CERT_COUNT } from './Certifications';
 
 const CONTACT = {
   email: 'bp.francisco1003@gmail.com',
@@ -46,6 +51,21 @@ const partOfDay = () => {
 
 // whole-word / phrase test, so "hi" doesn't fire inside "this"
 const has = (q, ...terms) => terms.some((t) => new RegExp(`(^|[^a-z])${t}([^a-z]|$)`, 'i').test(q));
+
+// Tagalog / Taglish markers: if the visitor writes like this, brian.ai answers in Taglish
+const isTagalog = (q) =>
+  has(q, 'ano', 'anong', 'sino', 'paano', 'bakit', 'saan', 'kailan', 'magkano', 'ilan', 'ba', 'po', 'naman', 'yung', 'mga', 'gusto', 'pwede', 'puwede', 'kasi', 'talaga', 'meron', 'wala', 'kwento', 'pakita', 'siya', 'niya', 'ginagawa', 'kanta', 'laro', 'salamat', 'kamusta', 'kumusta', 'musta', 'ikaw', 'sayo', 'mo', 'ka', 'isa pa', 'magpatawa', 'galing', 'nito', 'astig', 'lupet', 'malupet', 'ganda', 'grabe', 'sobra', 'naman', 'nga');
+// pick the English or the Taglish line
+const say = (tl, en, tag) => (tl ? tag : en);
+
+const statusOf = (name) => {
+  const w = WORK_LAYOUT.find((x) => x.name === name);
+  return w && STATUS[w.status] ? STATUS[w.status].label : null;
+};
+const byStatus = (key) => WORK_LAYOUT.filter((w) => w.status === key).map((w) => w.name);
+const joinWith = (names, and) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} ${and} ${names[names.length - 1]}` : names[0] || '');
+const list = (names) => joinWith(names, 'and');
+const listTl = (names) => joinWith(names, 'at');
 
 const findProject = (q) =>
   websites.find((w) => {
@@ -176,27 +196,61 @@ const weatherReport = () =>
 // ---------------------------------------------------------------------------
 
 const INTENTS = [
+  // ---- the assistant itself ----
   {
-    test: (q) => has(q, 'hire you', 'why should (we|i) hire'),
+    test: (q) => has(q, 'who (made|built|created) you', 'sino (gumawa|nagawa) (sayo|sa ?yo)', 'who coded you'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Brian built me himself — I'm a hand-made assistant, no paid AI API behind me. I know his work inside out, and for everything else I check Wikipedia, do math, or peek at the weather.",
+        'Si Brian mismo ang gumawa sa akin — gawa-kamay, walang bayad na AI API sa likod. Kabisado ko ang mga gawa niya, at sa ibang tanong, tumitingin ako sa Wikipedia, nagma-math, o sumisilip sa weather.'),
+      chips: tl ? ['Ano mga project niya?', 'Paano ginawa itong site?'] : ['What projects have you built?', 'How was this site built?'],
+    }),
+  },
+  {
+    test: (q) => has(q, 'who are you', 'who r u', 'what are you', 'your name', 'are you (an? )?(ai|bot|real)', 'sino ka', 'ano ka'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "I'm brian.ai, Brian's portfolio sidekick. Ask me about his projects, stack, certificates, soft skills or how to reach him — English or Taglish, both work. I can also look things up, do quick math, check the weather, and talk out loud (speaker button up top).",
+        'Ako si brian.ai, ang sidekick ng portfolio ni Brian. Tanungin mo ako tungkol sa projects, stack, certificates, soft skills niya o kung paano siya makokontak — English o Taglish, okay lang. Kaya ko ring mag-search, mag-math, tumingin ng weather, at magsalita (speaker button sa taas).'),
+      chips: tl ? ['Sino si Brian?', 'Ano mga project niya?', 'Kaya mo bang mag-Tagalog?'] : ['Who is Brian?', 'What projects have you built?', 'Can you speak Tagalog?'],
+    }),
+  },
+  {
+    test: (q) => has(q, 'speak tagalog', 'tagalog ka', 'mag-?tagalog', 'can you (speak|understand) filipino', 'taglish'),
     reply: () => ({
-      text: "Brian builds fast, responsive and reliable apps that solve real problems. He works across the whole stack, from friendly interfaces to secure backends, and he cares about shipping things people actually enjoy using — five of his apps are live right now.",
+      text: 'Oo naman! Kapag Tagalog o Taglish ang tanong mo, sasagot din ako nang ganoon. Try mo: "Ano mga project ni Brian?"',
+      chips: ['Ano mga project niya?', 'Ano soft skills niya?', 'Anong kanta yung tumutugtog?'],
+    }),
+  },
+
+  // ---- hiring ----
+  {
+    test: (q) => has(q, 'hire (you|him|brian)', 'why should (we|i) hire', 'bakit (namin )?(siya|ka) (dapat )?(i-?hire|kunin)', 'dapat i-?hire'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        'Because he ships. Seven live apps, five with LLMs doing real work inside, built end to end — from the interface people touch to the secure backend underneath. Add a 1.25 GWA, an internship at Grandline Maritime, and a habit of caring how things feel, not just whether they work.',
+        'Kasi nagsi-ship siya. Pitong live na apps, lima may LLM na talagang may silbi, gawa mula UI hanggang secure na backend. Dagdag pa ang 1.25 GWA, internship sa Grandline Maritime, at yung ugali niyang inaalala kung gaano kasarap gamitin ang app, hindi lang kung gumagana.'),
       attach: { type: 'projects' },
-      chips: ['What is your tech stack?', 'How can I contact Brian?'],
+      chips: tl ? ['Ano tech stack niya?', 'Paano siya makokontak?'] : ['What is your tech stack?', 'How can I contact Brian?'],
     }),
   },
   {
-    test: (q) => has(q, 'open (to|for) work', 'available (for|to) work', 'is (he|brian) available', 'hiring', 'looking for (a )?(job|work|role)', 'job hunting'),
-    reply: () => ({
-      text: "Yes — Brian is open to work: full-time roles, internships and collabs. He's based in Manila, happy with hybrid, remote or onsite, and usually replies within 24 hours.",
+    test: (q) => has(q, 'open (to|for) work', 'available (for|to) work', 'is (he|brian) available', 'hiring', 'looking for (a )?(job|work|role)', 'job hunting', 'naghahanap (ba )?(siya )?ng (trabaho|work)', 'available (ba )?siya'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Yes — Brian is open to work: full-time roles, internships and collabs. He's based in Manila, happy with hybrid, remote or onsite, and usually replies within 24 hours.",
+        'Oo! Open si Brian sa full-time, internship at collabs. Taga-Manila siya, okay sa hybrid, remote o onsite, at kadalasan sumasagot within 24 hours.'),
       attach: { type: 'contact' },
-      chips: ['What is your expected salary?', 'What projects have you built?'],
+      chips: tl ? ['Magkano expected salary niya?', 'Ano mga project niya?'] : ['What is your expected salary?', 'What projects have you built?'],
     }),
   },
   {
-    test: (q) => has(q, 'salary', 'compensation', 'expected pay', 'rate'),
-    reply: () => ({
-      text: 'His expected salary is ₱22,000 to ₱40,000 a month, depending on the scope of the role, the work setup and the full package.',
-      chips: ['What work modality do you prefer?', 'How can I contact Brian?'],
+    test: (q) => has(q, 'salary', 'compensation', 'expected pay', 'rate', 'sahod', 'sweldo'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        'His expected salary is ₱22,000 to ₱40,000 a month, depending on the scope of the role, the work setup and the full package.',
+        'Ang expected salary niya ay ₱22,000 hanggang ₱40,000 kada buwan, depende sa scope ng role, work setup at buong package.'),
+      chips: tl ? ['Remote ba o onsite?', 'Paano siya makokontak?'] : ['What work modality do you prefer?', 'How can I contact Brian?'],
     }),
   },
   {
@@ -207,9 +261,11 @@ const INTENTS = [
     }),
   },
   {
-    test: (q) => has(q, 'modality', 'hybrid', 'remote', 'work setup', 'wfh'),
-    reply: () => ({
-      text: "He does his best work in hybrid and remote setups, but he's just as happy onsite — especially for the hands-on collaboration.",
+    test: (q) => has(q, 'modality', 'hybrid', 'remote', 'work setup', 'wfh', 'onsite'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "He does his best work in hybrid and remote setups, but he's just as happy onsite — especially for the hands-on collaboration.",
+        'Pinakamaganda ang trabaho niya sa hybrid at remote, pero game din siya sa onsite — lalo na kung hands-on ang collab.'),
       chips: ['What work locations do you prefer?', 'What is your expected salary?'],
     }),
   },
@@ -221,6 +277,7 @@ const INTENTS = [
     test: (q) => has(q, 'complex', 'technical problem', 'difficult problem', 'problem solving'),
     reply: () => ({
       text: 'He keeps it structured. First, root-cause analysis: read the logs and debug step by step until the real issue shows up. Then research and ask — docs first, then seniors or peers. And when deadlines are tight, he ships a solid core version first, without cutting corners on quality.',
+      chips: ['What are your soft skills?', 'Why should we hire you?'],
     }),
   },
   {
@@ -242,43 +299,148 @@ const INTENTS = [
     }),
   },
   {
-    test: (q) => has(q, 'dream job', 'dream career', 'career goal', 'what do you want to be'),
+    test: (q) => has(q, 'dream job', 'dream career', 'career goal', 'what do you want to be', 'pangarap'),
     reply: () => ({
-      text: "Software engineering is number one — building real products end to end. AI and LLM engineering is a close second, and graphic design keeps the creative side alive.",
+      text: 'Software engineering is number one — building real products end to end. AI and LLM engineering is a close second, and graphic design keeps the creative side alive.',
     }),
   },
 
+  // ---- soft skills ----
   {
-    test: (q) => has(q, 'who are you', 'who r u', 'what are you', 'your name', 'are you (an? )?(ai|bot|real)'),
-    reply: () => ({
-      text: "I'm Brian's portfolio assistant. I know his projects, stack, certificates and how to reach him — and I can look up general topics, do quick math, tell the time, or check the weather. I can even talk: turn my voice on or off with the speaker button up top.",
-      chips: ['Who is Brian?', 'What projects have you built?', 'Who is José Rizal?'],
+    test: (q) => has(q, 'soft skills?', 'strengths?', 'traits?', 'personality', 'attitude', 'ugali', 'katangian', 'what kind of (person|teammate)', 'work ethic'),
+    reply: (q, tl) => {
+      const names = SOFT_SKILLS.map(([n]) => n);
+      return {
+        text: say(tl,
+          `Twelve of them, and he means every one: ${list(names)}. The short version — he questions the brief, stays calm when the stack changes, and owns his misses.`,
+          `Labindalawa, at seryoso siya sa lahat: ${listTl(names)}. Short version — tinatanong niya muna ang brief, kalmado kahit magbago ang stack, at inaamin niya ang mali tapos inaayos.`),
+        actions: [{ label: tl ? 'Tingnan sa About' : 'See them on About', nav: 'about' }],
+        chips: tl ? ['Bakit siya dapat i-hire?', 'Ano mga project niya?'] : ['Why should we hire you?', 'How do you handle complex technical problems?'],
+      };
+    },
+  },
+
+  // ---- project status (before single projects, so "which are done?" lists them all) ----
+  {
+    test: (q) =>
+      has(q, 'status', 'ongoing', 'on-?going', 'in progress', 'updating', 'completed', 'finished', 'done', 'tapos', 'ginagawa', 'inaayos', 'work in progress', 'wip') &&
+      !findProject(q),
+    reply: (q, tl) => {
+      const done = byStatus('completed');
+      const upd = byStatus('updating');
+      const wip = byStatus('in-progress');
+      const en = `Completed: ${list(done) || 'none yet'}. Live and still getting updates: ${list(upd) || 'none'}.${wip.length ? ` In progress: ${list(wip)}.` : ''} Every card on the site wears its status, so you can tell at a glance.`;
+      const tg = `Tapos na: ${listTl(done) || 'wala pa'}. Live pero inaayos pa: ${listTl(upd) || 'wala'}.${wip.length ? ` Hindi pa tapos: ${listTl(wip)}.` : ''} May status pill din ang bawat card sa site, kaya kita agad.`;
+      return {
+        text: say(tl, en, tg),
+        attach: { type: 'projects' },
+        actions: [{ label: tl ? 'Buksan ang My creations' : 'Open My creations', nav: 'projects' }],
+        chips: tl ? ['Kwento mo yung TIDE', 'Ano paborito niyang project?'] : ['Tell me about TIDE', 'Which project should I check first?'],
+      };
+    },
+  },
+  {
+    test: (q) => has(q, 'which project (should|to)', 'where (should|do) i start', 'best project', 'favou?rite project', 'fave', 'paborito', 'unang (titingnan|tignan)'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Start with TIDE — it's his favourite. It's a productivity coach whose AI actually reads your history and acts through 23 tools. Then try Poopipoo for the laughs (yes, it's real).",
+        'Simulan mo sa TIDE — paborito niya iyan. Productivity coach na binabasa talaga ng AI ang history mo at kumikilos gamit ang 23 tools. Tapos subukan mo ang Poopipoo para matawa (oo, totoo iyan).'),
+      attach: { type: 'project', name: 'TIDE' },
+      chips: tl ? ['Kwento mo yung Poopipoo', 'Ano status ng mga project?'] : ['Tell me about Poopipoo', 'Which projects are finished?'],
     }),
   },
 
+  // ---- this site (before the project intents, which also match "built") ----
+  {
+    test: (q) => has(q, 'this (site|website|portfolio|page)', 'how (was|did|is) (this|you|it) (site )?(built|made|build|make)', 'paano ginawa', 'built with', 'made with', 'source code', 'repo(sitory)?', 'github repo'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        'This portfolio is React + Vite, designed from scratch: a bento layout in navy, lilac and sky blue, Cabinet Grotesk and Instrument Serif type, a BP monogram, a HUD cursor, anime impact frames on the LIVE buttons, a record player, and two mini games. The whole thing is open source.',
+        'React + Vite ang portfolio na ito, dinisenyo mula sa simula: bento layout na navy, lilac at sky blue, Cabinet Grotesk at Instrument Serif na fonts, BP na logo, HUD cursor, anime impact frames sa LIVE buttons, record player, at dalawang mini games. Open source ang lahat.'),
+      actions: [{ label: tl ? 'Tingnan ang code sa GitHub' : 'See the code on GitHub', href: 'https://github.com/BryxCinco/BFPortfolio' }],
+      chips: tl ? ['Anong kanta yung tumutugtog?', 'Anong laro meron?'] : ['What song is playing?', 'What games are there?'],
+    }),
+  },
   // ---- rich answers ----
   {
     test: (q) => !!findProject(q),
-    reply: (q) => {
+    reply: (q, tl) => {
       const p = findProject(q);
       const live = p.url && p.url !== '#';
+      const st = statusOf(p.name);
       return {
-        text: `${p.name} — ${p.subtitle}. ${p.desc}${live ? ' It\'s live, so you can try it right now.' : ' A live demo is coming soon.'}`,
+        text: say(tl,
+          `${p.name} — ${p.subtitle}. ${p.desc}${live ? " It's live, so you can try it right now." : ' A live demo is coming soon.'}${st ? ` Status: ${st}.` : ''}`,
+          `${p.name} — ${p.subtitle}. ${p.desc}${live ? ' Live na ito, kaya masusubukan mo agad.' : ' May live demo na darating.'}${st ? ` Status: ${st}.` : ''}`),
         attach: { type: 'project', name: p.name },
-        chips: websites.filter((w) => w.name !== p.name).slice(0, 2).map((w) => `Tell me about ${w.name}`).concat('What is your tech stack?'),
+        chips: websites
+          .filter((w) => w.name !== p.name)
+          .slice(0, 2)
+          .map((w) => (tl ? `Kwento mo yung ${w.name}` : `Tell me about ${w.name}`))
+          .concat(tl ? 'Ano status ng mga project?' : 'Which projects are finished?'),
         topic: p.name,
       };
     },
   },
   {
-    test: (q) => has(q, 'projects?', 'portfolio', 'built', 'shipped', 'ship', 'launched', 'live apps?', 'apps?', 'websites?', 'gawa', 'ginawa', 'what can you (build|do|make)', 'work samples?'),
-    reply: () => ({
-      text: `Here's what Brian has shipped. ${liveProjects().length} of them are live — tap a card to open the real site, or ask me about any one.`,
+    test: (q) => has(q, 'projects?', 'portfolio', 'built', 'did (you|he|brian) (build|make|create)', 'what (did|has|have) (you|he|brian) (build|made|make|create)', 'shipped', 'ship', 'launched', 'live apps?', 'apps?', 'websites?', 'gawa', 'ginawa', 'creations?', 'what can you (build|do|make)', 'work samples?'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        `Here's what Brian has shipped — ${liveProjects().length} live apps, five with LLMs inside. Tap a card to open the real site, or ask me about any one.`,
+        `Ito ang mga nagawa ni Brian — ${liveProjects().length} live na apps, lima may LLM sa loob. I-tap mo ang card para buksan ang totoong site, o tanungin mo ako tungkol sa kahit alin.`),
       attach: { type: 'projects' },
-      actions: [{ label: 'Open Projects page', nav: 'projects' }],
-      chips: ['Tell me about TIDE', 'Tell me about Poopipoo', 'What stack do you use?'],
+      actions: [{ label: tl ? 'Buksan ang My creations' : 'Open My creations', nav: 'projects' }],
+      chips: tl ? ['Kwento mo yung TIDE', 'Ano status ng mga project?', 'Ano tech stack niya?'] : ['Tell me about TIDE', 'Which projects are finished?', 'What stack do you use?'],
     }),
   },
+
+  // ---- the site, its music and games ----
+  {
+    test: (q) => has(q, 'song', 'music', 'kanta', 'tugtog', 'tumutugtog', 'soundtrack', 'playing', 'spotify', 'youtube', 'ice on my baby', 'yung bleu', 'background music', 'bgm'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        `The soundtrack is "${TRACK.title}" by ${TRACK.artist}, starting at the 0:51 highlight and looping. It kicks in on your first tap or click — pause it anytime from the record player in Side quests.`,
+        `Ang soundtrack ay "${TRACK.title}" ni ${TRACK.artist}, nagsisimula sa 0:51 na highlight at paulit-ulit. Tumutugtog ito sa unang tap o click mo — puwede mong i-pause sa record player sa Side quests.`),
+      actions: [{ label: tl ? 'Buksan ang record player' : 'Open the record player', nav: 'play' }],
+      chips: tl ? ['Anong laro meron?', 'Paano ginawa itong site?'] : ['What games are there?', 'How was this site built?'],
+    }),
+  },
+  {
+    test: (q) => has(q, 'games?', 'typing test', 'stack game', 'laro', 'side quests?', 'play something', 'bored'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        'Two mini games live in Side quests: a typing test (15 to 120 seconds, with personal bests) and Stack the Tech, where you drop blocks to build a tower. Beat your own record and you get an anime impact frame. 😤',
+        'Dalawang mini games ang nasa Side quests: typing test (15 hanggang 120 seconds, may personal best) at Stack the Tech, kung saan magpapatong ka ng blocks. Kapag natalo mo ang sarili mong record, may anime impact frame ka. 😤'),
+      actions: [{ label: tl ? 'Pumunta sa Side quests' : 'Go to Side quests', nav: 'play' }],
+      chips: tl ? ['Anong kanta yung tumutugtog?', 'Magpatawa ka'] : ['What song is playing?', 'Tell me a joke'],
+    }),
+  },
+  {
+    test: (q) => has(q, 'fun fact', 'trivia', 'random fact', 'something interesting', 'surprise me'),
+    reply: (q, tl) => {
+      const facts = tl
+        ? ['May 35 tools ang Krea, at hindi lumalabas ng device mo ang files mo.', 'May 24 capture finishers ang Chess Fantasy — bawat nakaing piyesa may sariling eksena.', 'Ang AI coach ng TIDE ay kumikilos gamit ang 23 tools, hindi lang nagsasalita.', 'Totoo ang Poopipoo: mapa ng mga CR sa Metro Manila, may bidet info pa.']
+        : ['Krea has 35 tools, and your files never leave your device.', 'Chess Fantasy has 24 capture finishers — every taken piece gets its own scene.', "TIDE's AI coach acts through 23 tools instead of just chatting.", "Poopipoo is real: a community map of Metro Manila's restrooms, bidet info included."];
+      return { text: facts[Math.floor(Math.random() * facts.length)], chips: tl ? ['Isa pang fun fact', 'Ano mga project niya?'] : ['Another fun fact', 'What projects have you built?'] };
+    },
+  },
+  {
+    test: (q) => has(q, 'photos?', 'pictures?', 'pics?', 'gallery', 'litrato', 'selfie'),
+    reply: (q, tl) => ({
+      text: say(tl, 'Here are a few from My gallery — life outside the IDE.', 'Ito ang ilan mula sa My gallery — buhay sa labas ng IDE.'),
+      attach: { type: 'gallery' },
+      actions: [{ label: tl ? 'Buksan ang My gallery' : 'Open My gallery', nav: 'about' }],
+    }),
+  },
+  {
+    test: (q) => has(q, 'what are you (doing|working on)', 'what is he (doing|working on)', 'right now', 'currently', 'ginagawa (niya|mo) ngayon'),
+    reply: (q, tl) => ({
+      text: say(tl, `Right now: ${NOW.map((n) => n[0].toLowerCase() + n.slice(1)).join('; ')}.`, `Ngayon: ${NOW.join('; ')}.`),
+      chips: tl ? ['Ano status ng mga project?'] : ['Which projects are finished?'],
+    }),
+  },
+
+  // ---- stack ----
   {
     test: (q) => has(q, 'design tools?', 'canva', 'figma', 'photoshop', 'design'),
     reply: () => ({
@@ -322,35 +484,41 @@ const INTENTS = [
   {
     test: (q) => has(q, 'mobile', 'expo', 'react native', 'android', 'ios'),
     reply: () => ({
-      text: 'For mobile he uses React Native with Expo and NativeWind — that\'s how TIDE was built.',
+      text: "For mobile he uses React Native with Expo and NativeWind — that's how TIDE was built.",
       attach: { type: 'stack', category: 'mobile' },
       chips: ['Tell me about TIDE', 'What is your tech stack?'],
     }),
   },
   {
     test: (q) => has(q, 'stacks?', 'tech', 'tools?', 'skills?', 'languages?', 'frameworks?', 'gamit', 'technolog(y|ies)'),
-    reply: () => ({
-      text: 'Here\'s his whole toolbox, grouped the same way as the Stack page — frontend, backend, mobile, design, AI and shipping.',
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Here's his whole toolbox — frontend, backend, AI, shipping, design and mobile. The little ×n on the site shows how many of his apps use each one.",
+        'Ito ang buong toolbox niya — frontend, backend, AI, shipping, design at mobile. Yung maliit na ×n sa site ay kung ilang app niya ang gumagamit ng bawat isa.'),
       attach: { type: 'stack' },
-      actions: [{ label: 'Open the Stack tree', nav: 'stacks' }],
-      chips: ['What backend tools do you use?', 'Which AI tools do you use?'],
+      actions: [{ label: tl ? 'Buksan ang The toolbox' : 'Open The toolbox', nav: 'stacks' }],
+      chips: tl ? ['Anong AI tools gamit niya?', 'Ano soft skills niya?'] : ['Which AI tools do you use?', 'What are your soft skills?'],
     }),
   },
   {
     test: (q) => has(q, 'certs?', 'certificates?', 'certifications?', 'credentials?', 'courses?', 'accenture', 'coursera', 'cisco'),
-    reply: () => ({
-      text: 'Brian has a full vault of certificates from Coursera, Cisco, LinkedIn, DICT and the Accenture Technology Academy. Here are the highlights.',
+    reply: (q, tl) => ({
+      text: say(tl,
+        `${CERT_COUNT} certificates from Coursera, Cisco, LinkedIn, DICT and the Accenture Technology Academy. Here are the highlights.`,
+        `${CERT_COUNT} na certificates mula Coursera, Cisco, LinkedIn, DICT at Accenture Technology Academy. Ito ang mga highlight.`),
       attach: { type: 'certs' },
-      actions: [{ label: 'Open the Credential Vault', nav: 'certificates' }],
-      chips: ['What projects have you built?', 'Who is Brian?'],
+      actions: [{ label: tl ? 'Buksan ang Paper trail' : 'Open Paper trail', nav: 'certificates' }],
+      chips: tl ? ['Ano mga project niya?', 'Sino si Brian?'] : ['What projects have you built?', 'Who is Brian?'],
     }),
   },
   {
-    test: (q) => has(q, 'contacts?', 'email', 'phone', 'number', 'reach', 'message (him|brian)', 'socials?', 'linkedin', 'facebook', 'instagram'),
-    reply: () => ({
-      text: `You can email Brian at ${CONTACT.email} or call ${CONTACT.phone}. He's also on GitHub, LinkedIn and Facebook.`,
+    test: (q) => has(q, 'contacts?', 'email', 'phone', 'number', 'reach', 'message (him|brian)', 'socials?', 'linkedin', 'facebook', 'instagram', 'kontak', 'makokontak', 'makausap'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        `Email Brian at ${CONTACT.email} or call ${CONTACT.phone}. He's also on GitHub, LinkedIn, Facebook and Instagram — and he usually replies within a day.`,
+        `I-email mo si Brian sa ${CONTACT.email} o tawagan sa ${CONTACT.phone}. Nasa GitHub, LinkedIn, Facebook at Instagram din siya — kadalasan sumasagot within a day.`),
       attach: { type: 'contact' },
-      chips: ['What is your expected salary?', 'What work modality do you prefer?'],
+      chips: tl ? ['Magkano expected salary niya?', 'Remote ba o onsite?'] : ['What is your expected salary?', 'What work modality do you prefer?'],
     }),
   },
   {
@@ -362,12 +530,14 @@ const INTENTS = [
     }),
   },
   {
-    test: (q) => has(q, 'who is brian', 'about brian', 'tell me about (him|yourself|brian)', 'introduce', 'sino si brian'),
-    reply: () => ({
-      text: "Brian Paul Francisco is a fresh BSIT graduate from National Teachers College who finished with a 1.25 GWA. He's an aspiring full-stack LLM developer (with a UI/UX eye) who builds web and mobile apps with React, Next.js, Expo, Node and Supabase — and he's an IT intern at Grandline Maritime.",
+    test: (q) => has(q, 'who is brian', 'about brian', 'tell me about (him|brian)', 'introduce', 'sino si brian', 'kwento (mo )?(si|tungkol kay) brian'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Brian Paul Francisco is a fresh BSIT graduate from National Teachers College who finished with a 1.25 GWA. He's an aspiring full-stack LLM developer with a UI/UX eye, building web and mobile apps with React, Next.js, Expo, Node and Supabase — and he's an IT intern at Grandline Maritime.",
+        'Si Brian Paul Francisco ay fresh BSIT graduate ng National Teachers College na may 1.25 GWA. Aspiring full-stack LLM developer siya na may mata sa UI/UX, gumagawa ng web at mobile apps gamit ang React, Next.js, Expo, Node at Supabase — at IT intern siya sa Grandline Maritime.'),
       attach: { type: 'profile' },
-      actions: [{ label: 'Read the full story', nav: 'about' }],
-      chips: ['What projects have you built?', 'Why should we hire you?'],
+      actions: [{ label: tl ? 'Basahin ang buong kwento' : 'Read the full story', nav: 'about' }],
+      chips: tl ? ['Ano mga project niya?', 'Bakit siya dapat i-hire?'] : ['What projects have you built?', 'Why should we hire you?'],
     }),
   },
   {
@@ -387,7 +557,7 @@ const INTENTS = [
   },
   { test: (q) => has(q, 'age', 'how old', 'ilang taon'), reply: () => ({ text: 'Brian is 22 years old.' }) },
   { test: (q) => has(q, 'pogi', 'gwapo', 'handsome', 'cute'), reply: () => ({ text: 'Sobra! Kitang-kita naman sa profile pic, diba? 😎', attach: { type: 'profile' } }) },
-  { test: (q) => has(q, 'joke', 'funny', 'makakatawa', 'patawa'), reply: () => ({ text: randomJoke(), chips: ['Another joke', 'What projects have you built?'] }) },
+  { test: (q) => has(q, 'joke', 'funny', 'makakatawa', 'patawa', 'magpatawa', 'isa pa'), reply: (q, tl) => ({ text: randomJoke(), chips: tl ? ['Isa pa', 'Ano mga project niya?'] : ['Another joke', 'What projects have you built?'] }) },
   {
     test: (q) => has(q, 'what time', 'time is it', 'anong oras', 'oras na'),
     reply: () => ({ text: `It's ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} right now.` }),
@@ -398,32 +568,38 @@ const INTENTS = [
   },
   {
     test: (q) => has(q, 'how are you', "how'?s (your day|it going)", 'kamusta', 'kumusta', 'musta'),
-    reply: () => ({
-      text: `Having a good ${partOfDay()}, thanks for asking! Just here answering questions about Brian's work. How's yours going?`,
-      chips: ['What projects have you built?', 'Tell me a joke'],
+    reply: (q, tl) => ({
+      text: say(tl,
+        `Having a good ${partOfDay()}, thanks for asking! Just here talking up Brian's work. How's yours going?`,
+        'Okay na okay, salamat sa pagtanong! Nandito lang ako, kinukwento ang mga gawa ni Brian. Ikaw, kamusta?'),
+      chips: tl ? ['Ano mga project niya?', 'Magpatawa ka'] : ['What projects have you built?', 'Tell me a joke'],
     }),
   },
   {
-    test: (q) => has(q, 'cool', 'nice', 'awesome', 'amazing', 'great', 'galing', 'ganda', 'astig', 'angas', 'wow', 'love (it|this)', 'impressive'),
-    reply: () => ({
-      text: "Thank you! Brian put a lot of late nights into this portfolio — I'll pass the compliment along. 😄 Want to see what he's built?",
-      chips: ['What projects have you built?', 'Who is Brian?'],
+    test: (q) => has(q, 'cool', 'nice', 'awesome', 'amazing', 'great', 'galing', 'ganda', 'astig', 'angas', 'lupet', 'malupet', 'wow', 'love (it|this)', 'impressive'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        "Thank you! Brian put a lot of late nights into this — I'll pass it along. 😄 Want to see what he's built?",
+        'Salamat! Maraming puyat ni Brian dito — sasabihin ko sa kanya. 😄 Gusto mo bang makita ang mga gawa niya?'),
+      chips: tl ? ['Ano mga project niya?', 'Sino si Brian?'] : ['What projects have you built?', 'Who is Brian?'],
     }),
   },
   {
-    test: (q) => has(q, 'thanks?', 'thank you', 'salamat', 'bye', 'goodbye', 'see you'),
-    reply: () => ({ text: 'Anytime! Come back if you have more questions about Brian. 👋' }),
+    test: (q) => has(q, 'thanks?', 'thank you', 'salamat', 'bye', 'goodbye', 'see you', 'paalam'),
+    reply: (q, tl) => ({ text: say(tl, 'Anytime! Come back if you have more questions about Brian. 👋', 'Walang anuman! Balik ka lang kung may tanong ka pa tungkol kay Brian. 👋') }),
   },
   {
-    test: (q) => has(q, 'hi', 'hello', 'hey', 'yo', 'good (morning|afternoon|evening)', 'hola', 'sup'),
-    reply: () => ({
-      text: `Hey there, good ${partOfDay()}! I'm Brian's assistant. Ask me about his projects, stack or certificates — or anything else you're curious about.`,
-      chips: ['What projects have you built?', 'What is your tech stack?', 'Who is José Rizal?'],
+    test: (q) => has(q, 'hi', 'hello', 'hey', 'yo', 'good (morning|afternoon|evening)', 'hola', 'sup', 'uy', 'pre', 'lods'),
+    reply: (q, tl) => ({
+      text: say(tl,
+        `Hey, good ${partOfDay()}! I'm brian.ai. Ask me about Brian's projects, stack or soft skills — or anything else you're curious about.`,
+        'Uy, hello! Ako si brian.ai. Tanungin mo ako tungkol sa projects, stack o soft skills ni Brian — o kahit ano pang gusto mong malaman.'),
+      chips: tl ? ['Ano mga project niya?', 'Ano status ng mga project?', 'Anong kanta yung tumutugtog?'] : ['What projects have you built?', 'Which projects are finished?', 'What song is playing?'],
     }),
   },
 ];
 
-const FALLBACK_CHIPS = ['What projects have you built?', 'What is your tech stack?', 'Tell me a joke'];
+const FALLBACK_CHIPS = ['What projects have you built?', 'Which projects are finished?', 'Tell me a joke'];
 
 // ---------------------------------------------------------------------------
 
@@ -437,8 +613,9 @@ export async function getReply(raw) {
   const math = tryMath(q);
   if (math) return math;
 
+  const tl = isTagalog(q);
   for (const intent of INTENTS) {
-    if (intent.test(q)) return intent.reply(q);
+    if (intent.test(q)) return intent.reply(q, tl);
   }
 
   // only look things up for actual questions, not statements like "this is cool"
@@ -446,7 +623,7 @@ export async function getReply(raw) {
     /\?\s*$/.test(q) ||
     /^(what|who|whom|where|when|why|how|which|define|explain|describe|tell me (about|what)|meaning of|search|look up|ano|sino|saan|kailan|bakit|paano)/.test(q);
   // questions about Brian never go to Wikipedia ("what has Brian shipped?" is not a band)
-  const aboutBrian = has(q, 'brian', 'he', 'his', 'him');
+  const aboutBrian = has(q, 'brian', 'he', 'his', 'him', 'siya', 'niya', 'kanya');
   const wiki = isQuestion && !aboutBrian ? await wikiLookup(raw) : null;
   if (wiki) {
     return {
@@ -458,14 +635,18 @@ export async function getReply(raw) {
 
   if (aboutBrian) {
     return {
-      text: "I don't have that one about Brian yet. I can tell you about his projects, stack, certificates, school, internship or how to reach him.",
-      chips: FALLBACK_CHIPS,
+      text: say(tl,
+        "I don't have that one about Brian yet. I can tell you about his projects and their status, his stack, soft skills, certificates, school, internship or how to reach him.",
+        'Wala pa akong sagot diyan tungkol kay Brian. Pero kaya kong ikwento ang projects at status nila, stack, soft skills, certificates, school, internship o paano siya makokontak.'),
+      chips: tl ? ['Ano mga project niya?', 'Ano soft skills niya?'] : FALLBACK_CHIPS,
     };
   }
 
   return {
-    text: "Hmm, I couldn't find anything on that one. I'm best at Brian's projects, stack, certificates and contact details — but I can also look up general topics, do math, or check the weather.",
-    chips: FALLBACK_CHIPS,
+    text: say(tl,
+      "Hmm, I couldn't find anything on that one. I'm best at Brian's projects, stack, soft skills and contact details — but I can also look up general topics, do math, or check the weather.",
+      'Hmm, wala akong nahanap diyan. Pinakamagaling ako sa projects, stack, soft skills at contact ni Brian — pero kaya ko ring mag-search ng general topics, mag-math, o tumingin ng weather.'),
+    chips: tl ? ['Ano mga project niya?', 'Magpatawa ka'] : FALLBACK_CHIPS,
   };
 }
 

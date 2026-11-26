@@ -17,6 +17,10 @@ import {
   User,
   Sparkles,
   BookOpen,
+  Activity,
+  HeartHandshake,
+  Gamepad2,
+  Languages,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -45,7 +49,10 @@ import brian5 from './assets/Brian5.png';
 const QUESTION_BANK = [
   'Who is Brian?',
   'What projects have you built?',
+  'Which projects are finished?',
+  'Which project should I check first?',
   'What is your tech stack?',
+  'What are your soft skills?',
   'What certificates do you have?',
   'Why should we hire you?',
   'How can I contact Brian?',
@@ -54,20 +61,21 @@ const QUESTION_BANK = [
   'Tell me about Chess Fantasy',
   'Tell me about Krea',
   'Tell me about Matchie',
+  'What song is playing?',
+  'What games are there?',
+  'How was this site built?',
+  'Give me a fun fact',
   'Which AI tools do you use?',
-  'What design tools do you use?',
-  'What backend tools do you use?',
   'Do you build mobile apps?',
   'What are your hobbies?',
   'What is your expected salary?',
   'What work modality do you prefer?',
-  'What work locations do you prefer?',
-  'What days do you work?',
   'How do you handle complex technical problems?',
   'Where do you see yourself in 2-3 years?',
-  'What is your dream job?',
+  'Ano mga project ni Brian?',
+  'Ano soft skills niya?',
+  'Sino gumawa sayo?',
   'Who is José Rizal?',
-  'What is machine learning?',
   "What's 25 * 48?",
   "What's the weather?",
   'Tell me a joke',
@@ -75,11 +83,14 @@ const QUESTION_BANK = [
 
 const STARTERS = [
   { label: 'Projects', q: 'What projects have you built?', Icon: Rocket },
+  { label: 'Project status', q: 'Which projects are finished?', Icon: Activity },
   { label: 'Tech stack', q: 'What is your tech stack?', Icon: Layers },
+  { label: 'Soft skills', q: 'What are your soft skills?', Icon: HeartHandshake },
   { label: 'Certificates', q: 'What certificates do you have?', Icon: Award },
   { label: 'About Brian', q: 'Who is Brian?', Icon: User },
   { label: 'Contact', q: 'How can I contact Brian?', Icon: Mail },
-  { label: 'Ask anything', q: 'What is machine learning?', Icon: BookOpen },
+  { label: 'Side quests', q: 'What games are there?', Icon: Gamepad2 },
+  { label: 'Taglish', q: 'Ano mga project ni Brian?', Icon: Languages },
 ];
 
 const VOICE_KEY = 'bp_chat_voice';
@@ -852,7 +863,7 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavig
             <div className="max-w-3xl mx-auto w-full flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4">
               <Orb state={orbState} size={42} />
               <div className="min-w-0 flex-1">
-                <p className="text-base sm:text-lg font-black leading-tight truncate">Brian&apos;s AI</p>
+                <p className="text-base sm:text-lg font-black leading-tight truncate">brian.ai</p>
                 <p className="flex items-center gap-1.5 text-xs font-bold opacity-60">
                   <span className={`w-1.5 h-1.5 rounded-full ${orbState === 'listening' ? 'bg-rose-500' : 'bg-emerald-400'}`} />
                   <span>{status}</span>
@@ -901,9 +912,9 @@ const Chatbot = forwardRef(({ darkMode, soundEnabled = true, onTypeTick, onNavig
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 my-auto">
                   <div className="flex flex-col items-center text-center gap-4">
                     <Orb state="idle" size={72} />
-                    <p className="text-3xl sm:text-4xl font-black tracking-tight">Hey! I&apos;m Brian&apos;s AI.</p>
+                    <p className="text-3xl sm:text-4xl font-black tracking-tight">Hey! I&apos;m brian.ai.</p>
                     <p className="text-sm sm:text-base font-medium opacity-60 max-w-md">
-                      Ask me about his projects, stack and certificates — I&apos;ll show you, not just tell you. I can also answer general questions, and I talk back{voice.supported ? '' : ' (in browsers that support it)'}.
+                      Brian&apos;s portfolio sidekick. Ask about his projects, their status, his stack or soft skills — in English or Taglish, I&apos;ll show you, not just tell you. I also do general questions, math and weather, and I talk back{voice.supported ? '' : ' (in browsers that support it)'}.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
