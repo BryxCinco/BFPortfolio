@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUpRight, Download, MessageSquare } from 'lucide-react';
 
-import { Tile, Chars, Words, Scramble, Count } from './motion';
+import { Tile, Chars, Words, Scramble, Count, useOnScreen } from './motion';
 import { ROLES, TOOLS } from './data';
 import { getPalette, cssVars } from '../theme';
 import HeroInference from '../HeroInference';
@@ -18,6 +18,8 @@ const SLIDE_MS = 3000;
 
 // the hero photo changes every 3 seconds: the next picture wipes in over the last one
 const Portrait = () => {
+  const box = useRef(null);
+  const visible = useOnScreen(box);
   const [i, setI] = useState(0);
   const [prev, setPrev] = useState(-1);
   const [tick, setTick] = useState(0);
@@ -33,13 +35,15 @@ const Portrait = () => {
     return () => clearTimeout(t);
   }, []);
 
+  // rotates only while the photo is on screen
   useEffect(() => {
+    if (!visible) return undefined;
     const id = setTimeout(() => {
       setPrev(i);
       setI((n) => (n + 1) % PHOTOS.length);
     }, SLIDE_MS);
     return () => clearTimeout(id);
-  }, [i, tick]);
+  }, [i, tick, visible]);
 
   const pick = (k) => {
     if (k === i) return;
@@ -50,6 +54,7 @@ const Portrait = () => {
 
   return (
     <>
+      <span ref={box} className="portrait-probe" aria-hidden="true" />
       {PHOTOS.map((src, k) => (
         <img
           key={src}
@@ -100,17 +105,41 @@ const useManilaClock = () => {
   return t;
 };
 
-export default function Hero({ darkMode, go, onAsk }) {
-  const [role, setRole] = useState(0);
+// The ticking clock and the rotating role live in their own small components,
+// so a tick re-renders a few characters instead of the whole hero.
+const Clock = () => {
   const clock = useManilaClock();
-  const vars = useMemo(() => cssVars(getPalette(darkMode)), [darkMode]);
   const hour = Number(clock.h);
   const awake = hour >= 8 && hour < 24;
+  return (
+    <div>
+      <div className="clock" aria-label={`Manila time ${clock.h}:${clock.m}`}>
+        {clock.h}:{clock.m}
+        <span className="s">:{clock.s}</span>
+      </div>
+      <p className="mono mute" style={{ margin: '0.6rem 0 0' }}>
+        Manila time · {awake ? 'probably coding' : 'probably asleep'}
+      </p>
+    </div>
+  );
+};
 
+const RoleLine = () => {
+  const [role, setRole] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setRole((r) => (r + 1) % ROLES.length), 3200);
     return () => clearInterval(id);
   }, []);
+  return (
+    <div className="role-line">
+      <span className="bar-mark" aria-hidden="true" />
+      <Scramble text={ROLES[role]} trigger="mount" />
+    </div>
+  );
+};
+
+export default function Hero({ darkMode, go, onAsk }) {
+  const vars = useMemo(() => cssVars(getPalette(darkMode)), [darkMode]);
 
   return (
     <section id="home" className="hero wrap" aria-label="Introduction">
@@ -139,10 +168,7 @@ export default function Hero({ darkMode, go, onAsk }) {
 
           <div className="hero-foot">
             <div style={{ display: 'grid', gap: '1.25rem', maxWidth: '40rem' }}>
-              <div className="role-line">
-                <span className="bar-mark" aria-hidden="true" />
-                <Scramble text={ROLES[role]} trigger="mount" />
-              </div>
+              <RoleLine />
               <p className="hero-lede">
                 <Words
                   delay={0.35}
@@ -179,15 +205,7 @@ export default function Hero({ darkMode, go, onAsk }) {
                 Available for work
               </span>
             </div>
-            <div>
-              <div className="clock" aria-label={`Manila time ${clock.h}:${clock.m}`}>
-                {clock.h}:{clock.m}
-                <span className="s">:{clock.s}</span>
-              </div>
-              <p className="mono mute" style={{ margin: '0.6rem 0 0' }}>
-                Manila time · {awake ? 'probably coding' : 'probably asleep'}
-              </p>
-            </div>
+            <Clock />
           </div>
         </Tile>
 

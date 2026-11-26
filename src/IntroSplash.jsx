@@ -31,10 +31,11 @@ const GREETINGS = [
 const SHORT = ['Hello', '¡Hola!', 'Bonjour', 'こんにちは', 'Ciao'];
 
 const START_MS = 180; // letterbox settles first
+const HELLO_MS = 1500; // the first word, "Hello", holds this long before the other languages run
 const EXIT_MS = 600; // the split-open reveal
 const FONT_WAIT_MS = 300; // longest we wait for Montserrat before starting
 const TIMING = {
-  // capped so the site is on screen ~1.4s after load (any click or key skips sooner)
+  // Hello holds 1.5s, then the other greetings run fast; site is on screen ~2.8s after load (any click or key skips)
   full: { word: 65, hold: 420 },
   short: { word: 70, hold: 300 },
 };
@@ -140,7 +141,9 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
   const timers = useRef([]);
   const doneRef = useRef(false);
 
-  const total = START_MS + list.length * WORD_MS + HOLD_MS;
+  // when word i appears: Hello first and on its own, then the rest in quick succession
+  const at = (i) => START_MS + (i === 0 ? 0 : HELLO_MS + (i - 1) * WORD_MS);
+  const total = at(list.length) + HOLD_MS;
 
   const leave = () => {
     if (doneRef.current) return;
@@ -165,8 +168,8 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
         t.push(setTimeout(leave, 900));
       } else {
         setStarted(true);
-        list.forEach((_, i) => t.push(setTimeout(() => setIndex(i), START_MS + i * WORD_MS)));
-        t.push(setTimeout(() => setIndex(list.length), START_MS + list.length * WORD_MS));
+        list.forEach((_, i) => t.push(setTimeout(() => setIndex(i), at(i))));
+        t.push(setTimeout(() => setIndex(list.length), at(list.length)));
         t.push(setTimeout(leave, total));
       }
       timers.current = t;

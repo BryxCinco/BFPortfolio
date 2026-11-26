@@ -48,6 +48,15 @@ const InferenceStyles = () => (
       animation: hi-spin 3.2s linear infinite;
     }
     .hi-ring[data-live='true'] { opacity: 1; }
+    /* the spinning border animates a custom property on the main thread every
+       frame, so it only runs while the card is on screen and working */
+    .hi-ring { animation-play-state: paused; }
+    .hi-ring[data-run='true'] { animation-play-state: running; }
+    @keyframes hi-in-lite { from { opacity: 0; } }
+    @media (hover: none) {
+      .hi-ring { animation: none; }
+      .hi-card span.hi-tok { animation-name: hi-in-lite; animation-duration: 0.35s; }
+    }
 
     @keyframes hi-in {
       0% { opacity: 0; filter: blur(6px); background-color: var(--acc-soft); }
@@ -135,7 +144,7 @@ const HeroInference = ({ darkMode, reduced, onAsk, className = '' }) => {
       style={{ boxShadow: `0 30px 70px -30px ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(27,27,42,0.35)'}, 0 0 0 1px ${ink(0.08)}` }}
     >
       <InferenceStyles />
-      <div className="hi-ring" data-live={live} aria-hidden="true" />
+      <div className="hi-ring" data-live={live} data-run={running} aria-hidden="true" />
       <div
         className="relative rounded-[1.5rem] p-5 sm:p-6 backdrop-blur-xl text-left"
         style={{ background: darkMode ? 'rgba(18,18,30,0.92)' : 'rgba(255,255,255,0.94)' }}

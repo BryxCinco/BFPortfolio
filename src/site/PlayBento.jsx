@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, MessageSquare, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 
-import { Tile, SectionHead, Chars, useSeen } from './motion';
+import { Tile, SectionHead, Chars, useOnScreen } from './motion';
 
 const ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
 const PHRASE = 'ship it then make it pretty';
@@ -9,12 +9,13 @@ const PHRASE = 'ship it then make it pretty';
 // the little keyboard "types" a phrase on its own while it's on screen
 const Keys = () => {
   const ref = useRef(null);
-  const seen = useSeen(ref);
+  const visible = useOnScreen(ref);
   const [hit, setHit] = useState('');
   const [typed, setTyped] = useState('');
 
+  // only types while it is on screen, so it costs nothing when scrolled away
   useEffect(() => {
-    if (!seen || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (!visible || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
     let i = 0;
     const id = setInterval(() => {
       const ch = PHRASE[i % (PHRASE.length + 6)] ?? '';
@@ -23,7 +24,7 @@ const Keys = () => {
       i += 1;
     }, 140);
     return () => clearInterval(id);
-  }, [seen]);
+  }, [visible]);
 
   return (
     <div ref={ref} aria-hidden="true">

@@ -10,6 +10,7 @@ import fbLogo from '../assets/FacebookLogo.png';
 import igLogo from '../assets/InstagramLogo.png';
 import liLogo from '../assets/LinkedInLogo.png';
 import ghAvatar from '../assets/hero/brian-1.webp';
+import { thumb } from './thumbs';
 
 const ART = {
   Facebook: { shot: fbShot, logo: fbLogo, tone: 'poly' },
@@ -60,7 +61,7 @@ export default function Socials() {
                 <ArrowUpRight size={16} className="social-arrow" />
               </div>
               <div className="phone">
-                {art.shot ? <img src={art.shot} alt={`${s.name} profile of Brian Francisco`} loading="lazy" decoding="async" width="300" height="640" draggable={false} /> : <GitHubCard />}
+                {art.shot ? <img src={thumb(art.shot)} alt={`${s.name} profile of Brian Francisco`} loading="lazy" decoding="async" width="300" height="640" draggable={false} /> : <GitHubCard />}
               </div>
               <div className="social-foot">
                 <span className="social-logo">

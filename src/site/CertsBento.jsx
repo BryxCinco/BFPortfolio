@@ -3,13 +3,14 @@ import { ArrowDown, ArrowUp, Plus, Minus } from 'lucide-react';
 
 import { Tile, SectionHead, Count, Reveal } from './motion';
 import { allCerts, featuredCerts, CERT_TOTAL } from '../Certifications';
+import { thumb } from './thumbs';
 
 const STEP = 8;
 
 const CertCard = ({ c, cls, delay, onOpen }) => (
   <Tile as="button" type="button" className={`${cls} cert`} ticks={false} delay={delay} onClick={() => onOpen(c)}>
     <div className="cert-img">
-      <img src={c.img} alt="" loading="lazy" decoding="async" width="1414" height="1000" />
+      <img src={thumb(c.img)} alt="" loading="lazy" decoding="async" width="1414" height="1000" />
     </div>
     <div className="cert-body">
       <span className="mono mark">

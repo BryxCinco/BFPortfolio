@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowUpRight, Code2, Plus } from 'lucide-react';
 
 import { Tile, SectionHead, Chars } from './motion';
@@ -6,6 +7,7 @@ import { WORK_LAYOUT } from './data';
 import { websites, ProjectStyles, ProjectDetails } from '../Project';
 import { launchSite } from '../WarpHost';
 import { impactAt } from './impact';
+import { thumb } from './thumbs';
 import { getPalette, cssVars } from '../theme';
 
 const TONE = {
@@ -36,7 +38,7 @@ const WorkTile = ({ w, site, i, onDetails }) => {
           <span>P/{pad(i + 1)}</span>
           <span>{site.tag}</span>
         </div>
-        <img src={site.image} alt={`${site.name} screenshot`} loading="lazy" decoding="async" width="1600" height="900" draggable={false} />
+        <img src={thumb(site.image)} alt={`${site.name} screenshot`} loading="lazy" decoding="async" width="1600" height="900" draggable={false} />
       </div>
 
       <div className="work-body">
@@ -95,12 +97,12 @@ export default function Work({ darkMode }) {
     <section id="projects" className="sec wrap" aria-labelledby="work-title">
       <SectionHead
         num="01 — Selected work"
-        title="Things I"
-        serif="shipped."
+        title="My"
+        serif="creations."
         aside="Seven live apps, five with LLMs doing real work inside. Click Live to open one, or read the case study."
       />
       <span id="work-title" className="sr-only">
-        Selected work
+        My creations
       </span>
 
       <div className="bento">
@@ -109,12 +111,15 @@ export default function Work({ darkMode }) {
         ))}
       </div>
 
-      {details && (
-        <div className="pj-scope" style={cssVars(getPalette(darkMode))}>
-          <ProjectStyles />
-          <ProjectDetails site={details} darkMode={darkMode} onClose={close} onLaunch={launch} />
-        </div>
-      )}
+      {/* rendered on <body> so the section's rendering containment never traps the full-screen sheet */}
+      {details &&
+        createPortal(
+          <div className="pj-scope" style={cssVars(getPalette(darkMode))}>
+            <ProjectStyles />
+            <ProjectDetails site={details} darkMode={darkMode} onClose={close} onLaunch={launch} />
+          </div>,
+          document.body
+        )}
     </section>
   );
 }

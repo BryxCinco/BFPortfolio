@@ -187,7 +187,7 @@ export default function AboutBento({ onPreview }) {
           <div className="tile-label mono" style={{ padding: '1rem 1rem 0', marginBottom: 0 }}>
             <span>
               <span className="dot" />
-              Life outside code
+              My gallery
             </span>
             <span>(yes, I go outside)</span>
           </div>

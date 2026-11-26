@@ -91,6 +91,22 @@ export function useReveal(ref, onIn) {
   }, []);
 }
 
+/** true while the node is on screen (for pausing work when scrolled away) */
+export function useOnScreen(ref) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setOn(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
 /** true once the node has scrolled into view */
 export function useSeen(ref) {
   const [seen, setSeen] = useState(false);
@@ -224,7 +240,8 @@ export const Scramble = ({ text, className = '', delay = 0, as: Tag = 'span', tr
   const raf = useRef(0);
 
   const run = () => {
-    if (reducedMotion()) {
+    // touch screens get the final text straight away: decoding re-renders every frame
+    if (reducedMotion() || window.matchMedia?.('(hover: none)').matches) {
       setOut(text);
       return;
     }
