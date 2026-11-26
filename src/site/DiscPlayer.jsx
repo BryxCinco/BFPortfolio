@@ -13,7 +13,7 @@ const fmt = (ms) => {
 // ============================================================================
 // DISCPLAYER.JSX — the Side quests record player: a vinyl that spins while the
 // soundtrack plays, a tonearm that drops onto it, play / pause, and the
-// official Spotify player underneath (Spotify requires its player on screen).
+// official YouTube player underneath (YouTube requires its player on screen).
 // ============================================================================
 
 export default function DiscPlayer() {
@@ -21,7 +21,7 @@ export default function DiscPlayer() {
   const slot = useRef(null);
   const playing = status === 'playing';
 
-  // the Spotify API replaces the element it is given, so it gets a plain div
+  // the YouTube API replaces the element it is given, so it gets a plain div
   // that React doesn't manage, inside a container that React does
   useEffect(() => {
     const el = document.createElement('div');
@@ -64,7 +64,7 @@ export default function DiscPlayer() {
             {playing ? <Pause /> : <Play />}
           </button>
           <a className="btn sm" href={TRACK.url} target="_blank" rel="noopener noreferrer">
-            Open in Spotify <ArrowUpRight className="nudge" />
+            Watch on YouTube <ArrowUpRight className="nudge" />
           </a>
         </div>
 
@@ -73,8 +73,8 @@ export default function DiscPlayer() {
         </div>
 
         {/* the official player loads here on first play */}
-        <div ref={slot} className="disc-spotify" />
-        <p className="disc-note mono">Full track if you're signed in to Spotify · 30s preview otherwise</p>
+        <div ref={slot} className="disc-video" />
+        <p className="disc-note mono">Plays from 0:51 and loops back there · via YouTube</p>
       </div>
     </Tile>
   );
