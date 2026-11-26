@@ -1530,7 +1530,7 @@ html.dark .impact { --line1: #0B0B0C; }
   position: fixed;
   z-index: 10001; /* above the intro, so a tap on Hello shows it too */
   right: clamp(0.75rem, 2vw, 1.5rem);
-  top: calc(3.75rem + 0.75rem);
+  bottom: calc(clamp(0.75rem, 2vw, 1.5rem) + env(safe-area-inset-bottom, 0px));
   width: min(24rem, calc(100vw - 1.5rem));
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1545,7 +1545,7 @@ html.dark .impact { --line1: #0B0B0C; }
   overflow: hidden;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-0.75rem);
+  transform: translateY(0.75rem);
   transition: opacity 0.3s ease, transform 0.45s var(--ease), visibility 0s linear 0.45s;
 }
 .now-playing.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity 0.3s ease, transform 0.45s var(--ease), visibility 0s; }

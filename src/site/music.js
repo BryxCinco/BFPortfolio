@@ -14,13 +14,14 @@ import { useSyncExternalStore } from 'react';
 // Spotify's 30-second preview.
 // ============================================================================
 
+// Rodeo (Radio Edit): the clean version, since employers browse the site
 export const TRACK = {
-  uri: 'spotify:track:0lYBSQXN6rCTvUZvg9S0lU',
-  url: 'https://open.spotify.com/track/0lYBSQXN6rCTvUZvg9S0lU',
-  title: 'Let Me Love You',
-  artist: 'DJ Snake, Justin Bieber',
+  uri: 'spotify:track:3QuzBc8sIVfsCHg0r7W7cb',
+  url: 'https://open.spotify.com/track/3QuzBc8sIVfsCHg0r7W7cb',
+  title: 'Rodeo',
+  artist: 'Lah Pat, Big Jade',
 };
-// where playback starts, in seconds (Justin's vocals come in at the top of the song)
+// where playback starts, in seconds (only applies to visitors signed in to Spotify)
 const START_AT = 0;
 const PREF = 'bp_music'; // 'off' after the visitor pauses
 
