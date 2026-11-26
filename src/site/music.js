@@ -14,12 +14,11 @@ import { useSyncExternalStore } from 'react';
 // Spotify's 30-second preview.
 // ============================================================================
 
-// Rodeo (Radio Edit): the clean version, since employers browse the site
 export const TRACK = {
-  uri: 'spotify:track:3QuzBc8sIVfsCHg0r7W7cb',
-  url: 'https://open.spotify.com/track/3QuzBc8sIVfsCHg0r7W7cb',
-  title: 'Rodeo',
-  artist: 'Lah Pat, Big Jade',
+  uri: 'spotify:track:2DOzJWZCslTQFQPQf6hhhj',
+  url: 'https://open.spotify.com/track/2DOzJWZCslTQFQPQf6hhhj',
+  title: 'Ice On My Baby',
+  artist: 'Yung Bleu',
 };
 // where playback starts, in seconds (only applies to visitors signed in to Spotify)
 const START_AT = 0;
@@ -67,6 +66,7 @@ export async function play() {
     /* storage may be unavailable */
   }
   if (controller) {
+    pendingPlay = true;
     controller.resume ? controller.resume() : controller.play();
     return;
   }
@@ -94,12 +94,26 @@ export async function play() {
       if (START_AT) c.seek(START_AT);
       c.play();
     });
+    let announced = false;
+    let restarting = false;
     c.addListener('playback_update', (e) => {
       const { isPaused, isBuffering, position, duration } = e.data;
+      // loop: when the track (or Spotify's 30s preview) reaches its end and the
+      // visitor hasn't paused, start it again from the top. Spotify doesn't
+      // always report a pause at the end, so the position decides.
+      if (restarting && position < duration - 2000) restarting = false;
+      if (!restarting && pendingPlay && duration > 0 && position >= duration - 400) {
+        restarting = true;
+        c.seek(START_AT);
+        c.play();
+        return set({ status: 'playing', position: START_AT * 1000, duration });
+      }
       const status = isPaused ? 'paused' : isBuffering ? 'loading' : 'playing';
-      // announce each time playback actually starts, so the toast can show
-      if (status === 'playing' && state.status !== 'playing') set({ status, position, duration, announce: Date.now() });
-      else set({ status, position, duration });
+      // the toast announces the first start only, not every loop or resume
+      if (status === 'playing' && !announced) {
+        announced = true;
+        set({ status, position, duration, announce: Date.now() });
+      } else set({ status, position, duration });
     });
   });
 }
