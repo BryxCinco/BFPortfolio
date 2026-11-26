@@ -15,7 +15,8 @@ import ContactBento from './site/ContactBento';
 import Socials from './site/Socials';
 import BrandMark from './site/BrandMark';
 import Cursor from './site/Cursor';
-import MusicDock from './site/MusicDock';
+import NowPlaying from './site/NowPlaying';
+import { armAutostart, useMusic } from './site/music';
 
 import Chatbot from './Chatbot';
 import TypingTest from './TypingTest';
@@ -191,6 +192,9 @@ function App() {
   const [sheet, setSheet] = useState(false);
   const [preview, setPreview] = useState(null);
 
+  // soundtrack: starts on the first tap, click or key anywhere, intro included
+  useEffect(() => armAutostart(), []);
+
   // the theme lives on <html> so portals, scrollbars and the view transition all see it
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -223,7 +227,10 @@ function App() {
     }
   }, []);
 
-  const ready = !showIntro || introOpening;
+  // a tap on the intro asks for music: mount the page behind the intro right away
+  // so the record player (and Spotify) can load while the greetings still run
+  const { status: musicStatus } = useMusic();
+  const ready = !showIntro || introOpening || musicStatus !== 'idle';
   const ids = useRef(['home', ...NAV.map((n) => n.id)]).current;
   const active = useScrollSpy(ready ? ids : NO_IDS);
   useScrollProgress(progressRef);
@@ -401,7 +408,7 @@ function App() {
             </div>
           )}
 
-          <MusicDock darkMode={darkMode} />
+          <NowPlaying />
           <Cursor />
           <WarpHost darkMode={darkMode} />
           <Chatbot ref={chatbotRef} darkMode={darkMode} soundEnabled={soundEnabled} onTypeTick={playClick} onNavigate={navigate} />

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, MessageSquare, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 
 import { Tile, SectionHead, Chars, useOnScreen } from './motion';
+import DiscPlayer from './DiscPlayer';
 
 const ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
 const PHRASE = 'ship it then make it pretty';
@@ -96,6 +97,8 @@ export default function PlayBento({ darkMode, onTyping, onStack, onChat, soundEn
             </span>
           </div>
         </Tile>
+
+        <DiscPlayer />
 
         <Tile as="button" type="button" className="t-4 tb-2 play" tone="lav" onClick={onChat} aria-label="Open the chat assistant" style={{ minHeight: '13rem' }}>
           <div className="tile-label mono">

@@ -6,8 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 // focusing in from a blur with its language underneath, then a gradient
 // "Kamusta." and the screen splits open onto the site. It matches the
 // device's light or dark display. The full cut runs about 3.3s on a first
-// visit; returning visitors get a short cut (about 1.6s). A click, tap or any
-// key skips straight to the reveal. It waits briefly for the web font so no
+// visit. A tap turns the music on (see site/music.js); Skip, Esc or Enter
+// goes straight to the reveal. It waits briefly for the web font so no
 // fallback face flashes, and tells App when the split starts so the page
 // mounts right then and its own entrance animations play in view.
 // ============================================================================
@@ -27,16 +27,15 @@ const GREETINGS = [
   ['Привет', 'Русский'],
 ];
 
-// returning visitors see a few of them, faster
-const SHORT = ['Hello', '¡Hola!', 'Bonjour', 'こんにちは', 'Ciao'];
 
 const START_MS = 180; // letterbox settles first
 const HELLO_MS = 1500; // the first word, "Hello", holds this long before the other languages run
 const EXIT_MS = 600; // the split-open reveal
 const FONT_WAIT_MS = 300; // longest we wait for Montserrat before starting
 const TIMING = {
-  // Hello holds 1.5s, then the other greetings run fast; site is on screen ~2.8s after load (any click or key skips)
-  full: { word: 65, hold: 420 },
+  // Hello holds 1.5s, then each greeting stays long enough to read; Kamusta holds
+  // a beat. ~4.3s in all. A tap turns the sound on; Esc / Enter or Skip leaves early.
+  full: { word: 180, hold: 750 },
   short: { word: 70, hold: 300 },
 };
 
@@ -133,8 +132,9 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
   const ink = (a) => `rgba(${T.ink},${a})`;
   const reduced =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const list = short ? GREETINGS.filter(([w]) => SHORT.includes(w)) : GREETINGS;
-  const { word: WORD_MS, hold: HOLD_MS } = TIMING[short ? 'short' : 'full'];
+  // every visit gets all twelve greetings (short is kept for API compatibility)
+  const list = GREETINGS;
+  const { word: WORD_MS, hold: HOLD_MS } = TIMING.full;
   const [index, setIndex] = useState(reduced ? list.length : -1); // -1 = bars only, length = Kamusta
   const [started, setStarted] = useState(reduced);
   const [leaving, setLeaving] = useState(false);
@@ -181,7 +181,7 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
       : Promise.resolve();
     Promise.race([fontsReady, new Promise((r) => setTimeout(r, FONT_WAIT_MS))]).then(run, run);
 
-    const skip = () => leave();
+    const skip = (e) => (e.key === 'Escape' || e.key === 'Enter') && leave();
     window.addEventListener('keydown', skip);
     return () => {
       cancelled = true;
@@ -198,10 +198,8 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
 
   return (
     <div
-      className={`is-root fixed inset-0 z-[9999] select-none ${leaving ? 'pointer-events-none' : 'cursor-pointer'}`}
-      onClick={leave}
+      className={`is-root fixed inset-0 z-[9999] select-none ${leaving ? 'pointer-events-none' : ''}`}
       role="presentation"
-      aria-hidden="true"
     >
       <Styles />
 
@@ -247,7 +245,17 @@ const IntroSplash = ({ onDone, onLeave, dark = true, short = false }) => {
             <span className="text-[0.625rem] sm:text-xs font-black tabular-nums tracking-[0.3em]" style={{ color: ink(0.5) }}>
               {String(isFinal ? list.length + 1 : Math.max(count, 0)).padStart(2, '0')} / {list.length + 1}
             </span>
-            <span className="text-[0.625rem] sm:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: ink(0.35) }}>click to skip</span>
+            <span className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: ink(0.6) }}>
+              <span>tap for sound</span>
+              <button
+                type="button"
+                onClick={leave}
+                className="min-h-11 px-3 border uppercase tracking-[0.3em] text-xs font-bold"
+                style={{ color: ink(0.85), borderColor: ink(0.3) }}
+              >
+                Skip ›
+              </button>
+            </span>
           </div>
         </div>
 

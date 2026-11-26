@@ -1466,62 +1466,99 @@ html.dark .impact { --line1: #0B0B0C; }
 }
 @media (hover: none) { .live-dot::after { animation: none; } }
 
+
+
 /* ==========================================================================
-   MUSIC DOCK (site/MusicDock.jsx) — official Spotify embed, loaded on demand
+   DISC PLAYER (site/DiscPlayer.jsx) — Side quests record player
    ========================================================================== */
-.music-dock { position: fixed; left: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem); z-index: 95; }
-.music-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  height: 3.25rem;
-  padding: 0.375rem 1rem 0.375rem 0.375rem;
-  border: 1px solid var(--line-2);
-  border-radius: var(--r);
-  background: var(--tile);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.45);
-  transition: border-color 0.25s ease, transform 0.25s ease;
-}
-.music-btn:hover { border-color: var(--ink); }
-.music-btn:active { transform: translateY(1px); }
-.music-icon { position: relative; width: 2.5rem; height: 2.5rem; flex: none; display: grid; place-items: center; border-radius: 3px; background: var(--yale); color: #fff; }
-.site.is-dark .music-icon { background: var(--lav); color: var(--yale); }
-.music-icon svg { width: 1.15rem; height: 1.15rem; }
-.music-icon .eq { position: absolute; right: -4px; bottom: -4px; display: flex; align-items: flex-end; gap: 2px; height: 14px; padding: 2px 3px; border-radius: 2px; background: var(--ink); }
-.music-icon .eq b { width: 2px; height: 100%; background: var(--bg); transform-origin: 50% 100%; animation: eq 0.9s ease-in-out infinite alternate; }
-.music-icon .eq b:nth-child(2) { animation-delay: -0.3s; }
-.music-icon .eq b:nth-child(3) { animation-delay: -0.6s; }
-@keyframes eq { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
-.music-txt b { display: block; font-size: 0.875rem; font-weight: 600; line-height: 1.2; white-space: nowrap; }
-.music-txt small { display: block; font-size: 0.75rem; color: var(--mute); white-space: nowrap; }
-.music-panel {
+.disc-tile { display: grid; grid-template-columns: minmax(16rem, 26rem) 1fr; gap: clamp(1.5rem, 4vw, 4rem); align-items: center; }
+.disc-wrap { position: relative; aspect-ratio: 1; width: 100%; }
+.vinyl {
   position: absolute;
-  left: 0;
-  bottom: calc(100% + 0.6rem);
-  width: min(23rem, calc(100vw - 1.5rem));
-  padding: 0.6rem;
+  inset: 4%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 0 31%, rgba(255, 255, 255, 0.07) 31.5% 32%, transparent 32.5%),
+    repeating-radial-gradient(circle, #0b0b0c 0 2px, #17181b 2px 3px),
+    #0b0b0c;
+  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7), inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+  animation: spin 2.4s linear infinite;
+  animation-play-state: paused;
+}
+.vinyl::after { /* light sheen that stays put while the disc turns underneath */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 30deg, transparent 0 12%, rgba(255, 255, 255, 0.12) 18%, transparent 26% 62%, rgba(255, 255, 255, 0.08) 68%, transparent 76%);
+  animation: spin 2.4s linear infinite reverse;
+  animation-play-state: inherit;
+}
+.vinyl-label { position: absolute; inset: 34%; border-radius: 50%; background: var(--lav); display: grid; place-items: center; }
+.vinyl-label::after { content: ""; position: absolute; width: 6%; aspect-ratio: 1; border-radius: 50%; background: #0b0b0c; }
+.vinyl-label .bmark { --bm-ink: var(--yale); --bm-acc: var(--pomp); width: 58%; height: auto; }
+.disc-tile[data-playing="true"] .vinyl { animation-play-state: running; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tonearm { position: absolute; top: 2%; right: 2%; width: 44%; height: 6px; transform-origin: 100% 50%; transform: rotate(-38deg); transition: transform 0.9s var(--ease); }
+.tonearm i { position: absolute; inset: 0; border-radius: 3px; background: linear-gradient(90deg, #f4f4f2, #b9bcc4); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); }
+.tonearm::before { content: ""; position: absolute; right: -10px; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: #f4f4f2; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); }
+.tonearm::after { content: ""; position: absolute; left: -6px; top: -5px; width: 18px; height: 16px; border-radius: 2px; background: var(--lav); }
+.disc-tile[data-playing="true"] .tonearm { transform: rotate(-14deg); }
+.disc-info { min-width: 0; }
+.disc-title { margin: 0.25rem 0 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(2.4rem, 5vw, 4.6rem); letter-spacing: -0.045em; line-height: 0.9; text-transform: uppercase; }
+.disc-artist { margin: 0.5rem 0 0; font-size: clamp(1.4rem, 2vw, 2rem); color: var(--lav); }
+.disc-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.disc-play { width: 4rem; height: 4rem; border: 0; border-radius: 50%; background: var(--lav); color: var(--yale); display: grid; place-items: center; cursor: pointer; transition: transform 0.2s ease; }
+.disc-play:hover { transform: scale(1.05); }
+.disc-play:active { transform: scale(0.96); }
+.disc-play svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
+.disc-bar { margin-top: 1.25rem; height: 3px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+.disc-bar i { display: block; height: 100%; background: var(--lav); transform-origin: 0 50%; transition: transform 0.5s linear; }
+.disc-spotify { margin-top: 1rem; min-height: 80px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+.disc-spotify iframe { display: block; border: 0; border-radius: 12px; }
+.disc-note { margin: 0.6rem 0 0; color: var(--mute); font-size: 0.75rem; text-transform: none; }
+@media (max-width: 767px) {
+  .disc-tile { grid-template-columns: 1fr; }
+  .disc-wrap { max-width: 18rem; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) { .vinyl, .vinyl::after { animation: none; } }
+
+/* ==========================================================================
+   NOW PLAYING (site/NowPlaying.jsx) — 4-second notice when music starts
+   ========================================================================== */
+.now-playing {
+  position: fixed;
+  z-index: 10001; /* above the intro, so a tap on Hello shows it too */
+  right: clamp(0.75rem, 2vw, 1.5rem);
+  top: calc(3.75rem + 0.75rem);
+  width: min(24rem, calc(100vw - 1.5rem));
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.7rem 0.85rem;
   border: 1px solid var(--line-2);
   border-radius: var(--r);
   background: var(--tile);
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+  color: var(--ink);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(0.75rem);
-  transition: opacity 0.25s ease, transform 0.35s var(--ease), visibility 0s linear 0.35s;
+  transform: translateY(-0.75rem);
+  transition: opacity 0.3s ease, transform 0.45s var(--ease), visibility 0s linear 0.45s;
 }
-.music-dock.is-open .music-panel { opacity: 1; visibility: visible; transform: none; transition: opacity 0.25s ease, transform 0.35s var(--ease), visibility 0s; }
-.music-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0 0.5rem 0.25rem; color: var(--mute); }
-.music-head .dot { display: inline-block; width: 6px; height: 6px; background: var(--mark); margin-right: 0.5rem; vertical-align: 1px; }
-.music-panel iframe { display: block; border: 0; border-radius: 12px; background: var(--tile-2); }
-/* phones: icon-only button so it never covers content */
-@media (max-width: 639px) {
-  .music-txt { display: none; }
-  .music-btn { padding: 0.375rem; width: 3.25rem; justify-content: center; }
-}
-@media (prefers-reduced-motion: reduce) { .music-icon .eq b { animation: none; } }
-.music-dock { transform: translateY(calc(100% + 2rem)); transition: transform 0.5s var(--ease); }
-.music-dock.is-shown { transform: none; }
+.now-playing.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity 0.3s ease, transform 0.45s var(--ease), visibility 0s; }
+.np-icon { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: 3px; background: var(--yale); color: #fff; }
+.site.is-dark .np-icon { background: var(--lav); color: var(--yale); }
+.np-icon svg { width: 1.2rem; height: 1.2rem; }
+.np-txt { min-width: 0; }
+.np-txt b { display: block; font-size: 0.9375rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-txt small { display: block; font-size: 0.75rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-txt small.mono { color: var(--mark); }
+.np-pause { display: inline-flex; align-items: center; gap: 0.4rem; height: 2.75rem; padding: 0 0.9rem; border: 1px solid var(--ink); border-radius: var(--r); background: var(--ink); color: var(--bg); font-family: var(--f-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; }
+.np-pause svg { width: 0.9rem; height: 0.9rem; }
+/* a line that runs out with the four seconds */
+.np-timer { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--mark); transform-origin: 0 50%; }
+.now-playing.is-on .np-timer { animation: np-time 4s linear forwards; }
+@keyframes np-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
