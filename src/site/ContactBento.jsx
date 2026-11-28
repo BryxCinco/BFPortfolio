@@ -43,7 +43,7 @@ export default function ContactBento({ soundEnabled, onTypeTick }) {
             <div className="tile-label mono">
               <span>
                 <span className="dot" />
-                <Scramble text="07 — Contact" />
+                <Scramble text="08 — Contact" />
               </span>
               <span>Usually replies within 24h</span>
             </div>

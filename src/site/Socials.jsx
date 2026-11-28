@@ -37,7 +37,7 @@ const GitHubCard = () => (
 export default function Socials() {
   return (
     <section id="socials" className="sec wrap" aria-label="Socials">
-      <SectionHead num="06 — Socials" title="Find me" serif="online." aside="Same person on every app. Tap a card to open the profile." />
+      <SectionHead num="07 — Socials" title="Find me" serif="online." aside="Same person on every app. Tap a card to open the profile." />
       <div className="bento">
         {SOCIALS.map((s, i) => {
           const art = ART[s.name];

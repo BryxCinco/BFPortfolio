@@ -55,7 +55,7 @@ const Blocks = () => (
 export default function PlayBento({ darkMode, onTyping, onStack, onChat, soundEnabled, onToggleSound, onToggleTheme }) {
   return (
     <section id="play" className="sec wrap" aria-label="Play">
-      <SectionHead num="05 — Play" title="Side" serif="quests." aside="Small games I built into the site. Your score stays on your device." />
+      <SectionHead num="06 — Play" title="Side" serif="quests." aside="Small games I built into the site. Your score stays on your device." />
 
       <div className="bento">
         <Tile as="button" type="button" className="t-7 play" tone="ink" onClick={onTyping} aria-label="Open the typing speed test">

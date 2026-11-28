@@ -13,6 +13,7 @@ import CertsBento from './site/CertsBento';
 import PlayBento from './site/PlayBento';
 import ContactBento from './site/ContactBento';
 import Socials from './site/Socials';
+import ServicesBento from './site/ServicesBento';
 import BrandMark from './site/BrandMark';
 import Cursor from './site/Cursor';
 import NowPlaying from './site/NowPlaying';
@@ -344,6 +345,7 @@ function App() {
           <main>
             <Hero darkMode={darkMode} go={go} onAsk={ask} />
             <Work darkMode={darkMode} />
+            <ServicesBento />
             <AboutBento onPreview={setPreview} />
             <StackBento />
             <CertsBento onPreview={setPreview} />

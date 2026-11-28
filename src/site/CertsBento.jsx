@@ -70,7 +70,7 @@ export default function CertsBento({ onPreview }) {
 
   return (
     <section id="certificates" className="sec wrap" aria-label="Certificates">
-      <SectionHead num="04 — Certificates" title="Paper" serif="trail." aside="Courses from Coursera, Cisco, LinkedIn, DICT and Accenture. Click any one to see it up close." />
+      <SectionHead num="05 — Certificates" title="Paper" serif="trail." aside="Courses from Coursera, Cisco, LinkedIn, DICT and Accenture. Click any one to see it up close." />
 
       <Reveal className="cert-stats" rv="fade">
         {stats.map((s) => (

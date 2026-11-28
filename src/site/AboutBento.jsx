@@ -21,7 +21,7 @@ const THUMBS = [t2, t3, t4, t5, t6];
 export default function AboutBento({ onPreview }) {
   return (
     <section id="about" className="sec wrap" aria-label="About">
-      <SectionHead num="02 — About" title="The short" serif="version." aside="Four years of BSIT, one internship, a lot of late nights. Here is the gist." />
+      <SectionHead num="03 — About" title="The short" serif="version." aside="Four years of BSIT, one internship, a lot of late nights. Here is the gist." />
 
       <div className="bento">
         <Tile className="t-7" delay={0}>

@@ -25,7 +25,7 @@ export default function StackBento() {
   return (
     <section id="stacks" className="sec wrap" aria-label="Tech stack">
       <SectionHead
-        num="03 — Stack"
+        num="04 — Stack"
         title="The"
         serif="toolbox."
         aside={`${total} tools across six areas. The small ×n is how many of my shipped apps use it.`}

@@ -6,6 +6,7 @@
 
 export const NAV = [
   { id: 'projects', label: 'Work' },
+  { id: 'services', label: 'Services' },
   { id: 'about', label: 'About' },
   { id: 'stacks', label: 'Stack' },
   { id: 'certificates', label: 'Certs' },
@@ -153,3 +154,62 @@ export const SOFT_SKILLS = [
   ['Optimistic', 'There is always a next build'],
   ['Ideator', 'Never short of the next idea'],
 ];
+
+// ---------- freelance ----------
+// What Brian offers clients. `example` points at his real projects; `price`
+// stays "Quote" until he sets starting prices (e.g. 'from ₱15,000').
+export const SERVICES = [
+  {
+    id: 'ai',
+    title: 'AI features',
+    line: 'Chatbots, assistants and automations that work on your own data, not generic answers.',
+    includes: ['Chat assistants trained on your content', 'Smart search and summaries', 'Workflow automation'],
+    example: 'TIDE, Snapzy, Poopipoo',
+    price: 'Quote',
+  },
+  {
+    id: 'web',
+    title: 'Websites & landing pages',
+    line: 'Fast, responsive sites that look sharp on every phone — for businesses, brands and launches.',
+    includes: ['Custom design, no templates', 'Mobile-first and fast', 'Contact forms, SEO basics, launch'],
+    example: 'This portfolio',
+    price: 'Quote',
+  },
+  {
+    id: 'app',
+    title: 'Web apps',
+    line: 'Full-stack apps with accounts, dashboards and databases, built to be used every day.',
+    includes: ['Login, roles and dashboards', 'Supabase, PostgreSQL or MySQL', 'Admin panels and reports'],
+    example: 'SweepXpress, Matchie',
+    price: 'Quote',
+  },
+  {
+    id: 'mobile',
+    title: 'Mobile apps',
+    line: 'iOS and Android apps from one codebase, sharing a backend with your web app.',
+    includes: ['React Native + Expo', 'One codebase, both stores', 'Same backend as the web'],
+    example: 'TIDE',
+    price: 'Quote',
+  },
+  {
+    id: 'design',
+    title: 'UI/UX design',
+    line: 'Wireframes and clickable prototypes you can try before a single line of code.',
+    includes: ['Figma wireframes and prototypes', 'Design systems', 'Redesigns of existing sites'],
+    example: 'Chess Fantasy, Krea',
+    price: 'Quote',
+  },
+];
+
+export const PROCESS = [
+  ['Discovery', 'A quick call or chat about your goal, your users and your budget.'],
+  ['Plan & design', 'Scope, timeline and a design you approve before anything gets built.'],
+  ['Build', 'Regular progress you can open and try, not just screenshots.'],
+  ['Launch', 'Live on your domain, with a walkthrough of how everything works.'],
+  ['Support', 'Fixes and small updates after launch, so it keeps running.'],
+];
+
+// options in the contact form's freelance mode
+export const BUDGETS = ['Under ₱10k', '₱10k – ₱30k', '₱30k – ₱60k', '₱60k+', 'Not sure yet'];
+export const TIMELINES = ['ASAP', 'Within a month', '1 – 3 months', 'Flexible'];
+export const REACH = ['Email', 'Messenger', 'Viber', 'WhatsApp', 'Phone call'];

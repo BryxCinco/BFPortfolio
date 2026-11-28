@@ -1597,3 +1597,24 @@ html.dark .impact { --line1: #0B0B0C; }
 @media (max-width: 639px) { .status-legend .faint { display: none; } }
 /* phones: the generic tile padding must not apply to edge-to-edge cards */
 @media (max-width: 639px) { .tile.work, .tile.cert, .tile.portrait { padding: 0; } }
+
+/* ==========================================================================
+   SERVICES (site/ServicesBento.jsx)
+   ========================================================================== */
+.service { display: flex; flex-direction: column; gap: 0.9rem; }
+.service-title { margin: 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(1.7rem, 2.6vw, 2.5rem); letter-spacing: -0.035em; line-height: 1; }
+.service-line { margin: 0; font-size: 1rem; line-height: 1.55; color: var(--mute); }
+.service-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.service-list li { display: flex; gap: 0.6rem; font-size: 0.9375rem; }
+.service-list li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 0.5em; background: var(--mark); }
+.service-foot { margin-top: auto; padding-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.process { margin-top: calc(var(--gap) * 2.5); padding-top: clamp(1.5rem, 3vw, 2.5rem); border-top: 1px solid var(--line-2); display: grid; gap: 1.5rem; }
+.process-title { margin: 0.5rem 0 0; font-family: var(--f-display); font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem); letter-spacing: -0.035em; line-height: 1; }
+.process-title .serif { font-weight: 400; color: var(--mark); }
+.process-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--gap); }
+.process-steps li { display: flex; flex-direction: column; gap: 0.4rem; padding-top: 1rem; border-top: 2px solid var(--line-2); }
+.process-steps strong { font-family: var(--f-display); font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; }
+.process-steps p { margin: 0; font-size: 0.9375rem; line-height: 1.5; color: var(--mute); }
+.process-cta { justify-self: start; }
+@media (max-width: 1100px) { .process-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 539px) { .process-steps { grid-template-columns: 1fr; } }
